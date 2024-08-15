@@ -1,11 +1,11 @@
 <script setup>
 // ? import lib
-import {onBeforeMount, ref, watch} from "vue";
-import {useRoute} from "vue-router";
-import {deleteTask, getLimitStatus} from "../lib/fetchUtils.js";
+import { onBeforeMount, ref, watch } from "vue";
+import { useRoute } from "vue-router";
+import { deleteTask, getLimitStatus } from "../lib/fetchUtils.js";
 import router from "@/router";
-import {useTaskStore} from "@/stores/task";
-import {useStatusStore} from "@/stores/status";
+import { useTaskStore } from "@/stores/task";
+import { useStatusStore } from "@/stores/status";
 // ? import component
 import Modal from "../components/Modal.vue";
 import Taskdetail from "../components/Tasks/Taskdetail.vue";
@@ -22,7 +22,7 @@ const route = useRoute();
 const showDetailModal = ref(false);
 const showDeleteModal = ref(false);
 const showAddModal = ref(false);
-const toast = ref({status: "", msg: ""});
+const toast = ref({ status: "", msg: "" });
 const showEditLimit = ref(false); // * show modal edit limit of task status
 
 // ? ----------------- Common -------------------------
@@ -31,9 +31,9 @@ const allTasks = ref(null);
 const filteredTasks = ref(null); // * allTasks that filter ready to show!
 const error = ref(null);
 const selectedId = ref(0); // * use to show detail and delete
-const limitStatusValue = ref({isEnable: true, limit: 10}); // * obj for EditLimit modal
-const showErrorModal = ref(false) // * show Error from Edit Limit modal
-const overStatuses = ref([])
+const limitStatusValue = ref({ isEnable: true, limit: 10 }); // * obj for EditLimit modal
+const showErrorModal = ref(false); // * show Error from Edit Limit modal
+const overStatuses = ref([]);
 
 // ! ================= Modal ======================
 const openEditMode = (id) => {
@@ -44,31 +44,37 @@ const openEditMode = (id) => {
 const closeAddModal = (res) => {
   showAddModal.value = false;
   if (res === null) return 0;
-  if (typeof(res) === "object") {
-    showToast({status: "success", msg: "Add task successfully"});
+  if (typeof res === "object") {
+    showToast({ status: "success", msg: "Add task successfully" });
     taskStore.addStoreTask(res);
     // const
-  } else showToast({status: "error", msg: "Add task Failed"});
+  } else showToast({ status: "error", msg: "Add task Failed" });
 };
 
 const closeEditModal = (res) => {
   showDetailModal.value = false;
   if (res === null) return 0;
-  if (typeof(res) === "object") {
-    showToast({status: "success", msg: "Edit task successfully"});
+  if (typeof res === "object") {
+    showToast({ status: "success", msg: "Edit task successfully" });
     taskStore.editStoreTask(res);
   } else {
-    showToast({status: "error", msg: "The error occurred, the status does not exist"});
+    showToast({
+      status: "error",
+      msg: "The error occurred, the status does not exist",
+    });
   }
 };
 
 function closeEditLimit(overStatus) {
-  showEditLimit.value = false
-  showToast({ status : 'success' , msg : `The Kanban now limit ${statusStore.getLimit()} tasks in each status` } )
+  showEditLimit.value = false;
+  showToast({
+    status: "success",
+    msg: `The Kanban now limit ${statusStore.getLimit()} tasks in each status`,
+  });
   if (overStatus === null || overStatus === undefined) return 0;
-  if (typeof (overStatus) === "object") {
-    showErrorModal.value = true
-    overStatuses.value = overStatus
+  if (typeof overStatus === "object") {
+    showErrorModal.value = true;
+    overStatuses.value = overStatus;
   }
 }
 
@@ -76,7 +82,7 @@ function closeEditLimit(overStatus) {
 const showToast = (toastData, timeOut = 3000) => {
   toast.value = toastData;
   setTimeout(() => {
-    toast.value = {...{status: ""}};
+    toast.value = { ...{ status: "" } };
   }, timeOut);
 };
 
@@ -87,10 +93,14 @@ const deleteThisTask = async () => {
   let res;
   try {
     res = await deleteTask(selectedId.value);
-    if (typeof(res) === "object") {
+    if (typeof res === "object") {
       taskStore.deleteStoreTask(res);
-      showToast({status: "success", msg: "Delete task successfully"});
-    } else showToast({status: "error", msg: "Delete task Failed , Please Refresh Page"});
+      showToast({ status: "success", msg: "Delete task successfully" });
+    } else
+      showToast({
+        status: "error",
+        msg: "Delete task Failed , Please Refresh Page",
+      });
   } catch (error) {
     console.log(error);
   } finally {
@@ -103,7 +113,6 @@ const openDeleteModal = (taskTitle, id) => {
   selectedId.value = id;
   showDeleteModal.value = true;
 };
-
 
 // ? open = true , close = false
 // function EditLimitModal(openOrClose) {
@@ -149,12 +158,15 @@ async function fetchData(id) {
   }
 }
 
-watch(() => route.params.id, fetchData, {immediate: true});
+watch(() => route.params.id, fetchData, { immediate: true });
 
 // ! ================= Filter and Sort ======================
 const filterBy = ref([]);
 const sortBy = ref("");
-watch(() => [filterBy.value, sortBy.value], filterData, {immediate: true, deep: true});
+watch(() => [filterBy.value, sortBy.value], filterData, {
+  immediate: true,
+  deep: true,
+});
 // watch(filterBy, (newValue) => {
 //   if (newValue.length === 0) {
 //     filteredTasks.value = allTasks.value;
@@ -175,12 +187,12 @@ async function filterData([filter, sort]) {
       break;
     case "ASC":
       filteredTasks.value = filteredTasks.value.sort((a, b) =>
-          a.status.localeCompare(b.status)
+        a.status.localeCompare(b.status)
       );
       break;
     case "DESC":
       filteredTasks.value = filteredTasks.value.sort((a, b) =>
-          b.status.localeCompare(a.status)
+        b.status.localeCompare(a.status)
       );
       break;
   }
@@ -206,8 +218,8 @@ function sortBtn() {
 onBeforeMount(async () => {
   statusStore.getAllStatus();
   statusStore.getLimitEnable();
-  const res = await getLimitStatus()
-  statusStore.setLimitEnable(await res)
+  const res = await getLimitStatus();
+  statusStore.setLimitEnable(await res);
   if (route.params.id !== undefined) {
     selectedId.value = parseInt(route.params.id);
     showDetailModal.value = true;
@@ -227,15 +239,15 @@ onBeforeMount(async () => {
     <!-- Add button -->
     <div class="navbar-end">
       <button
-          class="itbkk-button-add btn btn-square btn-outline w-16 m-2"
-          @click="showAddModal = true"
+        class="itbkk-button-add btn btn-square btn-outline w-16 m-2"
+        @click="showAddModal = true"
       >
         + ADD
       </button>
       <div class="manage-status">
         <button
-            @click="router.push('/status')"
-            class="itbkk-manage-status btn btn-square btn-outline w-20 m-2"
+          @click="router.push('/status')"
+          class="itbkk-manage-status btn btn-square btn-outline w-20 m-2"
         >
           Manage Status
         </button>
@@ -247,22 +259,24 @@ onBeforeMount(async () => {
   <!-- dropdowns status -->
   <div class="w-3/4 mx-auto mt-10 relative">
     <details class="dropdown">
-      <summary class="m-1 btn no-animation itbkk-status-filter">Filter Status</summary>
+      <summary class="m-1 btn no-animation itbkk-status-filter">
+        Filter Status
+      </summary>
       <!-- FilterStatus -->
       <ul class="absolute dropdown-menu z-[1000] rounded-box">
         <li
-            v-for="status in statusStore.status"
-            :key="status"
-            class="menu p-2 shadow bg-base-100 w-52 itbkk-status-choice"
-            tabindex="0"
+          v-for="status in statusStore.status"
+          :key="status"
+          class="menu p-2 shadow bg-base-100 w-52 itbkk-status-choice"
+          tabindex="0"
         >
           <div>
             <input
-                type="checkbox"
-                class="checkbox"
-                :id="status.id"
-                :value="status.name"
-                v-model="filterBy"
+              type="checkbox"
+              class="checkbox"
+              :id="status.id"
+              :value="status.name"
+              v-model="filterBy"
             />
             <label :for="status.id">{{ status.name }}</label>
           </div>
@@ -276,8 +290,8 @@ onBeforeMount(async () => {
     <!-- show edit limit modal -->
     <div class="float-right">
       <button
-          class="itbkk-button-add btn btn-square btn-outline w-16"
-          @click="showEditLimit = true"
+        class="itbkk-button-add btn btn-square btn-outline w-16"
+        @click="showEditLimit = true"
       >
         Limit Status
       </button>
@@ -289,14 +303,14 @@ onBeforeMount(async () => {
     <div class="border rounded-md w-auto p-2" v-if="filterBy.length > 0">
       Filtered Status:
       <div
-          class="itbkk-filter-item badge font-semibold w-auto m-1"
-          v-for="(status, index) in filterBy"
-          :key="index"
+        class="itbkk-filter-item badge font-semibold w-auto m-1"
+        v-for="(status, index) in filterBy"
+        :key="index"
       >
         {{ status }}
         <button
-            @click="filterBy.splice(index, 1)"
-            class="itbkk-filter-item-clear ml-1 text-red-600"
+          @click="filterBy.splice(index, 1)"
+          class="itbkk-filter-item-clear ml-1 text-red-600"
         >
           X
         </button>
@@ -309,126 +323,126 @@ onBeforeMount(async () => {
     <div class="flex flex-col">
       <!-- Table -->
       <table
-          class="table table-lg table-pin-rows table-pin-cols w-3/4 font-semibold mx-auto my-5 text-center text-base rounded-lg border-2 border-slate-500 border-separate border-spacing-1"
+        class="table table-lg table-pin-rows table-pin-cols w-3/4 font-semibold mx-auto my-5 text-center text-base rounded-lg border-2 border-slate-500 border-separate border-spacing-1"
       >
         <!-- head -->
         <thead>
-        <tr>
-          <th>No</th>
-          <th>Title</th>
-          <th>Assignees</th>
-          <!-- sort button -->
-          <button class="itbkk-status-sort" @click="sortBtn()">
-            <th class="flex justify-center">
-              Status
-              <!-- default sort button -->
-              <svg
+          <tr>
+            <th>No</th>
+            <th>Title</th>
+            <th>Assignees</th>
+            <!-- sort button -->
+            <button class="itbkk-status-sort" @click="sortBtn()">
+              <th class="flex justify-center">
+                Status
+                <!-- default sort button -->
+                <svg
                   v-if="sortBy === ''"
                   xmlns="http://www.w3.org/2000/svg"
                   width="18"
                   height="18"
                   viewBox="0 0 24 24"
-              >
-                <path
+                >
+                  <path
                     fill="currentColor"
                     d="M11 9h9v2h-9zm0 4h7v2h-7zm0-8h11v2H11zm0 12h5v2h-5zm-6 3h2V8h3L6 4L2 8h3z"
-                />
-              </svg>
-              <!-- ASC Button -->
-              <svg
+                  />
+                </svg>
+                <!-- ASC Button -->
+                <svg
                   v-if="sortBy === 'ASC'"
                   class="text-pink-400"
                   xmlns="http://www.w3.org/2000/svg"
                   width="18"
                   height="18"
                   viewBox="0 0 24 24"
-              >
-                <path
+                >
+                  <path
                     fill="#323ffb"
                     d="M11 9h9v2h-9zm0 4h7v2h-7zm0-8h11v2H11zm0 12h5v2h-5zm-6 3h2V8h3L6 4L2 8h3z"
-                />
-              </svg>
-              <!-- DESC Button -->
-              <svg
+                  />
+                </svg>
+                <!-- DESC Button -->
+                <svg
                   v-if="sortBy === 'DESC'"
                   class="text-pink-400"
                   xmlns="http://www.w3.org/2000/svg"
                   width="18"
                   height="18"
                   viewBox="0 0 24 24"
-              >
-                <path
+                >
+                  <path
                     fill="#323ffb"
                     d="m6 20l4-4H7V4H5v12H2zm5-12h9v2h-9zm0 4h7v2h-7zm0-8h11v2H11zm0 12h5v2h-5z"
-                />
-              </svg>
-            </th>
-          </button>
-          <th>Action</th>
-        </tr>
+                  />
+                </svg>
+              </th>
+            </button>
+            <th>Action</th>
+          </tr>
         </thead>
         <tbody>
-        <!-- Listing -->
-        <tr v-if="allTasks === null">
-          <td colspan="4">Waiting For Data</td>
-        </tr>
-        <tr
+          <!-- Listing -->
+          <tr v-if="allTasks === null">
+            <td colspan="4">Waiting For Data</td>
+          </tr>
+          <tr
             v-if="allTasks !== null"
             v-for="(task, index) in filteredTasks"
             :key="task.id"
             class="itbkk-item hover"
-        >
-          <th>{{ index + 1 }}</th>
-          <td class="itbkk-title">
-            <!-- <RouterLink :to="`/task/${task.id}`"> -->
-            <button @click="router.push(`/task/${task.id}`)">
-              {{ task.title }}
-            </button>
-            <!-- </RouterLink> -->
-          </td>
-          <td
+          >
+            <th>{{ index + 1 }}</th>
+            <td class="itbkk-title">
+              <!-- <RouterLink :to="`/task/${task.id}`"> -->
+              <button @click="router.push(`/task/${task.id}`)">
+                {{ task.title }}
+              </button>
+              <!-- </RouterLink> -->
+            </td>
+            <td
               class="itbkk-assignees"
               :style="{
                 fontStyle: task.assignees ? 'normal' : 'italic',
                 color: task.assignees ? '' : 'gray',
               }"
-          >
-            {{
-              task.assignees === null || task.assignees == ""
+            >
+              {{
+                task.assignees === null || task.assignees == ""
                   ? "Unassigned"
                   : task.assignees
-            }}
-          </td>
-          <td class="itbkk-status">{{ task.status }}</td>
-          <td class="">
-            <div class="dropdown dropdown-bottom dropdown-end">
-              <div tabindex="0" role="button" class="btn m-1">
-                <svg
+              }}
+            </td>
+            <td class="itbkk-status">{{ task.status }}</td>
+            <td class="">
+              <div class="dropdown dropdown-bottom dropdown-end">
+                <div tabindex="0" role="button" class="btn m-1">
+                  <svg
                     class="swap-off fill-current"
                     xmlns="http://www.w3.org/2000/svg"
                     width="32"
                     height="32"
                     viewBox="0 0 512 512"
-                >
-                  <path
+                  >
+                    <path
                       d="M64,384H448V341.33H64Zm0-106.67H448V234.67H64ZM64,128v42.67H448V128Z"
-                  />
-                </svg>
-              </div>
-              <ul
+                    />
+                  </svg>
+                </div>
+                <ul
                   tabindex="0"
                   class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
-              >
-                <li>
-                  <a @click="openEditMode(task.id)">Edit</a>
-                </li>
-                <li>
-                  <a @click="openDeleteModal(task.title, task.id)">Delete</a>
-                </li>
-              </ul>
-            </div>
-          </td>
-        </tr>
+                >
+                  <li>
+                    <a @click="openEditMode(task.id)">Edit</a>
+                  </li>
+                  <li>
+                    <a @click="openDeleteModal(task.title, task.id)">Delete</a>
+                  </li>
+                </ul>
+              </div>
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -437,40 +451,42 @@ onBeforeMount(async () => {
     <!-- DetailsModal -->
     <!-- EditModal -->
     <Modal :show-modal="showDetailModal">
-      <Taskdetail :taskId="parseInt(selectedId)" @closeModal="closeEditModal"/>
+      <Taskdetail :taskId="parseInt(selectedId)" @closeModal="closeEditModal" />
     </Modal>
     <!-- Add Modal -->
     <Modal :show-modal="showAddModal">
-      <AddTaskModal @closeModal="closeAddModal"/>
+      <AddTaskModal @closeModal="closeAddModal" />
     </Modal>
 
     <!-- DeleteModal -->
     <Modal :showModal="showDeleteModal">
-      <div class="flex flex-col p-5 text-black bg-slate-50 rounded-lg w-full">
+      <div
+        class="flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 dark:text-slate-400 rounded-lg w-full"
+      >
         <h1 class="m-2 pb-4 text-2xl font-bold">
           DELETE: {{ deleteTaskTitle }}
         </h1>
-        <hr/>
+        <hr />
         <h1 class="itbkk-message font-semibold text-xl p-8">
           <!-- Do you want to delete the task "{{ deleteTaskTitle }}" -->
           ARE YOU SURE TO DELETE THIS TASK ?
         </h1>
-        <hr/>
+        <hr />
         <div class="flex flex-row-reverse gap-4 mt-5">
           <button
-              @click="showDeleteModal = false"
-              class="itbkk-button-cancel btn btn-outline btn-error basis-1/6"
+            @click="showDeleteModal = false"
+            class="itbkk-button-cancel btn btn-outline btn-error basis-1/6"
           >
             Close
           </button>
           <button
-              @click="deleteThisTask()"
-              class="itbkk-button-confirm btn btn-outline btn-success basis-1/6"
+            @click="deleteThisTask()"
+            class="itbkk-button-confirm btn btn-outline btn-success basis-1/6"
           >
             {{ loading ? "" : "Confirm" }}
             <span
-                class="loading loading-spinner text-success"
-                v-if="loading"
+              class="loading loading-spinner text-success"
+              v-if="loading"
             ></span>
           </button>
         </div>
@@ -479,67 +495,77 @@ onBeforeMount(async () => {
 
     <!-- edit limit modal-->
     <Modal :show-modal="showEditLimit">
-      <EditLimitStatus @close-modal="closeEditLimit"/>
+      <EditLimitStatus @close-modal="closeEditLimit" />
     </Modal>
 
     <!-- Error Modal -->
     <Modal :show-modal="showErrorModal">
-      <div class="itbkk-modal-task flex flex-col gap-3 p-5 text-black bg-slate-50 rounded-lg w-full m-auto">
+      <div
+        class="itbkk-modal-task flex flex-col gap-3 p-5 text-black bg-slate-50 rounded-lg w-full m-auto"
+      >
         <h2>Have Task Over Limit!!!</h2>
-        <hr>
-        <p>These statuses that have reached the task limit. No additional tasks can be added to these statuses.</p>
+        <hr />
+        <p>
+          These statuses that have reached the task limit. No additional tasks
+          can be added to these statuses.
+        </p>
         <table class="table">
           <thead>
-          <tr>
-            <th>status name</th>
-            <th>remaining tasks</th>
-          </tr>
+            <tr>
+              <th>status name</th>
+              <th>remaining tasks</th>
+            </tr>
           </thead>
           <tbody>
-          <tr v-for="status in overStatuses">
-            <td>{{ status.name }}</td>
-            <td>{{ status.task }}</td>
-          </tr>
+            <tr v-for="status in overStatuses">
+              <td>{{ status.name }}</td>
+              <td>{{ status.task }}</td>
+            </tr>
           </tbody>
         </table>
-        <button class="btn btn-outline btn-primary w-fit self-end" @click="showErrorModal = false">OKAY</button>
+        <button
+          class="btn btn-outline btn-primary w-fit self-end"
+          @click="showErrorModal = false"
+        >
+          OKAY
+        </button>
       </div>
     </Modal>
 
     <!-- Toast -->
     <div class="toast">
       <div
-          role="alert"
-          class="alert"
-          :class="`alert-${toast.status}`"
-          v-if="toast.status !== ''"
+        role="alert"
+        class="alert"
+        :class="`alert-${toast.status}`"
+        v-if="toast.status !== ''"
       >
         <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="stroke-current shrink-0 h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            v-if="toast.status === 'success'"
+          xmlns="http://www.w3.org/2000/svg"
+          class="stroke-current shrink-0 h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          v-if="toast.status === 'success'"
         >
           <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
           />
         </svg>
         <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="stroke-current shrink-0 h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            v-if="toast.status === 'error'"
+          xmlns="http://www.w3.org/2000/svg"
+          class="stroke-current shrink-0 h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          v-if="toast.status === 'error'"
         >
           <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
           />
         </svg>
         <span>{{ toast.msg }}</span>
@@ -551,11 +577,11 @@ onBeforeMount(async () => {
 <style scoped>
 ::backdrop {
   background-image: linear-gradient(
-      45deg,
-      magenta,
-      rebeccapurple,
-      dodgerblue,
-      green
+    45deg,
+    magenta,
+    rebeccapurple,
+    dodgerblue,
+    green
   );
   opacity: 0.75;
 }
