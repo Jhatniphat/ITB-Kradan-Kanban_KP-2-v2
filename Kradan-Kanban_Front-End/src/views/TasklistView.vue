@@ -11,7 +11,6 @@ import Modal from "../components/Modal.vue";
 import Taskdetail from "../components/Tasks/Taskdetail.vue";
 import AddTaskModal from "@/components/Tasks/AddTaskModal.vue";
 import EditLimitStatus from "@/components/EditLimitStatus.vue";
-import NavBar from "@/App.vue";
 
 // ! ================= Variable ======================
 // ? ----------------- Store and Route ---------------
