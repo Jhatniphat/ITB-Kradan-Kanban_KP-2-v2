@@ -11,6 +11,7 @@ import Modal from "../components/Modal.vue";
 import Taskdetail from "../components/Tasks/Taskdetail.vue";
 import AddTaskModal from "@/components/Tasks/AddTaskModal.vue";
 import EditLimitStatus from "@/components/EditLimitStatus.vue";
+import NavBar from "@/App.vue";
 
 // ! ================= Variable ======================
 // ? ----------------- Store and Route ---------------
@@ -216,33 +217,8 @@ onBeforeMount(async () => {
 </script>
 
 <template>
-  <!-- NavBar -->
-  <div class="navbar bg-base-300 sticky top-0 z-40">
-    <div class="navbar-start p-4">
-      <div class="flex flex-col text-center ml-4 italic">
-        <h1 class="text-xl font-bold">ITB-Kradan-Kanban</h1>
-        <h1 class="text-sm">By KP-2</h1>
-      </div>
-    </div>
-    <!-- Add button -->
-    <div class="navbar-end">
-      <button
-          class="itbkk-button-add btn btn-square btn-outline w-16 m-2"
-          @click="showAddModal = true"
-      >
-        + ADD
-      </button>
-      <div class="manage-status">
-        <button
-            @click="router.push('/status')"
-            class="itbkk-manage-status btn btn-square btn-outline w-20 m-2"
-        >
-          Manage Status
-        </button>
-      </div>
-    </div>
-    <!-- Manage Status Button -->
-  </div>
+
+
 
   <!-- dropdowns status -->
   <div class="w-3/4 mx-auto mt-10 relative">
@@ -276,7 +252,14 @@ onBeforeMount(async () => {
     <!-- show edit limit modal -->
     <div class="float-right">
       <button
-          class="itbkk-button-add btn btn-square btn-outline w-16"
+          class="itbkk-button-add btn btn-square btn-outline w-16 float-left mr-1"
+          @click="showAddModal = true"
+      >
+        + ADD
+      </button>
+
+      <button
+          class="itbkk-button-add btn btn-square btn-outline w-16 float-right"
           @click="showEditLimit = true"
       >
         Limit Status
