@@ -311,7 +311,7 @@ function sendCloseModal() {
             </select>
           </label>
 
-          <div class="mt-2 text-sm text-black dark:text-slate-400">
+          <div class="mt-5 text-xs text-black dark:text-slate-400">
             <div class="flex flex-row justify-between">
               <h1 class="font-bold">TimeZone</h1>
               <h1 class="itbkk-timezone font-semibold">
