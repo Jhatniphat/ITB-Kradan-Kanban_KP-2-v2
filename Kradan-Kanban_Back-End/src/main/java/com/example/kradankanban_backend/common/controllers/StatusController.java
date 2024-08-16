@@ -1,9 +1,8 @@
-package com.example.kradankanban_backend.controllers;
+package com.example.kradankanban_backend.common.controllers;
 
-import com.example.kradankanban_backend.dtos.SimpleStatusDTO;
-import com.example.kradankanban_backend.entities.LimitSettings;
-import com.example.kradankanban_backend.entities.StatusEntity;
-import com.example.kradankanban_backend.services.StatusService;
+import com.example.kradankanban_backend.common.dtos.SimpleStatusDTO;
+import com.example.kradankanban_backend.common.entities.StatusEntity;
+import com.example.kradankanban_backend.common.services.StatusService;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;

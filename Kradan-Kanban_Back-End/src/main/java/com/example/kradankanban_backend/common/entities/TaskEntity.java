@@ -1,9 +1,8 @@
-package com.example.kradankanban_backend.entities;
+package com.example.kradankanban_backend.common.entities;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import java.time.LocalDateTime;

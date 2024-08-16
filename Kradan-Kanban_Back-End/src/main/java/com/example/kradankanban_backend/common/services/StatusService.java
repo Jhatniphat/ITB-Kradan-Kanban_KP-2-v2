@@ -1,11 +1,10 @@
-package com.example.kradankanban_backend.services;
+package com.example.kradankanban_backend.common.services;
 
-import com.example.kradankanban_backend.entities.LimitSettings;
-import com.example.kradankanban_backend.entities.StatusEntity;
+import com.example.kradankanban_backend.common.entities.StatusEntity;
+import com.example.kradankanban_backend.common.repositories.StatusRepository;
+import com.example.kradankanban_backend.common.repositories.TaskRepository;
 import com.example.kradankanban_backend.exceptions.BadRequestException;
 import com.example.kradankanban_backend.exceptions.ItemNotFoundException;
-import com.example.kradankanban_backend.repositories.StatusRepository;
-import com.example.kradankanban_backend.repositories.TaskRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

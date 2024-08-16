@@ -1,9 +1,9 @@
-package com.example.kradankanban_backend.controllers;
+package com.example.kradankanban_backend.common.controllers;
 
-import com.example.kradankanban_backend.dtos.DetailTaskDTO;
-import com.example.kradankanban_backend.dtos.SimpleTaskDTO;
-import com.example.kradankanban_backend.entities.TaskEntity;
-import com.example.kradankanban_backend.services.TaskService;
+import com.example.kradankanban_backend.common.dtos.DetailTaskDTO;
+import com.example.kradankanban_backend.common.dtos.SimpleTaskDTO;
+import com.example.kradankanban_backend.common.entities.TaskEntity;
+import com.example.kradankanban_backend.common.services.TaskService;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
