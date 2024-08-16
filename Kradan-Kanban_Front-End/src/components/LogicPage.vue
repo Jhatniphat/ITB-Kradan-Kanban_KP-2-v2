@@ -1,36 +1,45 @@
 <script setup>
-import { ref, watch } from "vue";
+import { ref, computed } from "vue";
 const userData = ref({
   username: "",
   password: "",
 });
 
-const dataValidation = ref(false);
+const showAlert = ref(false)
 
-watch(userData.value, () => {
-  if (userData.value.username !== "" && userData.value.password !== "")
-    dataValidation.value = false;
-  else dataValidation.value = true;
+const isFormValid = computed(() => {
+  return userData.value.username.length > 0 && userData.value.password.length > 0;
 });
 
+const handleLogin = () => {
+  if (!isFormValid.value) {
+    showAlert.value = true;
+  } else {
+    console.log("Logging in with:", userData.value);
+  }
+};
+
+const closeAlert = () => {
+  showAlert.value = false
+};
 </script>
 
 <template>
   <div
-    class="flex flex-col justify-center gap-3 items-center h-screen bg-slate-600 bg-transparent"
+    class="flex flex-col justify-center gap-3 items-center h-screen bg-slate-600"
   >
     <div
+      v-if="showAlert"
       class="itbkk-message bg-red-100 border border-red-400 text-red-700 px-10 py-6 rounded relative"
       role="alert"
-      v-show="dataValidation"
     >
       <strong class="font-bold">Error: </strong>
       <span class="block sm:inline">Username or Password is incorrect</span>
       <span class="absolute top-0 bottom-0 right-0">
         <svg
           class="fill-current h-6 w-6 text-red-500"
-          @click="dataValidation = false"
           role="button"
+          @click="closeAlert"
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 20 20"
         >
@@ -46,9 +55,7 @@ watch(userData.value, () => {
       <h2 class="text-2xl font-bold mb-4">Welcome to ITBKK-KP2</h2>
 
       <div class="mb-4">
-        <span class="block text-sm font-medium text-gray-700"
-          >Username</span
-        >
+        <span class="block text-sm font-medium text-gray-700">Username</span>
         <input
           type="text"
           v-model="userData.username"
@@ -57,9 +64,7 @@ watch(userData.value, () => {
         />
       </div>
       <div class="mb-6">
-        <span class="block text-sm font-medium text-gray-700"
-          >Password</span
-        >
+        <span class="block text-sm font-medium text-gray-700">Password</span>
         <input
           type="password"
           v-model="userData.password"
@@ -68,8 +73,9 @@ watch(userData.value, () => {
         />
       </div>
       <button
-        class="itbkk-button-signin w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        :disabled="!dataValidation"
+        class="itbkk-button-signin btn w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        :disabled="!isFormValid"
+        @click="handleLogin"
       >
         Login
       </button>
