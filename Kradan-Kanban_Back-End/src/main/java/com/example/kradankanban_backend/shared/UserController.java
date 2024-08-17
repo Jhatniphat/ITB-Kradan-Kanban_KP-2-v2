@@ -1,5 +1,6 @@
 package com.example.kradankanban_backend.shared;
 
+import com.example.kradankanban_backend.shared.dtos.UserDataDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,14 +16,9 @@ public class UserController {
     @Autowired
     UserService service;
 
-//    @GetMapping("")
-//    public List<UserEntity> getAllUser(){
-//        return service.getAllUser();
-//    }
-
     @PostMapping("")
-    public ResponseEntity login(@RequestBody String username, @RequestBody String password) {
-        if (service.Authentication(username, password)) {
+    public ResponseEntity login(@RequestBody UserDataDTO userData) {
+        if (service.Authentication(userData.getUserName(), userData.getPassWord())) {
             return new ResponseEntity(HttpStatus.OK);
         } else {
             return new ResponseEntity(HttpStatus.BAD_REQUEST);

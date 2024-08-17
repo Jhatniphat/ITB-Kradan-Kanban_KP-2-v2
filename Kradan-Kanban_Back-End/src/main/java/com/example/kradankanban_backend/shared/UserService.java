@@ -12,10 +12,6 @@ public class UserService {
     @Autowired
     UserRepository repository;
 
-    public List<UserEntity> getAllUser(){
-        return repository.findAll();
-    }
-
     public boolean Authentication(String username, String password){
         UserEntity userEntity = repository.findByUsername(username);
         if(userEntity == null){
@@ -23,7 +19,7 @@ public class UserService {
         } else {
             Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id, 16,32);
             char[] passwordArray = password.toCharArray();
-            return argon2.verify(userEntity.getEmail(), passwordArray);
+            return argon2.verify(userEntity.getPassword(), passwordArray);
         }
     }
 }
