@@ -8,6 +8,7 @@ import Modal from "@/components/Modal.vue";
 import router from "@/router";
 import { useStatusStore } from "@/stores/status.js";
 import EditLimitStatus from "@/components/EditLimitStatus.vue";
+import NavBar from "@/App.vue";
 
 // ! ================= Variable ======================
 // ? ----------------- Store and Route ---------------
@@ -128,32 +129,16 @@ function closeEditLimit(overStatus) {
 </script>
 
 <template>
-  <!-- NavBar -->
-  <div class="navbar bg-base-300 sticky top-0 z-40 flex justify-between">
-    <div class="navbar-start p-4">
-      <div class="flex flex-col text-center ml-4 italic">
-        <h1 class="text-xl font-bold">ITB-Kradan-Kanban</h1>
-        <h1 class="text-sm">By KP-2</h1>
-      </div>
-    </div>
-    <!-- Add Status -->
-    <div class="navbar-end">
-      <button
-        class="itbkk-button-add btn btn-square btn-outline w-16"
-        @click="showAddModal = true"
-      >
-        Add Status
-      </button>
-    </div>
-  </div>
 
-  <!-- Home Button -->
-  <div class="text-base breadcrumbs flex p-10">
-    <ul>
-      <li @click="router.push('/task')" class="cursor-pointer">Home</li>
-      <li class="text-base font-semibold">Task Status</li>
-    </ul>
-  </div>
+
+
+<!--  &lt;!&ndash; Home Button &ndash;&gt;-->
+<!--  <div class="text-base breadcrumbs flex p-10">-->
+<!--    <ul>-->
+<!--      <li @click="router.push('/task')" class="cursor-pointer">Home</li>-->
+<!--      <li class="text-base font-semibold">Task Status</li>-->
+<!--    </ul>-->
+<!--  </div>-->
 
   <!-- content -->
   <div class="opacity">
@@ -162,7 +147,14 @@ function closeEditLimit(overStatus) {
       <div class="w-3/4 mx-auto mt-10 relative">
         <div class="float-right">
           <button
-            class="itbkk-button-add btn btn-square btn-outline w-16"
+              class="itbkk-button-add btn btn-square btn-outline w-16 float-left mr-1"
+              @click="showAddModal = true"
+          >
+            + Add
+          </button>
+
+          <button
+            class="itbkk-button-add btn btn-square btn-outline w-16 float-right"
             @click="showEditLimit = true"
           >
             Limit Status

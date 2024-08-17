@@ -58,7 +58,7 @@ watch(
       Errortext.value.title === "" &&
       Errortext.value.description === "" &&
       Errortext.value.assignees === "" &&
-      JSON.stringify(newVal) !== JSON.stringify(originalTask.value)
+      JSON.stringify(newVal) !== JSON.stringify(originalTask.value);
   },
   { deep: true }
 );
@@ -75,8 +75,12 @@ async function fetchTask(id) {
   statusList.value = statusStore.getAllStatusWithLimit();
   try {
     const originalTaskDetails = await getTaskById(id);
-    console.table(await originalTaskDetails)
-    if (originalTaskDetails === 404 || originalTaskDetails === 400 || originalTaskDetails === 500) {
+    console.table(await originalTaskDetails);
+    if (
+      originalTaskDetails === 404 ||
+      originalTaskDetails === 400 ||
+      originalTaskDetails === 500
+    ) {
       emit("closeModal", 404);
       router.push("/task");
     }
@@ -119,12 +123,15 @@ function sendCloseModal() {
 </script>
 
 <template>
-
-  <div class="flex flex-col p-5 text-black bg-slate-50 rounded-lg w-full" v-if="loading === true">
-
-  </div>
+  <div
+    class="flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 rounded-lg w-full"
+    v-if="loading === true"
+  ></div>
   <!-- Title -->
-  <div class="flex flex-col p-5 text-black bg-slate-50 rounded-lg w-full" v-if="loading === false">
+  <div
+    class="flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 rounded-lg w-full"
+    v-if="loading === false"
+  >
     <div v-if="editMode">
       <label class="form-control w-full">
         <div class="label">
@@ -132,7 +139,9 @@ function sendCloseModal() {
             Loading Data For TaskId = {{ props.taskId }}
           </h1>
           <div v-if="loading === false && error === null">
-            <h1 class="m-2 mt-0 text-2xl font-bold text-wrap break-all">
+            <h1
+              class="m-2 mt-0 text-2xl font-bold text-wrap break-all dark:text-slate-400"
+            >
               Edit task
             </h1>
             <hr />
@@ -144,7 +153,7 @@ function sendCloseModal() {
           v-model="taskDetail.title"
           type="text"
           placeholder="Type here"
-          class="itbkk-title input input-bordered w-full bg-white"
+          class="itbkk-title input input-bordered w-full bg-white dark:bg-base-300 dark:text-slate-400"
         />
         <div class="label">
           <!-- ? Error Text -->
@@ -179,7 +188,7 @@ function sendCloseModal() {
             Loading Data For TaskId = {{ props.taskId }}
           </h1>
           <h1
-            class="itbkk-title m-2 text-2xl font-bold text-wrap break-all"
+            class="itbkk-title m-2 text-2xl font-bold text-wrap break-all dark:text-slate-400"
             v-if="loading === false && error === null"
           >
             {{ taskDetail.title }}
@@ -203,7 +212,7 @@ function sendCloseModal() {
           <textarea
             :readonly="!editMode"
             v-model="taskDetail.description"
-            class="itbkk-description textarea textarea-bordered h-72 bg-white resize-none"
+            class="itbkk-description textarea textarea-bordered h-72 bg-white dark:bg-base-300 dark:text-slate-400 resize-none"
             placeholder="No Description Provided"
             :class="taskDetail.description === '' ? 'italic text-gray-600' : ''"
             >{{
@@ -243,7 +252,7 @@ function sendCloseModal() {
             <textarea
               :readonly="!editMode"
               v-model="taskDetail.assignees"
-              class="itbkk-assignees textarea textarea-bordered h-24 bg-white resize-none"
+              class="itbkk-assignees textarea textarea-bordered h-24 bg-white dark:bg-base-300 dark:text-slate-400 resize-none"
               placeholder="Unassigned"
               :class="
                 taskDetail.assignees === '' || taskDetail.assignees === null
@@ -284,7 +293,7 @@ function sendCloseModal() {
             </div>
             <select
               :disabled="!editMode"
-              class="itbkk-status select select-bordered bg-white"
+              class="itbkk-status select select-bordered bg-white dark:bg-base-300 dark:text-slate-400"
               v-model="taskDetail.status"
             >
               <option
@@ -302,7 +311,7 @@ function sendCloseModal() {
             </select>
           </label>
 
-          <div class="mt-2 text-sm text-black">
+          <div class="mt-5 text-xs text-black dark:text-slate-400">
             <div class="flex flex-row justify-between">
               <h1 class="font-bold">TimeZone</h1>
               <h1 class="itbkk-timezone font-semibold">

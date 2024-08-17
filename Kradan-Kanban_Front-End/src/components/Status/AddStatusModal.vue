@@ -27,7 +27,8 @@ watch(statusData.value, () => {
         statusData.value.name.trim().toLowerCase()
     )
   )
-    Errortext.value.name = "Status name must be uniques, please choose another name.";
+    Errortext.value.name =
+      "Status name must be uniques, please choose another name.";
   else Errortext.value.name = "";
   if (statusData.value.description.trim().length > 200)
     Errortext.value.description =
@@ -57,13 +58,12 @@ async function fetchStatusData() {
 function sendCloseModal() {
   emit("closeModal", null);
 }
-
 </script>
 
 <template>
   <!-- div -->
   <div
-    class="itbkk-modal-status flex flex-col p-5 text-black bg-slate-50 rounded-lg w-full"
+    class="itbkk-modal-status flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 dark:text-slate-400 rounded-lg w-full"
   >
     <!-- title -->
     <label class="form-control w-full">
@@ -84,7 +84,7 @@ function sendCloseModal() {
         v-model="statusData.name"
         type="text"
         placeholder="Type Status Name Here"
-        class="itbkk-status-name input input-bordered w-full bg-white"
+        class="itbkk-status-name input input-bordered w-full bg-white dark:bg-base-300"
       />
       <div class="label">
         <!-- ? Error Text -->
@@ -98,7 +98,7 @@ function sendCloseModal() {
           >{{ statusData.name.length }} / 50</span
         >
         <span
-          v-if="statusData.name.length === 0 && Errortext.name !==''"
+          v-if="statusData.name.length === 0 && Errortext.name !== ''"
           class="flex justify-end text-red-400 label-text-alt"
           >{{ statusData.name.length }} / 50</span
         >
@@ -117,7 +117,7 @@ function sendCloseModal() {
         </div>
         <textarea
           v-model="statusData.description"
-          class="itbkk-status-description textarea textarea-bordered h-72 bg-white"
+          class="itbkk-status-description textarea textarea-bordered h-72 bg-white dark:bg-base-300"
           placeholder="Type Status Description Here"
         ></textarea>
         <div class="label">

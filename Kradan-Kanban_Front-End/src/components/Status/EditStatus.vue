@@ -47,14 +47,17 @@ watch(
           statusDetail.value.name?.trim().toLowerCase()
       )
     )
-      Errortext.value.name = "Status name must be uniques, please choose another name.";
+      Errortext.value.name =
+        "Status name must be uniques, please choose another name.";
     else Errortext.value.name = "";
     if (editStatusDescriptionLength.value > 200)
       Errortext.value.description =
         "Status Description can't long more 200 character";
     else Errortext.value.description = "";
     canSave.value =
-      Errortext.value.name === "" && Errortext.value.description === "" && JSON.stringify(newVal) !== JSON.stringify(originalsDetail.value);
+      Errortext.value.name === "" &&
+      Errortext.value.description === "" &&
+      JSON.stringify(newVal) !== JSON.stringify(originalsDetail.value);
   },
   { deep: true }
 );
@@ -64,7 +67,11 @@ async function fetchData(id) {
   loading.value = true;
   try {
     const originalstatusDetails = await getStatusById(id);
-    if (originalstatusDetails === 404 || originalstatusDetails === 400 || originalstatusDetails === 500) {
+    if (
+      originalstatusDetails === 404 ||
+      originalstatusDetails === 400 ||
+      originalstatusDetails === 500
+    ) {
       emit("closeModal", 404);
       router.push("/status");
     }
@@ -84,7 +91,7 @@ async function saveStatus() {
     delete statusDetail.value.id;
     delete statusDetail.value.createdOn;
     delete statusDetail.value.updatedOn;
-    console.table(statusDetail.value)
+    console.table(statusDetail.value);
     res = await editStatus(props.statusId, statusDetail.value);
     statusDetail.value = res;
   } catch (error) {
@@ -104,7 +111,7 @@ function sendCloseModal() {
 
 <template>
   <div
-    class="itbkk-modal-status flex flex-col p-5 text-black bg-slate-50 rounded-lg w-full"
+    class="itbkk-modal-status flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 dark:text-slate-400 rounded-lg w-full"
   >
     <label class="form-control w-full">
       <div class="label">
@@ -125,7 +132,7 @@ function sendCloseModal() {
         v-model="statusDetail.name"
         type="text"
         placeholder="Type here"
-        class="itbkk-status-name input input-bordered w-full bg-white"
+        class="itbkk-status-name input input-bordered w-full bg-white dark:bg-base-300"
       />
       <div class="label">
         <!-- ? Error Text -->
@@ -165,7 +172,7 @@ function sendCloseModal() {
           <textarea
             v-if="loading === false"
             v-model="statusDetail.description"
-            class="itbkk-status-description textarea textarea-bordered h-72 bg-white"
+            class="itbkk-status-description textarea textarea-bordered h-72 bg-white dark:bg-base-300"
             placeholder="No Description Provided"
             :class="
               statusDetail.description === '' ? 'italic text-gray-600' : ''
@@ -198,7 +205,7 @@ function sendCloseModal() {
           </div>
         </label>
         <div
-          class="mt-2 text-sm text-black flex flex-col justify-between mb-5 lg:flex-row"
+          class="mt-2 text-sm text-black flex flex-col justify-between mb-5 lg:flex-row dark:text-slate-400"
         >
           <div class="flex flex-row mx-2">
             <h1 class="font-bold pr-5">TimeZone:</h1>

@@ -226,6 +226,18 @@ export async function getLimitStatus() {
     }
 }
 
+export async function login(username, password) {
+    let res,item
+    try {
+        res = await fetch(`${import.meta.env.VITE_API_ROOT}/login`, {method : "GET"})
+        if (res.status === 200) {
+            return {status: res.status, payload: res.json()};
+        } if (res.status === 400) {
+            return { status: res.status, payload: "Username or Password is incorrect" };
+        } else return { status: res.status, payload: "There is a problem. Please try again later" };
+    } catch (error) {}
+}
+
 // ! -------------------------- Private function ----------------------------
 
 function timeFormater(time) {
@@ -247,3 +259,4 @@ function ENUMToTitleCase(str) {
 function titleCaseToENUM(str) {
     return str.split(" ").join("_").toUpperCase();
 }
+
