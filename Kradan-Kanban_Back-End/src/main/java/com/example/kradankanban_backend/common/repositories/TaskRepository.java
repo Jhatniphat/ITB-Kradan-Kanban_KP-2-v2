@@ -1,6 +1,6 @@
-package com.example.kradankanban_backend.repositories;
+package com.example.kradankanban_backend.common.repositories;
 
-import com.example.kradankanban_backend.entities.TaskEntity;
+import com.example.kradankanban_backend.common.entities.TaskEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

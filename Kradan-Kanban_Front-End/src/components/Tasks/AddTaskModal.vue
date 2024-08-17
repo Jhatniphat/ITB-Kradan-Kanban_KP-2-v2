@@ -75,7 +75,7 @@ function sendCloseModal() {
 
   </div> -->
   <div
-    class="itbkk-modal-task flex flex-col p-5 text-black bg-slate-50 rounded-lg w-full"
+    class="itbkk-modal-task flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 rounded-lg w-full"
   >
     <!-- * title -->
     <label class="form-control w-full">
@@ -87,7 +87,7 @@ function sendCloseModal() {
         v-model="taskData.title"
         type="text"
         placeholder="Type here"
-        class="itbkk-title input input-bordered w-full bg-white"
+        class="itbkk-title input input-bordered w-full bg-white dark:bg-base-300 dark:text-slate-400"
       />
       <div class="label">
         <!-- ? Error Text -->
@@ -122,7 +122,7 @@ function sendCloseModal() {
         </div>
         <textarea
           v-model="taskData.description"
-          class="itbkk-description textarea textarea-bordered h-72 bg-white"
+          class="itbkk-description textarea textarea-bordered h-72 bg-white dark:bg-base-300 dark:text-slate-400"
           placeholder="Bio"
         ></textarea>
         <div class="label">
@@ -155,7 +155,7 @@ function sendCloseModal() {
           </div>
           <textarea
             v-model="taskData.assignees"
-            class="itbkk-assignees textarea textarea-bordered h-24 bg-white"
+            class="itbkk-assignees textarea textarea-bordered h-24 bg-white dark:bg-base-300 dark:text-slate-400"
             placeholder="Bio"
           ></textarea>
           <div class="label">
@@ -184,7 +184,7 @@ function sendCloseModal() {
             <span class="label-text">Status</span>
           </div>
           <select
-            class="itbkk-status select select-bordered bg-white"
+            class="itbkk-status select select-bordered bg-white dark:bg-base-300 dark:text-slate-400"
             v-model="taskData.status"
           >
             <option

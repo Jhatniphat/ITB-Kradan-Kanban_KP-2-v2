@@ -1,4 +1,4 @@
-package com.example.kradankanban_backend.entities;
+package com.example.kradankanban_backend.common.entities;
 
 import jakarta.persistence.*;
 import lombok.Getter;

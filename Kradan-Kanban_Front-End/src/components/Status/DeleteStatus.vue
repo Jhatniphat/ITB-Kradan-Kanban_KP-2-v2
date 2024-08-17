@@ -107,7 +107,9 @@ const transferTheStatus = async (newId) => {
 </script>
 
 <template>
-  <div class="flex flex-col p-5 text-black bg-slate-50 rounded-lg w-full">
+  <div
+    class="flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 dark:text-slate-400 rounded-lg w-full"
+  >
     <!-- Delete Modal -->
     <div v-if="!transfer">
       <h1 class="m-2 pb-4 text-2xl font-bold">Delete a Satus</h1>
