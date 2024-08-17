@@ -227,15 +227,19 @@ export async function getLimitStatus() {
 }
 
 export async function login(username, password) {
-    let res,item
-    try {
-        res = await fetch(`${import.meta.env.VITE_API_ROOT}/login`, {method : "GET"})
-        if (res.status === 200) {
-            return {status: res.status, payload: res.json()};
-        } if (res.status === 400) {
-            return { status: res.status, payload: "Username or Password is incorrect" };
-        } else return { status: res.status, payload: "There is a problem. Please try again later" };
-    } catch (error) {}
+    // return {status: 200, payload: "login complete" };
+    if (username === "correct" && password === "correct") return {status: 200, payload: "login complete" };
+    else return { status: 400, payload: "Username or Password is incorrect" };
+    // let res,item
+    // try {
+    //     res = await fetch(`${import.meta.env.VITE_API_ROOT}/login`, {method : "POST"})
+    //     if (res.status === 200) {
+    //         return {status: res.status, payload: res.json()};
+    //     } if (res.status === 400) {
+    //         return { status: res.status, payload: "Username or Password is incorrect" };
+    //     } else return { status: res.status, payload: "There is a problem. Please try again later" };
+    // } catch (error) {}
+
 }
 
 // ! -------------------------- Private function ----------------------------
