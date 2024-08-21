@@ -3,6 +3,8 @@ package com.example.kradankanban_backend.exceptions;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.method.ParameterValidationResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -34,6 +36,18 @@ public class GlobalExceptionHandling {
 //        return buildErrorResponse(null, exception, exception.getMethod().getName(), HttpStatus.valueOf(exception.getStatusCode().value()), request);
     }
 
+    @ExceptionHandler(BadCredentialsException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ResponseEntity<ErrorResponse> handleBadCredentialsException(BadCredentialsException exception, WebRequest request) {
+        return buildErrorResponse(exception, "username or password is invalid" ,HttpStatus.UNAUTHORIZED, request);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException exception, WebRequest request) {
+        return buildErrorResponse(exception, "username or password is invalid" ,HttpStatus.UNAUTHORIZED, request);
+    }
+
     @ExceptionHandler(ItemNotFoundException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<ErrorResponse> handleItemNotFoundException(ItemNotFoundException exception, WebRequest request) {
@@ -58,8 +72,9 @@ public class GlobalExceptionHandling {
 
     private ResponseEntity<ErrorResponse> buildErrorResponse(
             Exception exception, String message, HttpStatus httpStatus, WebRequest request) {
-        return buildErrorResponse(null, exception, exception.getMessage(), httpStatus, request);
+        return buildErrorResponse(null, exception, message, httpStatus, request);
     }
+
     private ResponseEntity<ErrorResponse> buildErrorResponse(
             String title, Exception exception, String message, HttpStatus httpStatus, WebRequest request) {
         ErrorResponse errorResponse = new ErrorResponse( httpStatus.value(), message, request.getDescription(false));

@@ -2,6 +2,10 @@
 import {ref, computed} from "vue";
 import {login} from "@/lib/fetchUtils.js";
 import router from "@/router/index.js";
+import VueJwtDecode from 'vue-jwt-decode'
+import {useAccountStore} from "@/stores/account.js";
+
+const accountStore = useAccountStore();
 
 const userData = ref({
   username: "",
@@ -23,6 +27,8 @@ const handleLogin = async () => {
     let result = await login(userData.value.username , userData.value.password)
     console.log(result)
     if (result.status === 200) {
+      accountStore.tokenDetail = VueJwtDecode.decode(result.payload?.access_token);
+      console.log(accountStore.tokenDetail);
       router.push("/task")
       console.log("success")
     } else {
@@ -87,6 +93,7 @@ const closeAlert = () => {
       </div>
       <button
           class="itbkk-button-signin btn w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          :class="!isFormValid ? 'disabled' : '' "
           :disabled="!isFormValid"
           @click="handleLogin"
       >

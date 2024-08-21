@@ -220,31 +220,35 @@ export async function getLimitStatus() {
     try {
         res = await fetch(`${import.meta.env.VITE_API_ROOT}/statuses/maximum-task`, {method: "GET"})
         if (res.status === 200)
-        return await res.json()
+            return await res.json()
     } catch (e) {
         console.log(e.toString())
     }
 }
 
+// ! -------------------------- LOGIN ----------------------------
+
 export async function login(username, password) {
-    // return {status: 200, payload: "login complete" };
-    // if (username === "correct" && password === "correct") return {status: 200, payload: "login complete" };
-    // else return { status: 400, payload: "Username or Password is incorrect" };
-    let res,item
-    console.log(JSON.stringify({userName : username , passWord: password}))
+    let res, item
     try {
-        res = await fetch(`${import.meta.env.VITE_API_ROOT}/login`, {method : "POST" ,
+        res = await fetch(`${import.meta.env.VITE_API_ROOT}/login`, {
+            method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({userName : username , passWord: password})
+            body: JSON.stringify({userName: username, password: password})
         })
         if (res.status === 200) {
-            return {status: res.status, payload: res.json()};
-        } if (res.status === 400) {
-            return { status: res.status, payload: "Username or Password is incorrect" };
-        } else return { status: res.status, payload: "There is a problem. Please try again later" };
-    } catch (error) {}
+            return {
+                status: res.status,
+                payload: await res.json()
+            };
+        }
+        if (res.status === 401 || res.status === 400) {
+            return {status: res.status, payload: "Username or Password is incorrect"};
+        } else return {status: res.status, payload: "There is a problem. Please try again later"};
+    } catch (error) {
+    }
 
 }
 

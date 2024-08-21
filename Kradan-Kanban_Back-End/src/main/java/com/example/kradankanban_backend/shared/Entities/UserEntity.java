@@ -1,4 +1,4 @@
-package com.example.kradankanban_backend.shared;
+package com.example.kradankanban_backend.shared.Entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -38,9 +38,8 @@ public class UserEntity {
     private String password;
 
     @NotNull
-    @ColumnDefault("'STUDENT'")
-    @Lob
+    @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
-    private String role;
+    private Role role;
 
 }
