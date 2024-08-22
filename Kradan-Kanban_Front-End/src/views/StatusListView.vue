@@ -1,144 +1,144 @@
 <script setup>
-import { onMounted, ref } from "vue";
-import { useRoute } from "vue-router";
-import AddStatusModal from "@/components/Status/AddStatusModal.vue";
-import EditStatus from "@/components/Status/EditStatus.vue";
-import DeleteStatus from "@/components/Status/DeleteStatus.vue";
-import Modal from "@/components/Modal.vue";
-import router from "@/router";
-import { useStatusStore } from "@/stores/status.js";
-import EditLimitStatus from "@/components/EditLimitStatus.vue";
-import NavBar from "@/App.vue";
+import { onMounted, ref } from "vue"
+import { useRoute } from "vue-router"
+import AddStatusModal from "@/components/Status/AddStatusModal.vue"
+import EditStatus from "@/components/Status/EditStatus.vue"
+import DeleteStatus from "@/components/Status/DeleteStatus.vue"
+import Modal from "@/components/Modal.vue"
+import router from "@/router"
+import { useStatusStore } from "@/stores/status.js"
+import EditLimitStatus from "@/components/EditLimitStatus.vue"
+import NavBar from "@/App.vue"
 
 // ! ================= Variable ======================
 // ? ----------------- Store and Route ---------------
-const statusStore = useStatusStore();
-const route = useRoute();
+const statusStore = useStatusStore()
+const route = useRoute()
 
 // ? ----------------- Modal ---------------
-const toast = ref({ status: "", msg: "" });
-const showAddModal = ref(false);
-const showEdit = ref(false);
-const showDelete = ref(false);
-const showEditLimit = ref(false);
-const showErrorModal = ref(false);
+const toast = ref({ status: "", msg: "" })
+const showAddModal = ref(false)
+const showEdit = ref(false)
+const showDelete = ref(false)
+const showEditLimit = ref(false)
+const showErrorModal = ref(false)
 // ? ----------------- Common -------------------------
-const selectedId = ref(0);
-const deleteTitle = ref("");
-const error = ref(null);
-const status = ref(null);
-const loading = ref(false);
-const overStatuses = ref([]);
+const selectedId = ref(0)
+const deleteTitle = ref("")
+const error = ref(null)
+const status = ref(null)
+const loading = ref(false)
+const overStatuses = ref([])
 onMounted(() => {
-  fetchStatusData();
+  fetchStatusData()
   if (route.params.id !== undefined) {
-    selectedId.value = parseInt(route.params.id);
-    showEdit.value = true;
+    selectedId.value = parseInt(route.params.id)
+    showEdit.value = true
   }
-});
+})
 
 async function fetchStatusData(id) {
   if (id !== undefined) {
-    openEdit(id);
+    openEdit(id)
   }
-  error.value = status.value = null;
-  loading.value = true;
+  error.value = status.value = null
+  loading.value = true
   try {
-    status.value = await statusStore.getAllStatus();
+    status.value = await statusStore.getAllStatus()
   } catch (err) {
-    error.value = err.toString();
+    error.value = err.toString()
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 // ! ================= Modal ======================
 const showToast = (toastData) => {
-  toast.value = toastData;
+  toast.value = toastData
   setTimeout(() => {
-    toast.value = { ...{ status: "" } };
-  }, 5000);
-};
+    toast.value = { ...{ status: "" } }
+  }, 5000)
+}
 
 const closeAddModal = (res) => {
-  showAddModal.value = false;
-  if (res === null) return 0;
+  showAddModal.value = false
+  if (res === null) return 0
   if (typeof res === "object") {
-    showToast({ status: "success", msg: "Add task successfuly" });
-    statusStore.addStoreStatus(res);
-  } else showToast({ status: "error", msg: "Add task Failed" });
-};
+    showToast({ status: "success", msg: "Add status successfuly" })
+    statusStore.addStoreStatus(res)
+  } else showToast({ status: "error", msg: "Add status Failed" })
+}
 
 const openEdit = (id) => {
-  selectedId.value = id;
-  showEdit.value = true;
-  router.push(`/status/${id}`);
-};
+  selectedId.value = id
+  showEdit.value = true
+  router.push(`/status/${id}`)
+}
 
 const closeEdit = (res) => {
-  showEdit.value = false;
-  if (res === null) return 0;
+  showEdit.value = false
+  if (res === null) return 0
   // if (res === 404) showToast({status: "error", msg: "An error has occurred, the status does not exist"});
   if (typeof res === "object") {
-    showToast({ status: "success", msg: "Edit task successfuly" });
-    statusStore.editStoreStatus(res);
+    showToast({ status: "success", msg: "Edit status successfuly" })
+    statusStore.editStoreStatus(res)
   } else
     showToast({
       status: "error",
       msg: "An error has occurred, the status does not exist",
-    });
-};
+    })
+}
 
 const openDelete = (id, title) => {
-  selectedId.value = id;
-  deleteTitle.value = title;
-  showDelete.value = true;
-};
+  selectedId.value = id
+  deleteTitle.value = title
+  showDelete.value = true
+}
 
 const closeDelete = (res, numOfTasks) => {
-  showDelete.value = false;
-  if (res === null) return 0;
+  showDelete.value = false
+  if (res === null) return 0
   // if (res === 404)
   if (typeof res === "object") {
-    statusStore.deleteStoreStatus(res);
-    showToast({ status: "success", msg: "Delete status successfuly" });
+    statusStore.deleteStoreStatus(res)
+    showToast({ status: "success", msg: "Delete status successfuly" })
     if (typeof res === "object" && numOfTasks != undefined) {
-      statusStore.deleteStoreStatus(res);
+      statusStore.deleteStoreStatus(res)
       showToast({
         status: "success",
         msg: `Delete and Tranfer ${numOfTasks} tasks successfuly`,
-      });
+      })
     }
   } else {
     showToast(
       { status: "error", msg: "Delete status Failed ,Please restart page" },
       6000
-    );
+    )
   }
-};
+}
 
 function closeEditLimit(overStatus) {
-  showEditLimit.value = false;
-  showToast({ status : 'success' , msg : `The Kanban now limit ${statusStore.getLimit()} tasks in each status` } )
-  if (overStatus === null || overStatus === undefined) return 0;
+  showEditLimit.value = false
+  showToast({
+    status: "success",
+    msg: `The Kanban now limit ${statusStore.getLimit()} tasks in each status`,
+  })
+  if (overStatus === null || overStatus === undefined) return 0
   if (typeof overStatus === "object") {
-    showErrorModal.value = true;
-    overStatuses.value = overStatus;
+    showErrorModal.value = true
+    overStatuses.value = overStatus
   }
 }
 </script>
 
 <template>
-
-
-
-<!--  &lt;!&ndash; Home Button &ndash;&gt;-->
-<!--  <div class="text-base breadcrumbs flex p-10">-->
-<!--    <ul>-->
-<!--      <li @click="router.push('/task')" class="cursor-pointer">Home</li>-->
-<!--      <li class="text-base font-semibold">Task Status</li>-->
-<!--    </ul>-->
-<!--  </div>-->
+  <!--  &lt;!&ndash; Home Button &ndash;&gt;-->
+  <!--  <div class="text-base breadcrumbs flex p-10">-->
+  <!--    <ul>-->
+  <!--      <li @click="router.push('/task')" class="cursor-pointer">Home</li>-->
+  <!--      <li class="text-base font-semibold">Task Status</li>-->
+  <!--    </ul>-->
+  <!--  </div>-->
 
   <!-- content -->
   <div class="opacity">
@@ -147,8 +147,8 @@ function closeEditLimit(overStatus) {
       <div class="w-3/4 mx-auto mt-10 relative">
         <div class="float-right">
           <button
-              class="itbkk-button-add btn btn-square btn-outline w-16 float-left mr-1"
-              @click="showAddModal = true"
+            class="itbkk-button-add btn btn-square btn-outline w-16 float-left mr-1"
+            @click="showAddModal = true"
           >
             + Add
           </button>
