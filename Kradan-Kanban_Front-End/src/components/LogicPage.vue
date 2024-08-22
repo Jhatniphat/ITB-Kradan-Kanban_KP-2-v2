@@ -33,6 +33,7 @@ const handleLogin = async () => {
         result.payload?.access_token
       );
       console.log(accountStore.tokenDetail);
+      console.log(accountStore.tokenDetail.name);
       router.push("/task");
       console.log("success");
     } else {
