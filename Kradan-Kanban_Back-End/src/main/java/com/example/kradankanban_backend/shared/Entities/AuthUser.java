@@ -13,6 +13,7 @@ import java.util.Collection;
 @Setter
 public class AuthUser extends User implements Serializable {
 
+    String name;
     String oid;
     String email;
     Role role;
@@ -25,10 +26,11 @@ public class AuthUser extends User implements Serializable {
         super(userName, password, new ArrayList<GrantedAuthority>());
     }
 
-    public AuthUser(String userName, String password, Collection<? extends GrantedAuthority> authorities , String oid , String email , Role role) {
+    public AuthUser(String userName, String password, Collection<? extends GrantedAuthority> authorities , String oid , String email , Role role , String name) {
         super(userName, password, authorities);
         this.oid = oid;
         this.email = email;
         this.role = role;
+        this.name = name;
     }
 }

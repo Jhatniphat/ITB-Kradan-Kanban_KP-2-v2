@@ -38,7 +38,7 @@ public class JwtUserDetailsService implements UserDetailsService {
             }
         };
         roles.add(grantedAuthority);
-        UserDetails userDetails = new AuthUser(user.getUsername(), user.getPassword() , roles , user.getOid() , user.getEmail() , user.getRole());
+        UserDetails userDetails = new AuthUser(user.getUsername(), user.getPassword() , roles , user.getOid() , user.getEmail() , user.getRole() , user.getName());
         return userDetails;
     }
 
