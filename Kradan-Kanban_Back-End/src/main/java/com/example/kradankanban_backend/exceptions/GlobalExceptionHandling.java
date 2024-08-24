@@ -39,13 +39,13 @@ public class GlobalExceptionHandling {
     @ExceptionHandler(BadCredentialsException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ResponseEntity<ErrorResponse> handleBadCredentialsException(BadCredentialsException exception, WebRequest request) {
-        return buildErrorResponse(exception, "username or password is invalid" ,HttpStatus.UNAUTHORIZED, request);
+        return buildErrorResponse(exception, "Username or Password is incorrect" ,HttpStatus.UNAUTHORIZED, request);
     }
 
     @ExceptionHandler(AuthenticationException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException exception, WebRequest request) {
-        return buildErrorResponse(exception, "username or password is invalid" ,HttpStatus.UNAUTHORIZED, request);
+        return buildErrorResponse(exception, "Username or Password is incorrect" ,HttpStatus.UNAUTHORIZED, request);
     }
 
     @ExceptionHandler(ItemNotFoundException.class)
