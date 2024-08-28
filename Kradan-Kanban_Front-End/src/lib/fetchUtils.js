@@ -1,9 +1,20 @@
+import router from "@/router";
+import { useAccountStore } from "@/stores/account";
 // ! -------------------------------- Task ------------------------------------------
 export async function getAllTasks() {
   try {
+    const accountStore = useAccountStore();
     let res = await fetch(`${import.meta.env.VITE_API_ROOT}/tasks`, {
       method: "GET",
+      headers: {
+        Authorization: `Bearer ${accountStore.tokenDetail.token}`,
+      },
     }); //GET Method
+    if (res.status === 401) {
+      accountStore.clearTokenDetail();
+      router.push("/login");
+      return;
+    }
     return await res.json();
   } catch (error) {}
 }
@@ -12,9 +23,18 @@ export async function getTaskById(id) {
   console.log(`GET !! ${id}`);
   let res, item;
   try {
+    const accountStore = useAccountStore();
     res = await fetch(`${import.meta.env.VITE_API_ROOT}/tasks/${id}`, {
       method: "GET",
+      headers: {
+        Authorization: `Bearer ${accountStore.tokenDetail.token}`,
+      },
     });
+    if (res.status === 401) {
+      accountStore.clearTokenDetail();
+      router.push("/login");
+      return;
+    }
     if (res.status === 200) {
       item = await res.json();
       item.createdOn = timeFormater(item.createdOn);
@@ -32,13 +52,20 @@ export async function addTask(newTask) {
   let res, item;
   // console.log(JSON.stringify({ ...newTask }));
   try {
+    const accountStore = useAccountStore();
     res = await fetch(`${import.meta.env.VITE_API_ROOT}/tasks`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${accountStore.tokenDetail.token}`,
       },
       body: JSON.stringify({ ...newTask }),
     });
+    if (res.status === 401) {
+      accountStore.clearTokenDetail();
+      router.push("/login");
+      return;
+    }
     if (res.status === 201) {
       item = await res.json();
       return item;
@@ -52,14 +79,20 @@ export async function addTask(newTask) {
 
 export async function editTask(id, Task) {
   try {
+    const accountStore = useAccountStore();
     let res = await fetch(`${import.meta.env.VITE_API_ROOT}/tasks/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${accountStore.tokenDetail.token}`,
       },
       body: JSON.stringify(Task),
     });
-
+    if (res.status === 401) {
+      accountStore.clearTokenDetail();
+      router.push("/login");
+      return;
+    }
     if (res.ok) {
       return await res.json();
     } else {
@@ -72,9 +105,18 @@ export async function editTask(id, Task) {
 
 export async function deleteTask(id) {
   try {
+    const accountStore = useAccountStore();
     let res = await fetch(`${import.meta.env.VITE_API_ROOT}/tasks/${id}`, {
       method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${accountStore.tokenDetail.token}`,
+      },
     });
+    if (res.status === 401) {
+      accountStore.clearTokenDetail();
+      router.push("/login");
+      return;
+    }
     if (res.ok) {
       let item = await res.json();
       item.status = ENUMToTitleCase(item.status);
@@ -90,9 +132,18 @@ export async function deleteTask(id) {
 // ! ------------------------------- Status --------------------------------
 export async function getAllStatus() {
   try {
+    const accountStore = useAccountStore();
     let res = await fetch(`${import.meta.env.VITE_API_ROOT}/statuses`, {
       method: "GET",
+      headers: {
+        Authorization: `Bearer ${accountStore.tokenDetail.token}`,
+      },
     }); //GET Method
+    if (res.status === 401) {
+      accountStore.clearTokenDetail();
+      router.push("/login");
+      return;
+    }
     return await res.json();
   } catch (error) {}
 }
@@ -100,9 +151,18 @@ export async function getAllStatus() {
 export async function getStatusById(id) {
   let res, item;
   try {
+    const accountStore = useAccountStore();
     res = await fetch(`${import.meta.env.VITE_API_ROOT}/statuses/${id}`, {
       method: "GET",
+      headers: {
+        Authorization: `Bearer ${accountStore.tokenDetail.token}`,
+      },
     });
+    if (res.status === 401) {
+      accountStore.clearTokenDetail();
+      router.push("/login");
+      return;
+    }
     if (res.status === 200) {
       item = await res.json();
       item.createdOn = timeFormater(item.createdOn);
@@ -119,13 +179,20 @@ export async function getStatusById(id) {
 export async function addStatus(newStatus) {
   let res, item;
   try {
+    const accountStore = useAccountStore();
     res = await fetch(`${import.meta.env.VITE_API_ROOT}/statuses`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${accountStore.tokenDetail.token}`,
       },
       body: JSON.stringify({ ...newStatus }),
     });
+    if (res.status === 401) {
+      accountStore.clearTokenDetail();
+      router.push("/login");
+      return;
+    }
     if (res.status === 201) {
       item = await res.json();
       return item;
@@ -140,14 +207,20 @@ export async function addStatus(newStatus) {
 export async function editStatus(id, Status) {
   let res;
   try {
+    const accountStore = useAccountStore();
     res = await fetch(`${import.meta.env.VITE_API_ROOT}/statuses/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${accountStore.tokenDetail.token}`,
       },
       body: JSON.stringify(Status),
     });
-
+    if (res.status === 401) {
+      accountStore.clearTokenDetail();
+      router.push("/login");
+      return;
+    }
     if (res.ok) {
       let updatedStatus = await res.json();
       return updatedStatus;
@@ -162,9 +235,18 @@ export async function editStatus(id, Status) {
 export async function deleteStatus(id) {
   let res, item;
   try {
+    const accountStore = useAccountStore();
     res = await fetch(`${import.meta.env.VITE_API_ROOT}/statuses/${id}`, {
       method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${accountStore.tokenDetail.token}`,
+      },
     });
+    if (res.status === 401) {
+      accountStore.clearTokenDetail();
+      router.push("/login");
+      return;
+    }
     if (res.ok) {
       item = await res.json();
       item.createdOn = timeFormater(item.createdOn);
@@ -181,12 +263,21 @@ export async function deleteStatus(id) {
 export async function transferStatus(oldId, newId) {
   let res, item;
   try {
+    const accountStore = useAccountStore();
     res = await fetch(
       `${import.meta.env.VITE_API_ROOT}/statuses/${oldId}/${newId}`,
       {
         method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${accountStore.tokenDetail.token}`,
+        },
       }
     );
+    if (res.status === 401) {
+      accountStore.clearTokenDetail();
+      router.push("/login");
+      return;
+    }
     if (res.ok) {
       item = await res.json();
       return item;
@@ -203,12 +294,21 @@ export async function transferStatus(oldId, newId) {
 export async function toggleLimitStatus() {
   let res, item;
   try {
+    const accountStore = useAccountStore();
     res = await fetch(
       `${import.meta.env.VITE_API_ROOT}/statuses/maximum-task`,
       {
         method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${accountStore.tokenDetail.token}`,
+        },
       }
     );
+    if (res.status === 401) {
+      accountStore.clearTokenDetail();
+      router.push("/login");
+      return;
+    }
     return res.status;
   } catch (e) {
     console.log(e.toString());
@@ -218,10 +318,21 @@ export async function toggleLimitStatus() {
 export async function getLimitStatus() {
   let res, item;
   try {
+    const accountStore = useAccountStore();
     res = await fetch(
       `${import.meta.env.VITE_API_ROOT}/statuses/maximum-task`,
-      { method: "GET" }
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accountStore.tokenDetail.token}`,
+        },
+      }
     );
+    if (res.status === 401) {
+      accountStore.clearTokenDetail();
+      router.push("/login");
+      return;
+    }
     if (res.status === 200) return await res.json();
   } catch (e) {
     console.log(e.toString());
