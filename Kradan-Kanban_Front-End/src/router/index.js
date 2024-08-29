@@ -54,9 +54,9 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const accountStore = useAccountStore();
-  const token = accountStore.tokenDetail.token;
-  if (!token && to.path !== "/login") {
-    accountStore.clearTokenDetail();
+  const isAuthenticated = !!accountStore.tokenDetail.token;
+
+  if (to.path !== "/login" && !isAuthenticated) {
     next("/login");
   } else {
     next();
