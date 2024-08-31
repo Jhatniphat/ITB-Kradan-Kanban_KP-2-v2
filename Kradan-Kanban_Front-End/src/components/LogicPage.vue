@@ -29,9 +29,8 @@ const handleLogin = async () => {
     let result = await login(userData.value.username, userData.value.password);
     console.log(result);
     if (result.status === 200) {
-      accountStore.tokenDetail = VueJwtDecode.decode(
-        result.payload?.access_token
-      );
+      const decodedToken = VueJwtDecode.decode(result.payload?.access_token);
+      accountStore.setTokenDetail(decodedToken);
       console.log(accountStore.tokenDetail);
       console.log(accountStore.tokenDetail.name);
       router.push("/task");

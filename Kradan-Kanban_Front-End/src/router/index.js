@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import TaskListView from "../views/TasklistView.vue";
 import StatusListView from "@/views/StatusListView.vue";
 import LogicPage from "@/components/LogicPage.vue";
+import { useAccountStore } from "@/stores/account";
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -47,8 +48,19 @@ const router = createRouter({
       path: "/login",
       component: LogicPage,
     },
-    { path: '/:pathMatch(.*)*', redirect: { name : "tasklist"}},
+    { path: "/:pathMatch(.*)*", redirect: { name: "tasklist" } },
   ],
+});
+
+router.beforeEach((to, from, next) => {
+  const accountStore = useAccountStore();
+  const isAuthenticated = !!accountStore.tokenDetail.token;
+
+  if (to.path !== "/login" && !isAuthenticated) {
+    next("/login");
+  } else {
+    next();
+  }
 });
 
 export default router;
