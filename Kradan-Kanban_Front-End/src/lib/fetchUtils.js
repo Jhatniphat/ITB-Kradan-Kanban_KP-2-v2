@@ -7,7 +7,7 @@ export async function getAllTasks() {
     let res = await fetch(`${import.meta.env.VITE_API_ROOT}/tasks`, {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${accountStore.tokenDetail.token}`,
+        Authorization: `Bearer ${accountStore.tokenRaw}`,
       },
     }); //GET Method
     if (res.status === 401) {
@@ -27,7 +27,7 @@ export async function getTaskById(id) {
     res = await fetch(`${import.meta.env.VITE_API_ROOT}/tasks/${id}`, {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${accountStore.tokenDetail.token}`,
+        Authorization: `Bearer ${accountStore.tokenRaw}`,
       },
     });
     if (res.status === 401) {
@@ -57,7 +57,7 @@ export async function addTask(newTask) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${accountStore.tokenDetail.token}`,
+        Authorization: `Bearer ${accountStore.tokenRaw}`,
       },
       body: JSON.stringify({ ...newTask }),
     });
@@ -84,7 +84,7 @@ export async function editTask(id, Task) {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${accountStore.tokenDetail.token}`,
+        Authorization: `Bearer ${accountStore.tokenRaw}`,
       },
       body: JSON.stringify(Task),
     });
@@ -109,7 +109,7 @@ export async function deleteTask(id) {
     let res = await fetch(`${import.meta.env.VITE_API_ROOT}/tasks/${id}`, {
       method: "DELETE",
       headers: {
-        Authorization: `Bearer ${accountStore.tokenDetail.token}`,
+        Authorization: `Bearer ${accountStore.tokenRaw}`,
       },
     });
     if (res.status === 401) {
@@ -136,7 +136,7 @@ export async function getAllStatus() {
     let res = await fetch(`${import.meta.env.VITE_API_ROOT}/statuses`, {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${accountStore.tokenDetail.token}`,
+        Authorization: `Bearer ${accountStore.tokenRaw}`,
       },
     }); //GET Method
     if (res.status === 401) {
@@ -155,7 +155,7 @@ export async function getStatusById(id) {
     res = await fetch(`${import.meta.env.VITE_API_ROOT}/statuses/${id}`, {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${accountStore.tokenDetail.token}`,
+        Authorization: `Bearer ${accountStore.tokenRaw}`,
       },
     });
     if (res.status === 401) {
@@ -184,7 +184,7 @@ export async function addStatus(newStatus) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${accountStore.tokenDetail.token}`,
+        Authorization: `Bearer ${accountStore.tokenRaw}`,
       },
       body: JSON.stringify({ ...newStatus }),
     });
@@ -212,7 +212,7 @@ export async function editStatus(id, Status) {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${accountStore.tokenDetail.token}`,
+        Authorization: `Bearer ${accountStore.tokenRaw}`,
       },
       body: JSON.stringify(Status),
     });
@@ -239,7 +239,7 @@ export async function deleteStatus(id) {
     res = await fetch(`${import.meta.env.VITE_API_ROOT}/statuses/${id}`, {
       method: "DELETE",
       headers: {
-        Authorization: `Bearer ${accountStore.tokenDetail.token}`,
+        Authorization: `Bearer ${accountStore.tokenRaw}`,
       },
     });
     if (res.status === 401) {
@@ -269,7 +269,7 @@ export async function transferStatus(oldId, newId) {
       {
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${accountStore.tokenDetail.token}`,
+          Authorization: `Bearer ${accountStore.tokenRaw}`,
         },
       }
     );
@@ -300,7 +300,7 @@ export async function toggleLimitStatus() {
       {
         method: "PATCH",
         headers: {
-          Authorization: `Bearer ${accountStore.tokenDetail.token}`,
+          Authorization: `Bearer ${accountStore.tokenRaw}`,
         },
       }
     );
@@ -324,7 +324,7 @@ export async function getLimitStatus() {
       {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${accountStore.tokenDetail.token}`,
+          Authorization: `Bearer ${accountStore.tokenRaw}`,
         },
       }
     );
@@ -343,7 +343,9 @@ export async function getLimitStatus() {
 
 export async function login(username, password) {
   let res, item;
+  console.log(JSON.stringify({ userName: username, password: password }))
   try {
+    const accountStore = useAccountStore();
     res = await fetch(`${import.meta.env.VITE_API_ROOT}/login`, {
       method: "POST",
       headers: {
@@ -352,11 +354,13 @@ export async function login(username, password) {
       body: JSON.stringify({ userName: username, password: password }),
     });
     if (res.status === 200) {
-      console.log(res);
+      item = await res.json();
+      accountStore.setToken(item);
       return {
-        status: res.status,
-        payload: await res.json(),
+        status: 200,
+        payload: item,
       };
+
     }
     if (res.status === 401 || res.status === 400) {
       return {

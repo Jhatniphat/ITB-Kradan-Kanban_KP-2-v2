@@ -26,9 +26,10 @@ public class WebSecurityConfig {
     JwtAuthFilter jwtAuthFilter;
     @Autowired
     JwtUserDetailsService jwtUserDetailsService;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.csrf(csrf -> csrf.disable())
+        httpSecurity.csrf(csrf -> csrf.disable()) // ปิดการใช้งาน CSRF
                 .authorizeRequests(
                         authorize -> authorize.requestMatchers("/login").permitAll()
 //                                .requestMatchers("/**").permitAll()
