@@ -10,6 +10,11 @@ const accountStore = useAccountStore();
 
 const userName = computed(() => accountStore.userName);
 
+const handleLogout = () => {
+  accountStore.clearTokenDetail();
+  router.push("/login");
+};
+
 const route = useRoute();
 let currentRoute = ref(route.path);
 console.log(currentRoute);
@@ -107,11 +112,11 @@ console.log(currentRoute);
           class="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start"
         >
           <div class="flex flex-shrink-0 items-center">
-<!--            <img-->
-<!--              class="h-8 w-auto"-->
-<!--              src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500"-->
-<!--              alt="Your Company"-->
-<!--            />-->
+            <!--            <img-->
+            <!--              class="h-8 w-auto"-->
+            <!--              src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500"-->
+            <!--              alt="Your Company"-->
+            <!--            />-->
           </div>
           <div class="hidden sm:ml-6 sm:block">
             <div class="flex space-x-4">
@@ -157,7 +162,25 @@ console.log(currentRoute);
 
           <!-- Profile dropdown -->
           <div class="relative ml-3">
-            <div>
+            <div class="dropdown dropdown-end">
+              <div tabindex="0" role="button" class="m-1 flex flex-row">
+                <h1 class="m-2 text-slate-300 itbkk-fullname">
+                  {{ userName == "" ? "GUEST" : userName }}
+                </h1>
+                <img
+                  class="h-8 w-8 rounded-full"
+                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                  alt=""
+                />
+              </div>
+              <ul
+                tabindex="0"
+                class="dropdown-content menu bg-gray-800 rounded-box z-[1] w-52 p-2 shadow"
+              >
+                <li><a @click="handleLogout">Logout</a></li>
+              </ul>
+            </div>
+            <!-- <div>
               <button
                 type="button"
                 class="relative flex rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
@@ -167,14 +190,16 @@ console.log(currentRoute);
               >
                 <span class="absolute -inset-1.5"></span>
                 <span class="sr-only">Open user menu</span>
-                <h1 class="m-2 itbkk-fullname">{{ userName == "" ? "GUEST" : userName }}</h1>
+                <h1 class="m-2 text-slate-300 itbkk-fullname">
+                  {{ userName == "" ? "GUEST" : userName }}
+                </h1>
                 <img
                   class="h-8 w-8 rounded-full"
                   src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
                   alt=""
                 />
               </button>
-            </div>
+            </div> -->
 
             <!--
               Dropdown menu, show/hide based on menu state.
