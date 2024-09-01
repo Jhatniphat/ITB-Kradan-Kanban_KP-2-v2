@@ -1,6 +1,7 @@
 package com.example.kradankanban_backend.common.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -19,5 +20,10 @@ public class LimitSettings {
 
     @Column(name = "isEnable")
     private Boolean isEnable;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "ls_boardId", nullable = false)
+    private BoardEntity lsBoard;
 
 }

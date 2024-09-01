@@ -21,6 +21,11 @@ const router = createRouter({
             component: () => import("../views/AboutView.vue"),
         },
         {
+            path: "/board",
+            name: "board",
+            component: () => import("../views/BoardView.vue"),
+        },
+        {
             path: "/task",
             name: "tasklist",
             component: TaskListView,
@@ -54,28 +59,6 @@ const router = createRouter({
         {path: "/:pathMatch(.*)*", redirect: {name: "tasklist"}},
     ],
 });
-
-// router.beforeEach((to, from) => {
-//     const accountStore = useAccountStore();
-//     const isAuthenticated = !!accountStore.tokenDetail.token;
-//
-//     // if (to.path !== "/login" && !isAuthenticated) {
-//     //   // next("/login");
-//     // } else {
-//     //   next();
-//     // }
-//     if (
-//         // make sure the user is authenticated
-//         !isAuthenticated &&
-//         // ❗️ Avoid an infinite redirect
-//         to.name !== '/login'
-//     ) {
-//         // redirect the user to the login page
-//         return {name: 'login'}
-//     } else if (to.name === 'login') {
-//         return {name: 'login'};
-//     }
-// });
 
 router.beforeEach(async (to, from) => {
     const accountStore = useAccountStore();

@@ -46,6 +46,11 @@ public class StatusEntity {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "status" , cascade = CascadeType.ALL)
     private Set<TaskEntity> recordings = new HashSet<>();
 
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "st_boardId", nullable = false)
+    private BoardEntity stBoard;
+
     public void setName(String name) {
         if (name != null) {
             name = name.trim();
