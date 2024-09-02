@@ -1,5 +1,6 @@
 package com.example.kradankanban_backend.common.entities;
 
+import com.example.kradankanban_backend.common.dtos.DetailBoardDTO;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -27,5 +28,4 @@ public class BoardEntity {
     @Size(max = 36)
     @Column(name = "userId", length = 36)
     private String userId;
-
 }
