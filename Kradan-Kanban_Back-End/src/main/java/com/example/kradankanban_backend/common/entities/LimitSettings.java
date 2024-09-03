@@ -2,15 +2,14 @@ package com.example.kradankanban_backend.common.entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @Entity
-@Data
-@Table(name = "limitSettings")
+@AllArgsConstructor
+@NoArgsConstructor
+@Table(name = "limitSettings", schema = "intergrate-kp-2")
 public class LimitSettings {
 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,12 +17,7 @@ public class LimitSettings {
     @Column(name = "id")
     private Integer id;
 
-    @Column(name = "limit")
-    private Integer limit;
-
-    @Column(name = "isEnable", columnDefinition = "TINYINT", length = 1, nullable = false)
-    private Boolean isEnable;
-
+    //    @Id
     @NotNull
     @Column(name = "ls_boardId")
 //    @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -31,5 +25,9 @@ public class LimitSettings {
     private String lsBoard;
 
 
+    @Column(name = "`limit`")
+    private Integer limit;
 
+    @Column(name = "isEnable", columnDefinition = "TINYINT", length = 1, nullable = false)
+    private Boolean isEnable;
 }

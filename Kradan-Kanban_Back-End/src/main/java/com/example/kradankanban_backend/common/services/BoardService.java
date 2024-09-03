@@ -36,11 +36,11 @@ public class BoardService {
     public DetailBoardDTO getBoardByUserId(String userId) {
         BoardEntity board = repository.findByUserId(userId);
         if (board == null) {
-            throw  new ItemNotFoundException("Board not found");
+            throw new ItemNotFoundException("Board not found");
         }
         DetailBoardDTO.OwnerDTO owner = new DetailBoardDTO.OwnerDTO();
         owner.setOid(board.getUserId());
-        owner.setName(userRepository.findById(board.getUserId()).orElseThrow(() -> new ItemNotFoundException(board.getUserId() + "does not exist'")).getUsername() );
+        owner.setName(userRepository.findById(board.getUserId()).orElseThrow(() -> new ItemNotFoundException(board.getUserId() + "does not exist'")).getUsername());
 
         DetailBoardDTO dto = new DetailBoardDTO();
         dto.setId(board.getBoardId());
@@ -54,7 +54,7 @@ public class BoardService {
         BoardEntity board = repository.findById(boardId).orElseThrow(() -> new ItemNotFoundException(boardId + "does not exist'"));
         DetailBoardDTO.OwnerDTO owner = new DetailBoardDTO.OwnerDTO();
         owner.setOid(board.getUserId());
-        owner.setName(userRepository.findById(board.getUserId()).orElseThrow(() -> new ItemNotFoundException(board.getUserId() + "does not exist'")).getUsername() );
+        owner.setName(userRepository.findById(board.getUserId()).orElseThrow(() -> new ItemNotFoundException(board.getUserId() + "does not exist'")).getUsername());
 
         DetailBoardDTO dto = new DetailBoardDTO();
         dto.setId(board.getBoardId());
@@ -65,12 +65,7 @@ public class BoardService {
     }
 
     @Transactional
-    public DetailBoardDTO AddBoard(String userId , String BoardName) {
-
-        LimitSettings limitSettings = new LimitSettings();
-        limitSettings.setLimit(10);
-        limitSettings.setIsEnable(false);
-        limitSettings.setId(1);
+    public DetailBoardDTO AddBoard(String userId, String BoardName) {
 
 //        ! ยังไม่ได้ทำให้ดักว่ามีได้แค่ 1 board ต่อ 1 user
         BoardEntity board = new BoardEntity();
@@ -80,19 +75,16 @@ public class BoardService {
 
         DetailBoardDTO.OwnerDTO owner = new DetailBoardDTO.OwnerDTO();
         owner.setOid(userId);
-        owner.setName(userRepository.findById(userId).orElseThrow(() -> new ItemNotFoundException(userId + "does not exist'")).getUsername() );
+        owner.setName(userRepository.findById(userId).orElseThrow(() -> new ItemNotFoundException(userId + "does not exist'")).getUsername());
 
         DetailBoardDTO dto = new DetailBoardDTO();
         dto.setId(board.getBoardId());
         dto.setName(board.getBoardName());
         dto.setOwner(owner);
 
-//        try {
+        try {
             BoardEntity newBoard = repository.save(board);
-            limitSettings.setLsBoard(newBoard.getBoardId());
-            System.out.println(limitSettings);
-            limitRepository.save(limitSettings);
-            System.out.println(board);
+            
             List<StatusEntity> statusEntity = new ArrayList<>();
             StatusEntity status1 = new StatusEntity("No Status", "", newBoard.getBoardId());
             StatusEntity status2 = new StatusEntity("a", "", newBoard.getBoardId());
@@ -103,12 +95,18 @@ public class BoardService {
             statusEntity.add(status3);
             statusEntity.add(status4);
             statusRepository.saveAll(statusEntity);
+
+            LimitSettings limitSettings = new LimitSettings();
+            limitSettings.setLsBoard(newBoard.getBoardId());
+            limitSettings.setLimit(10);
+            limitSettings.setIsEnable(false);
+            limitRepository.save(limitSettings);
+
             return dto;
-//        } catch (Exception e) {
-//            System.out.println(e);
-//            throw new InternalError("Cannot add board");
-//
-//        }
+        } catch (Exception e) {
+            System.out.println(e);
+            throw new InternalError("Cannot add board");
+        }
 
     }
 }

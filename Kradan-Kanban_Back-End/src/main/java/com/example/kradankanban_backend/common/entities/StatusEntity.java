@@ -53,6 +53,7 @@ public class StatusEntity {
     @NotNull
 //    @ManyToOne(fetch = FetchType.LAZY, optional = false)
 //    @JoinColumn(name = "st_boardId", nullable = false)
+    @Column(name = "st_boardId" , nullable = false)
     private String stBoard;
 
     public StatusEntity(String noStatus, String description, String boardId) {
