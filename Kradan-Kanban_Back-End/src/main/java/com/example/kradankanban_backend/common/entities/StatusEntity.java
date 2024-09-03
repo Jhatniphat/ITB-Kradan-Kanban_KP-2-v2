@@ -6,7 +6,9 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
@@ -17,6 +19,8 @@ import java.util.Set;
 @Setter
 @Entity
 @Table(name = "status", schema = "intergrate-kp-2")
+@AllArgsConstructor
+@NoArgsConstructor
 public class StatusEntity {
 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,14 +46,20 @@ public class StatusEntity {
     @Column(name = "updatedOn", insertable = false, updatable = false)
     private LocalDateTime updatedOn;
 
-    @JsonIgnore
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "status" , cascade = CascadeType.ALL)
-    private Set<TaskEntity> recordings = new HashSet<>();
+//    @JsonIgnore
+//    @OneToMany(fetch = FetchType.LAZY, mappedBy = "status" , cascade = CascadeType.ALL)
+//    private Set<TaskEntity> recordings = new HashSet<>();
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "st_boardId", nullable = false)
-    private BoardEntity stBoard;
+//    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+//    @JoinColumn(name = "st_boardId", nullable = false)
+    private String stBoard;
+
+    public StatusEntity(String noStatus, String description, String boardId) {
+        this.name = noStatus;
+        this.description = description;
+        this.stBoard = boardId;
+    }
 
     public void setName(String name) {
         if (name != null) {
@@ -63,4 +73,6 @@ public class StatusEntity {
             this.description = null;
         } else this.description = description.trim();
     }
+
+
 }
