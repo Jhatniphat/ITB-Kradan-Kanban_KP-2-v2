@@ -1,13 +1,13 @@
 package com.example.kradankanban_backend.common.controllers;
 
 
-import com.example.kradankanban_backend.common.dtos.BoardNameDTO;
-import com.example.kradankanban_backend.common.dtos.DetailBoardDTO;
-import com.example.kradankanban_backend.common.dtos.SimpleStatusDTO;
+import com.example.kradankanban_backend.common.dtos.*;
 import com.example.kradankanban_backend.common.entities.BoardEntity;
 import com.example.kradankanban_backend.common.entities.StatusEntity;
+import com.example.kradankanban_backend.common.entities.TaskEntity;
 import com.example.kradankanban_backend.common.services.BoardService;
 import com.example.kradankanban_backend.common.services.StatusService;
+import com.example.kradankanban_backend.common.services.TaskService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureException;
@@ -33,11 +33,9 @@ public class BoardController {
     private TaskService taskService;
     @Autowired
     private ModelMapper modelMapper;
-
     @Autowired
     private StatusService statusService;
-    @Autowired
-    private ModelMapper modelMapper;
+
     @GetMapping("/{boardId}")
     public DetailBoardDTO getBoardById(@PathVariable String boardId) {
         return service.getBoardById(boardId);
