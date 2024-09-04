@@ -1,17 +1,22 @@
 package com.example.kradankanban_backend.common.controllers;
 
 
-import com.example.kradankanban_backend.common.dtos.BoardNameDTO;
-import com.example.kradankanban_backend.common.dtos.DetailBoardDTO;
-import com.example.kradankanban_backend.common.entities.BoardEntity;
+import com.example.kradankanban_backend.common.dtos.*;
+import com.example.kradankanban_backend.common.entities.TaskEntity;
 import com.example.kradankanban_backend.common.services.BoardService;
+import com.example.kradankanban_backend.common.services.TaskService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureException;
+import jakarta.validation.Valid;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @CrossOrigin(origins = {"http://localhost:5174" , "http://localhost:5173"})
 //@CrossOrigin(origins = "http://ip23kp2.sit.kmutt.ac.th:80")
@@ -20,6 +25,10 @@ import org.springframework.web.server.ResponseStatusException;
 public class BoardController {
     @Autowired
     private BoardService service;
+    @Autowired
+    private TaskService taskService;
+    @Autowired
+    private ModelMapper modelMapper;
 
     @GetMapping("/{boardId}")
     public DetailBoardDTO getBoardById(@PathVariable String boardId) {
@@ -46,6 +55,63 @@ public class BoardController {
         } else {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Authorization header must start with Bearer");
         }
+    }
+
+    @GetMapping("/{boardId}/tasks")
+    public ResponseEntity<Object> getTasksByBoardId(@PathVariable String boardId) {
+        DetailBoardDTO board = service.getBoardById(boardId);
+        if (board == null) {
+            return new ResponseEntity<>("Board not found", HttpStatus.NOT_FOUND);
+        }
+
+        List<TaskEntity> tasks = taskService.findTasksByBoardId(boardId);
+
+        // Map tasks to SimpleTaskDTOs
+        List<SimpleTaskDTO> simpleTaskDTOS = tasks.stream()
+                .map(task -> modelMapper.map(task, SimpleTaskDTO.class))
+                .collect(Collectors.toList());
+
+        return new ResponseEntity<>(simpleTaskDTOS, HttpStatus.OK);
+    }
+
+    @PostMapping("/{boardId}/tasks")
+    public ResponseEntity<DetailTaskDTO> addTaskForBoard(@PathVariable String boardId, @Valid @RequestBody AddEditTaskDTO addEditTaskDTO) {
+        TaskEntity task = new TaskEntity();
+        task.setTitle(addEditTaskDTO.getTitle());
+        task.setDescription(addEditTaskDTO.getDescription());
+        task.setAssignees(addEditTaskDTO.getAssignees());
+        task.setStatus(addEditTaskDTO.getStatus());
+
+        TaskEntity createdTask = taskService.addTaskForBoard(boardId, task);
+        DetailTaskDTO createdTaskDTO = modelMapper.map(createdTask, DetailTaskDTO.class);
+        return new ResponseEntity<>(createdTaskDTO, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/{boardId}/tasks/{taskId}")
+    public ResponseEntity<SimpleTaskDTO> getTaskByBoardIdAndTaskId(@PathVariable String boardId, @PathVariable int taskId) {
+        TaskEntity task = taskService.findTaskByBoardIdAndTaskId(boardId, taskId);
+        SimpleTaskDTO simpleTaskDTO = modelMapper.map(task, SimpleTaskDTO.class);
+        return ResponseEntity.ok(simpleTaskDTO);
+    }
+
+    @PutMapping("/{boardId}/tasks/{taskId}")
+    public ResponseEntity<DetailTaskDTO> updateTaskForBoard(@PathVariable String boardId, @PathVariable int taskId, @Valid @RequestBody AddEditTaskDTO addEditTaskDTO) {
+        TaskEntity task = new TaskEntity();
+        task.setTitle(addEditTaskDTO.getTitle());
+        task.setDescription(addEditTaskDTO.getDescription());
+        task.setAssignees(addEditTaskDTO.getAssignees());
+        task.setStatus(addEditTaskDTO.getStatus());
+
+        TaskEntity updatedTask = taskService.editTaskForBoard(boardId, taskId, task);
+        DetailTaskDTO updatedTaskDTO = modelMapper.map(updatedTask, DetailTaskDTO.class);
+        return new ResponseEntity<>(updatedTaskDTO, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{boardId}/tasks/{taskId}")
+    public ResponseEntity<SimpleTaskDTO> deleteTask(@RequestHeader("Authorization") String requestTokenHeader, @PathVariable String boardId, @PathVariable int taskId) {
+        String userId = extractUserIdFromToken(requestTokenHeader.substring(7));
+        SimpleTaskDTO deletedTask = taskService.deleteTaskByBoardIdAndTaskId(userId, boardId, taskId);
+        return ResponseEntity.ok(deletedTask);
     }
 
     // Add this method to extract userId from JWT token

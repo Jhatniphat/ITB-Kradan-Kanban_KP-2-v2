@@ -1,7 +1,10 @@
 package com.example.kradankanban_backend.common.services;
 
+import com.example.kradankanban_backend.common.dtos.DetailBoardDTO;
 import com.example.kradankanban_backend.common.dtos.SimpleTaskDTO;
+import com.example.kradankanban_backend.common.entities.BoardEntity;
 import com.example.kradankanban_backend.common.entities.TaskEntity;
+import com.example.kradankanban_backend.common.repositories.BoardRepository;
 import com.example.kradankanban_backend.exceptions.BadRequestException;
 import com.example.kradankanban_backend.exceptions.ItemNotFoundException;
 import com.example.kradankanban_backend.exceptions.TaskIdNotFound;
@@ -12,7 +15,9 @@ import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -25,10 +30,89 @@ public class TaskService {
     @Autowired
     private StatusRepository statusRepository;
     @Autowired
+    private BoardRepository boardRepository;
+    @Autowired
     private ModelMapper modelMapper;
     @Autowired
     private StatusService statusService;
 
+    //New TaskService With Personal Board
+    public List<TaskEntity> findTasksByBoardId(String boardId) {
+        return repository.findByTkBoard_BoardId(boardId);
+    }
+
+
+    public TaskEntity findTaskByBoardIdAndTaskId(String boardId, int taskId) {
+        BoardEntity board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new ItemNotFoundException("Board not found"));
+
+        return repository.findByTkBoardAndId(board, taskId)
+                .orElseThrow(() -> new ItemNotFoundException("Task ID "+ taskId +" does not exist !!!"));
+    }
+
+    public TaskEntity addTaskForBoard(String boardId, TaskEntity task) {
+        BoardEntity board = boardRepository.findByBoardId(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
+        task.setTkBoard(board);
+
+        String newTaskStatus = task.getStatus();
+        if(isNumeric(newTaskStatus)){
+            newTaskStatus = statusRepository.findById(Integer.valueOf(newTaskStatus)).orElseThrow(() -> new ItemNotFoundException(task.getStatus() + "does not exist'")).getName();
+            task.setStatus(newTaskStatus);
+        }
+        statusService.validateStatusLimitToAddEdit(task.getStatus());
+        try {
+            return repository.save(task);
+        } catch (Exception e) {
+            throw new ItemNotFoundException("Database Exception");
+        }
+    }
+
+    @Transactional
+    public TaskEntity editTaskForBoard(String boardId, int taskId, TaskEntity newTask) {
+        BoardEntity board = boardRepository.findByBoardId(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
+
+        TaskEntity existingTask = repository.findByTkBoardAndId(board, taskId).orElseThrow(() -> new ItemNotFoundException("Task ID " + taskId + " not found in this board!!"));
+
+        String newTaskStatus = newTask.getStatus();
+
+        if (isNumeric(newTaskStatus)) {
+            newTaskStatus = statusRepository.findById(Integer.valueOf(newTaskStatus))
+                    .orElseThrow(() -> new ItemNotFoundException("Status: " + newTask.getStatus() + " does not exist"))
+                    .getName();
+        }
+        if (newTask.getTitle() == null || newTask.getTitle().isEmpty()) {
+            throw new ItemNotFoundException("Title must not be empty");
+        } else {
+            existingTask.setTitle(newTask.getTitle());
+            existingTask.setDescription(newTask.getDescription());
+            existingTask.setAssignees(newTask.getAssignees());
+            existingTask.setStatus(newTaskStatus);
+            if (!statusRepository.existsByName(existingTask.getStatus())) {
+                throw new ItemNotFoundException("Task status does not exist");
+            }
+            statusService.validateStatusLimitToAddEdit(existingTask.getStatus());
+
+            return repository.save(existingTask);
+        }
+    }
+
+    @Transactional
+    public SimpleTaskDTO deleteTaskByBoardIdAndTaskId(String userId, String boardId, int taskId) {
+
+//        BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
+//        DetailBoardDTO boardDTO = modelMapper.map(board, DetailBoardDTO.class);
+//
+//        if (!boardDTO.getOwner().getOid().equals(userId)) {
+//            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User is not the owner of the board");
+//        }
+
+        TaskEntity task = repository.findByTkBoard_BoardIdAndId(boardId, taskId).orElseThrow(() -> new ItemNotFoundException("Task ID " + taskId + " not found in this board!!"));
+        SimpleTaskDTO simpleTaskDTO = modelMapper.map(task, SimpleTaskDTO.class);
+        repository.delete(task);
+        return simpleTaskDTO;
+    }
+
+    //Old TaskService Without Personal Board
     public List<TaskEntity> findAll() {
         return repository.findAll();
     }

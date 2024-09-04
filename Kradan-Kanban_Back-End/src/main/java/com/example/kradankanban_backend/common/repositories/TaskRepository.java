@@ -1,5 +1,6 @@
 package com.example.kradankanban_backend.common.repositories;
 
+import com.example.kradankanban_backend.common.entities.BoardEntity;
 import com.example.kradankanban_backend.common.entities.TaskEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 
 @Repository
@@ -33,4 +35,10 @@ public interface TaskRepository extends JpaRepository<TaskEntity, Integer> {
     boolean existsByStatus(String status);
 
     long countByStatus(String status);
+
+    List<TaskEntity> findByTkBoard_BoardId(String boardId);
+
+    Optional<TaskEntity> findByTkBoardAndId(BoardEntity board, int id);
+
+    Optional<TaskEntity> findByTkBoard_BoardIdAndId(String boardId, int taskId);
 }
