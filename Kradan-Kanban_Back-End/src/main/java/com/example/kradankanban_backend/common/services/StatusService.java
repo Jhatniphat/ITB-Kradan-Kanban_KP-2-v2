@@ -19,17 +19,17 @@ public class StatusService {
     @Autowired
     TaskRepository taskRepository;
 
-    public List<StatusEntity> getAll() {
-        return repository.findAll();
+    public List<StatusEntity> getAll(String boardId) {
+        return repository.findAllByStBoard(boardId);
     }
 
-    public StatusEntity getById(int id) {
-        return repository.findById(id).orElseThrow( () -> new ItemNotFoundException("No status found with id: " + id) );
+    public StatusEntity getById(String boardId,int statusId) {
+        return repository.findByStBoardAndId(boardId, statusId).orElseThrow( () -> new ItemNotFoundException("No status found with id: " + statusId) );
     }
 
     // * addStatus
     @Transactional
-    public StatusEntity addStatus(StatusEntity status) {
+    public StatusEntity addStatus(String boardId, StatusEntity status) {
 //        if (status.getName().trim().isEmpty() || status.getName() == null) {
 //            throw new BadRequestException( "Status Name is null !!!");
 //        }
@@ -44,6 +44,7 @@ public class StatusService {
 //            throw new BadRequestException("Status Name already exists !!!");
 //        }
         try {
+            status.setStBoard(boardId);
             return repository.save(status);
         } catch (Exception e) {
             throw new ItemNotFoundException("Database Exception");
@@ -52,7 +53,7 @@ public class StatusService {
 
     // * editStatus
     @Transactional
-    public StatusEntity editStatus(int id, StatusEntity status) {
+    public StatusEntity editStatus(String boardId ,int id, StatusEntity status) {
         StatusEntity oldStatus = repository.findById(id).orElseThrow( () -> new ItemNotFoundException("No status found with id: " + id) );
         if (oldStatus.getName().equals("No Status") || oldStatus.getName().equals("Done")){
             throw new BadRequestException( "'" + oldStatus.getName() +"'"+ " cannot be edited !!!");
@@ -73,6 +74,7 @@ public class StatusService {
 //            throw new BadRequestException("Status Description length should be less than 200 !!!");
 //        }
         try {
+            status.setStBoard(boardId);
             status.setId(id);
             return repository.save(status);
         } catch (Exception e) {
@@ -81,7 +83,7 @@ public class StatusService {
     }
 
     // * deleteStatus
-    public StatusEntity deleteStatus(int id) {
+    public StatusEntity deleteStatus(String boardId ,int id) {
         StatusEntity status = repository.findById(id).orElseThrow( () -> new ItemNotFoundException("No status found with id: " + id) );
         if (status.getName().equals("No Status") || status.getName().equals("Done")){
             throw new BadRequestException( "'" + status.getName() +"'"+ " cannot be delete !!!");
@@ -93,6 +95,7 @@ public class StatusService {
             throw new BadRequestException("Cannot delete 'No Status'!!!");
         }
         try {
+            status.setStBoard(boardId);
             repository.delete(status);
             return status;
         }catch (Exception e){
@@ -101,7 +104,7 @@ public class StatusService {
     }
 
     // * transferStatus
-    public StatusEntity transferStatus (int oldId, int newId){
+    public StatusEntity transferStatus (String boardId, int oldId, int newId){
         if (oldId == newId) {
             throw new BadRequestException("destination status for task transfer must be different from current status");
         }
@@ -111,10 +114,11 @@ public class StatusService {
         if (!repository.existsById(newId)) {
             throw new ItemNotFoundException("the specified status for task transfer does not exist");
         }
-        StatusEntity oldStatus = repository.findById(oldId).orElseThrow();
-        String newgetName = repository.findById(newId).orElseThrow().getName();
-        validateStatusLimitToDeleteTransfer(newgetName);
+        StatusEntity oldStatus = repository.findByStBoardAndId(boardId, oldId).orElseThrow();
+        String newgetName = repository.findByStBoardAndId(boardId, newId).orElseThrow().getName();
+        validateStatusLimitToDeleteTransfer(boardId, newgetName);
         try {
+
             taskRepository.updateTaskStatus(oldStatus.getName() , newgetName);
             repository.delete(oldStatus);
 
@@ -124,17 +128,17 @@ public class StatusService {
         }
     }
     @Transactional
-    public void toggleIsEnable() {
-        Boolean currentIsEnable = repository.findIsEnable();
+    public void toggleIsEnable(String boardId) {
+        Boolean currentIsEnable = repository.findIsEnable(boardId);
         repository.updateIsEnable(!currentIsEnable);
     }
 
-    public Object getLimitData(){
-        return repository.findIsEnable();
+    public Object getLimitData(String boardId) {
+        return repository.findIsEnable(boardId);
     }
 
-    public void validateStatusLimitToDeleteTransfer(String statusName) {
-        if (repository.findIsEnable()) {
+    public void validateStatusLimitToDeleteTransfer(String boardId, String statusName) {
+        if (repository.findIsEnable(boardId)) {
             long count = taskRepository.countByStatus(statusName);
             if (count >= repository.findLimit()) {
                 throw new BadRequestException("the destination status cannot be over the limit after transfer");
@@ -142,8 +146,8 @@ public class StatusService {
         }
     }
 
-    public void validateStatusLimitToAddEdit(String statusName) {
-        if (repository.findIsEnable()) {
+    public void validateStatusLimitToAddEdit(String boardId, String statusName) {
+        if (repository.findIsEnable(boardId)) {
             long count = taskRepository.countByStatus(statusName);
             if (count >= repository.findLimit()) {
                 throw new BadRequestException("the status has reached the limit");

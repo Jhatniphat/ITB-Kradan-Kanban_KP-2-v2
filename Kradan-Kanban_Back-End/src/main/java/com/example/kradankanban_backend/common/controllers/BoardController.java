@@ -3,15 +3,24 @@ package com.example.kradankanban_backend.common.controllers;
 
 import com.example.kradankanban_backend.common.dtos.BoardNameDTO;
 import com.example.kradankanban_backend.common.dtos.DetailBoardDTO;
+import com.example.kradankanban_backend.common.dtos.SimpleStatusDTO;
 import com.example.kradankanban_backend.common.entities.BoardEntity;
+import com.example.kradankanban_backend.common.entities.StatusEntity;
 import com.example.kradankanban_backend.common.services.BoardService;
+import com.example.kradankanban_backend.common.services.StatusService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureException;
+import jakarta.validation.Valid;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @CrossOrigin(origins = {"http://localhost:5174" , "http://localhost:5173"})
 //@CrossOrigin(origins = "http://ip23kp2.sit.kmutt.ac.th:80")
@@ -21,6 +30,10 @@ public class BoardController {
     @Autowired
     private BoardService service;
 
+    @Autowired
+    private StatusService statusService;
+    @Autowired
+    private ModelMapper modelMapper;
     @GetMapping("/{boardId}")
     public DetailBoardDTO getBoardById(@PathVariable String boardId) {
         return service.getBoardById(boardId);
@@ -59,5 +72,51 @@ public class BoardController {
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
         }
+    }
+
+    // /board/status
+    @GetMapping("/{boardId}/statuses")
+    public ResponseEntity<Object> getAll(@PathVariable String boardId) {
+        List<StatusEntity> statuses = statusService.getAll(boardId);
+        List<SimpleStatusDTO> simpleStatuses = statuses.stream().map(p -> modelMapper.map(p, SimpleStatusDTO.class)).collect(Collectors.toList());
+        return ResponseEntity.ok(simpleStatuses);
+    }
+
+    @GetMapping("/{boardId}/statuses/{statusId}")
+    public ResponseEntity<Object> getById(@PathVariable String boardId, @PathVariable int statusId) {
+        return ResponseEntity.ok(statusService.getById(boardId, statusId));
+    }
+
+    @PostMapping("/{boardId}/statuses")
+    public ResponseEntity<Object> addStatus(@PathVariable String boardId,@Valid @RequestBody StatusEntity status) {
+        StatusEntity createdStatus = statusService.addStatus(boardId, status);
+        SimpleStatusDTO simpleStatusDTO = modelMapper.map(createdStatus, SimpleStatusDTO.class);
+        return new ResponseEntity<> (simpleStatusDTO , HttpStatus.CREATED);
+    }
+
+    @PutMapping("/{boardId}/statuses/{statusId}")
+    public ResponseEntity<Object> updateStatus(@PathVariable String boardId,@PathVariable int statusId, @Valid @RequestBody StatusEntity status) {
+        return new ResponseEntity<>(statusService.editStatus(boardId, statusId, status) , HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{boardId}/statuses/{statusId}")
+    public ResponseEntity<Object> deleteStatus(@PathVariable String boardId,@PathVariable int statusId) {
+        return new ResponseEntity<>(statusService.deleteStatus(boardId, statusId) , HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{boardId}/statuses/{oldId}/{newId}")
+    public ResponseEntity<Object> transferStatus(@PathVariable String boardId, @PathVariable int oldId, @PathVariable int newId) {
+        return new ResponseEntity<>(statusService.transferStatus(boardId, oldId, newId) , HttpStatus.OK);
+    }
+
+    @GetMapping("/{boardId}/statuses/maximum-task")
+    public ResponseEntity<Object> getAllLimitSettings(@PathVariable String boardId) {
+        return new ResponseEntity<>(statusService.getLimitData(boardId) , HttpStatus.OK);
+    }
+
+    @PatchMapping("/{boardId}/statuses/maximum-task")
+    public ResponseEntity<Void> toggleMaximumTask(@PathVariable String boardId) {
+        statusService.toggleIsEnable(boardId);
+        return ResponseEntity.noContent().build();
     }
 }
