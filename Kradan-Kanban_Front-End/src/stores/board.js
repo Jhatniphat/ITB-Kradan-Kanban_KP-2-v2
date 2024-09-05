@@ -1,33 +1,33 @@
 import { defineStore } from "pinia";
+import {getAllBoard} from "@/lib/fetchUtils.js";
 
 export const useBoardStore = defineStore("Board", {
     state: () => ({
-        boards: [{ id: 1, name: "Board 1" }, { id: 2, name: "Board 2" }],
+        boards: [],
     }),
     getters: {
         getBoardById: (state) => (id) => {
             return state.boards.find((board) => board.id === id);
         },
-        getAllBoard: (state) => {
-            return state.boards;
-        },
     },
     actions: {
-        async getAllBoard() {
-            if (this.boards.length > 0) return this.boards;
-            // else {
-            //     let items;
-            //     try {
-            //         // items = await getAllBoard();
-            //         this.Board = await items;
-            //         if (typeof items !== Number) {
-            //             return this.Board;
-            //         }
-            //     } catch (error) {
-            //         console.log(error);
-            //     }
-            // }
+        getAllBoard() {
+            return this.boards;
         },
+        addBoard(newBoard) {
+            this.boards.push(newBoard);
+        },
+        addManyBoard(newBoards) {
+            newBoards.forEach((board) => {
+                this.boards.push(board);
+            });
+        },
+        deleteBoard(boardId) {
+            const index = this.boards.findIndex((board) => board.id === boardId);
+            if (index !== -1) {
+                this.boards.splice(index, 1);
+            }
+        }
 
     },
 

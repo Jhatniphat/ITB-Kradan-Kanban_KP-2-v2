@@ -17,7 +17,7 @@ const handleLogout = () => {
 
 const route = useRoute();
 let currentRoute = ref(route.path);
-console.log(currentRoute);
+console.log(currentRoute.value);
 </script>
 
 <template>

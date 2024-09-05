@@ -33,7 +33,7 @@ const handleLogin = async () => {
       const decodedToken = VueJwtDecode.decode(result.payload?.access_token);
       console.table(decodedToken);
       accountStore.setTokenDetail(decodedToken);
-      router.push({name: "tasklist"})
+      router.push({name: "board"})
     } else {
       showAlert.value = true;
       errorMsg.value = result.payload;

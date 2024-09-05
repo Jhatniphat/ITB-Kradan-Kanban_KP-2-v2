@@ -1,5 +1,6 @@
 import router from "@/router";
 import { useAccountStore } from "@/stores/account";
+import {useBoardStore} from "@/stores/board.js";
 // ! -------------------------------- Task ------------------------------------------
 export async function getAllTasks() {
   try {
@@ -338,7 +339,68 @@ export async function getLimitStatus() {
     console.log(e.toString());
   }
 }
+// ! -------------------------- BOARD ----------------------------
 
+// ? doesn't require param , func will get param from account store
+export async function getAllBoard() {
+  try {
+    const accountStore = useAccountStore();
+    const boardStore = useBoardStore();
+    let res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accountStore.tokenRaw}`,
+      },
+    }); //GET Method
+
+    if (res.status === 401) {
+      accountStore.clearTokenDetail();
+      router.push("/login");
+      return null;
+    } else if (res.status === 200) {
+      let item = await res.json();
+      console.table(item)
+      // ? because now item is an object not an array
+      boardStore.addBoard(item);
+      return await item
+    }
+    // return await res.json();
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+
+// ? @param newBoard : object
+export async function addBoard(newBoard) {
+  const accountStore = useAccountStore();
+  const boardStore = useBoardStore();
+  let res, item;
+  try {
+    res = await fetch(`${import.meta.env.VITE_API_ROOT}/tasks`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accountStore.tokenRaw}`,
+      },
+      body: JSON.stringify({ ...newTask }),
+    });
+    if (res.status === 401) {
+      accountStore.clearTokenDetail();
+      router.push("/login");
+      return;
+    }
+    if (res.status === 201) {
+      item = await res.json();
+      boardStore.addBoard(item);
+      return item;
+    } else {
+      return res.status;
+    }
+  } catch (error) {
+    return error;
+  }
+}
 // ! -------------------------- LOGIN ----------------------------
 
 export async function login(username, password) {
