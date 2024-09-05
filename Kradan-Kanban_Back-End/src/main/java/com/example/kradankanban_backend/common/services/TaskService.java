@@ -37,29 +37,35 @@ public class TaskService {
     private StatusService statusService;
 
     //New TaskService With Personal Board
-    public List<TaskEntity> findTasksByBoardId(String boardId) {
+    public List<TaskEntity> findAllTasksByBoardId(String userId,String boardId) {
+        BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
+        if (!board.getUserId().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this board.");
+        }
         return repository.findByTkBoard_BoardId(boardId);
     }
 
 
-    public TaskEntity findTaskByBoardIdAndTaskId(String boardId, int taskId) {
-        BoardEntity board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new ItemNotFoundException("Board not found"));
-
-        return repository.findByTkBoardAndId(board, taskId)
-                .orElseThrow(() -> new ItemNotFoundException("Task ID "+ taskId +" does not exist !!!"));
+    public TaskEntity findTaskByBoardIdAndTaskId(String userId,String boardId, int taskId) {
+        BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
+        if (!board.getUserId().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this board.");
+        }
+        return repository.findByTkBoardAndId(board, taskId).orElseThrow(() -> new ItemNotFoundException("Task ID "+ taskId +" does not exist !!!"));
     }
 
-    public TaskEntity addTaskForBoard(String boardId, TaskEntity task) {
+    public TaskEntity addTaskForBoard(String userId,String boardId, TaskEntity task) {
         BoardEntity board = boardRepository.findByBoardId(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
+        if (!board.getUserId().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this board.");
+        }
         task.setTkBoard(board);
-
         String newTaskStatus = task.getStatus();
         if(isNumeric(newTaskStatus)){
             newTaskStatus = statusRepository.findById(Integer.valueOf(newTaskStatus)).orElseThrow(() -> new ItemNotFoundException(task.getStatus() + "does not exist'")).getName();
             task.setStatus(newTaskStatus);
         }
-        statusService.validateStatusLimitToAddEdit(task.getStatus());
+        statusService.validateStatusLimitToAddEdit(boardId,task.getStatus());
         try {
             return repository.save(task);
         } catch (Exception e) {
@@ -68,8 +74,12 @@ public class TaskService {
     }
 
     @Transactional
-    public TaskEntity editTaskForBoard(String boardId, int taskId, TaskEntity newTask) {
+    public TaskEntity editTaskForBoard(String userId, String boardId, int taskId, TaskEntity newTask) {
         BoardEntity board = boardRepository.findByBoardId(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
+
+        if (!board.getUserId().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this board.");
+        }
 
         TaskEntity existingTask = repository.findByTkBoardAndId(board, taskId).orElseThrow(() -> new ItemNotFoundException("Task ID " + taskId + " not found in this board!!"));
 
@@ -90,7 +100,7 @@ public class TaskService {
             if (!statusRepository.existsByName(existingTask.getStatus())) {
                 throw new ItemNotFoundException("Task status does not exist");
             }
-            statusService.validateStatusLimitToAddEdit(existingTask.getStatus());
+            statusService.validateStatusLimitToAddEdit(boardId,existingTask.getStatus());
 
             return repository.save(existingTask);
         }
@@ -99,97 +109,98 @@ public class TaskService {
     @Transactional
     public SimpleTaskDTO deleteTaskByBoardIdAndTaskId(String userId, String boardId, int taskId) {
 
-//        BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
-//        DetailBoardDTO boardDTO = modelMapper.map(board, DetailBoardDTO.class);
-//
-//        if (!boardDTO.getOwner().getOid().equals(userId)) {
-//            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User is not the owner of the board");
-//        }
+        BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
+
+        if (!board.getUserId().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this board.");
+        }
 
         TaskEntity task = repository.findByTkBoard_BoardIdAndId(boardId, taskId).orElseThrow(() -> new ItemNotFoundException("Task ID " + taskId + " not found in this board!!"));
         SimpleTaskDTO simpleTaskDTO = modelMapper.map(task, SimpleTaskDTO.class);
         repository.delete(task);
         return simpleTaskDTO;
     }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //Old TaskService Without Personal Board
-    public List<TaskEntity> findAll() {
-        return repository.findAll();
-    }
 
-    public TaskEntity findById(int id) {
-        return repository.findById(id).orElseThrow(() -> new TaskIdNotFound("Task ID "+ id +" does not exist !!!"){
-        });
-    }
-
-    @Transactional
-    public TaskEntity addTask(TaskEntity task) {
-        String newTaskStatus = task.getStatus();
-        if(isNumeric(newTaskStatus)){
-            newTaskStatus = statusRepository.findById(Integer.valueOf(newTaskStatus)).orElseThrow(() -> new ItemNotFoundException(task.getStatus() + "does not exist'")).getName();
-            task.setStatus(newTaskStatus);
-        }
-        //        if (task.getTitle() == null || task.getTitle().isEmpty()) {
-//            throw new BadRequestException("Task title is null !!!");
+//    public List<TaskEntity> findAll() {
+//        return repository.findAll();
+//    }
+//
+//    public TaskEntity findById(int id) {
+//        return repository.findById(id).orElseThrow(() -> new TaskIdNotFound("Task ID "+ id +" does not exist !!!"){
+//        });
+//    }
+//
+//    @Transactional
+//    public TaskEntity addTask(TaskEntity task) {
+//        String newTaskStatus = task.getStatus();
+//        if(isNumeric(newTaskStatus)){
+//            newTaskStatus = statusRepository.findById(Integer.valueOf(newTaskStatus)).orElseThrow(() -> new ItemNotFoundException(task.getStatus() + "does not exist'")).getName();
+//            task.setStatus(newTaskStatus);
 //        }
-//        if (task.getTitle().length() > 100) {
-//            throw new BadRequestException("Task title length should be less than 100 !!!");
-//        }
-//        if (task.getDescription() != null && task.getDescription().length() > 500) {
-//            throw new BadRequestException("Task description length should be less than 500 !!!");
-//        }
-//        if (task.getAssignees() != null && task.getAssignees().length() > 30) {
-//            throw new BadRequestException("Task assignees length should be less than 30 !!!");
-//        }
-//        if (!statusRepository.existsByName(task.getStatus()) ){
-//            throw new ItemNotFoundException("Task status not exist !!!");
-//        }
-        statusService.validateStatusLimitToAddEdit(task.getStatus());
-        try {
-            return repository.save(task);
-        } catch (Exception e) {
-            throw new ItemNotFoundException("Database Exception");
-        }
-    }
-
-    @Transactional
-    public SimpleTaskDTO deleteTask(int id) {
-        TaskEntity task = repository.findById(id).orElseThrow(() -> new ItemNotFoundException("NOT FOUND"));
-        SimpleTaskDTO simpleTaskDTO = modelMapper.map(task, SimpleTaskDTO.class);
-        repository.delete(task);
-        return simpleTaskDTO;
-    }
-
-    @Transactional
-    public TaskEntity editTask(int id, TaskEntity newTask) {
-        String newTaskStatus = newTask.getStatus();
-        if(isNumeric(newTaskStatus)){
-            newTaskStatus = statusRepository.findById(Integer.valueOf(newTaskStatus)).orElseThrow( () -> new ItemNotFoundException("status : " + newTask.getStatus() + "does not exist")).getName();
-        }
+//        //        if (task.getTitle() == null || task.getTitle().isEmpty()) {
+////            throw new BadRequestException("Task title is null !!!");
+////        }
+////        if (task.getTitle().length() > 100) {
+////            throw new BadRequestException("Task title length should be less than 100 !!!");
+////        }
+////        if (task.getDescription() != null && task.getDescription().length() > 500) {
+////            throw new BadRequestException("Task description length should be less than 500 !!!");
+////        }
+////        if (task.getAssignees() != null && task.getAssignees().length() > 30) {
+////            throw new BadRequestException("Task assignees length should be less than 30 !!!");
+////        }
+////        if (!statusRepository.existsByName(task.getStatus()) ){
+////            throw new ItemNotFoundException("Task status not exist !!!");
+////        }
+//        statusService.validateStatusLimitToAddEdit(task.getStatus());
 //        try {
-//            double d = Double.parseDouble(newTaskStatus);
-//        } catch (NumberFormatException nfe) {
-////            return false;
-//        } finally {
-//            newTaskStatus = statusRepository.findById(Integer.valueOf(newTaskStatus)).orElseThrow().getName();
+//            return repository.save(task);
+//        } catch (Exception e) {
+//            throw new ItemNotFoundException("Database Exception");
 //        }
-        TaskEntity task = repository.findById(id).orElseThrow(() -> new ItemNotFoundException("NOT FOUND"));
-        if (newTask.getTitle() == null || newTask.getTitle().isEmpty()) {
-            throw new ItemNotFoundException("NOT FOUND");
-        } else {
-            newTask.setId(id);
-            task.setTitle(newTask.getTitle());
-            task.setDescription(newTask.getDescription());
-            task.setAssignees(newTask.getAssignees());
-            task.setStatus(newTaskStatus);
-            if (!statusRepository.existsByName(task.getStatus())){
-//                throw new HttpClientErrorException(HttpStatus.BAD_REQUEST,"Task status not exist !!!");
-                throw new ItemNotFoundException("Task status not exist !!!");
-            }
-            statusService.validateStatusLimitToAddEdit(task.getStatus());
-            return repository.save(newTask);
-        }
-    }
+//    }
+//
+//    @Transactional
+//    public SimpleTaskDTO deleteTask(int id) {
+//        TaskEntity task = repository.findById(id).orElseThrow(() -> new ItemNotFoundException("NOT FOUND"));
+//        SimpleTaskDTO simpleTaskDTO = modelMapper.map(task, SimpleTaskDTO.class);
+//        repository.delete(task);
+//        return simpleTaskDTO;
+//    }
+//
+//    @Transactional
+//    public TaskEntity editTask(int id, TaskEntity newTask) {
+//        String newTaskStatus = newTask.getStatus();
+//        if(isNumeric(newTaskStatus)){
+//            newTaskStatus = statusRepository.findById(Integer.valueOf(newTaskStatus)).orElseThrow( () -> new ItemNotFoundException("status : " + newTask.getStatus() + "does not exist")).getName();
+//        }
+////        try {
+////            double d = Double.parseDouble(newTaskStatus);
+////        } catch (NumberFormatException nfe) {
+//////            return false;
+////        } finally {
+////            newTaskStatus = statusRepository.findById(Integer.valueOf(newTaskStatus)).orElseThrow().getName();
+////        }
+//        TaskEntity task = repository.findById(id).orElseThrow(() -> new ItemNotFoundException("NOT FOUND"));
+//        if (newTask.getTitle() == null || newTask.getTitle().isEmpty()) {
+//            throw new ItemNotFoundException("NOT FOUND");
+//        } else {
+//            newTask.setId(id);
+//            task.setTitle(newTask.getTitle());
+//            task.setDescription(newTask.getDescription());
+//            task.setAssignees(newTask.getAssignees());
+//            task.setStatus(newTaskStatus);
+//            if (!statusRepository.existsByName(task.getStatus())){
+////                throw new HttpClientErrorException(HttpStatus.BAD_REQUEST,"Task status not exist !!!");
+//                throw new ItemNotFoundException("Task status not exist !!!");
+//            }
+//            statusService.validateStatusLimitToAddEdit(task.getStatus());
+//            return repository.save(newTask);
+//        }
+//    }
 
     private static final List<String> ALLOWED_SORT_FIELDS = Arrays.asList("status.id", "status.name", "id", "title","assignees");
 

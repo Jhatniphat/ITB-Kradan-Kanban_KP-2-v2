@@ -63,52 +63,53 @@ public class BoardController {
         }
     }
 
+    // "/boards/tasks"
+
     @GetMapping("/{boardId}/tasks")
-    public ResponseEntity<Object> getTasksByBoardId(@PathVariable String boardId) {
+    public ResponseEntity<Object> getTasksByBoardId(@RequestHeader("Authorization") String requestTokenHeader ,@PathVariable String boardId) {
+        String userId = extractUserIdFromToken(requestTokenHeader.substring(7));
         DetailBoardDTO board = service.getBoardById(boardId);
         if (board == null) {
             return new ResponseEntity<>("Board not found", HttpStatus.NOT_FOUND);
         }
-
-        List<TaskEntity> tasks = taskService.findTasksByBoardId(boardId);
-
-        // Map tasks to SimpleTaskDTOs
-        List<SimpleTaskDTO> simpleTaskDTOS = tasks.stream()
-                .map(task -> modelMapper.map(task, SimpleTaskDTO.class))
-                .collect(Collectors.toList());
+        List<TaskEntity> tasks = taskService.findAllTasksByBoardId(userId,boardId);
+        List<SimpleTaskDTO> simpleTaskDTOS = tasks.stream().map(task -> modelMapper.map(task, SimpleTaskDTO.class)).collect(Collectors.toList());
 
         return new ResponseEntity<>(simpleTaskDTOS, HttpStatus.OK);
     }
 
     @PostMapping("/{boardId}/tasks")
-    public ResponseEntity<DetailTaskDTO> addTaskForBoard(@PathVariable String boardId, @Valid @RequestBody AddEditTaskDTO addEditTaskDTO) {
+    public ResponseEntity<DetailTaskDTO> addTaskForBoard(@RequestHeader("Authorization") String requestTokenHeader ,@PathVariable String boardId, @Valid @RequestBody AddEditTaskDTO addEditTaskDTO) {
+        String userId = extractUserIdFromToken(requestTokenHeader.substring(7));
         TaskEntity task = new TaskEntity();
         task.setTitle(addEditTaskDTO.getTitle());
         task.setDescription(addEditTaskDTO.getDescription());
         task.setAssignees(addEditTaskDTO.getAssignees());
         task.setStatus(addEditTaskDTO.getStatus());
 
-        TaskEntity createdTask = taskService.addTaskForBoard(boardId, task);
+        TaskEntity createdTask = taskService.addTaskForBoard(userId,boardId, task);
         DetailTaskDTO createdTaskDTO = modelMapper.map(createdTask, DetailTaskDTO.class);
         return new ResponseEntity<>(createdTaskDTO, HttpStatus.CREATED);
     }
 
     @GetMapping("/{boardId}/tasks/{taskId}")
-    public ResponseEntity<SimpleTaskDTO> getTaskByBoardIdAndTaskId(@PathVariable String boardId, @PathVariable int taskId) {
-        TaskEntity task = taskService.findTaskByBoardIdAndTaskId(boardId, taskId);
+    public ResponseEntity<SimpleTaskDTO> getTaskByBoardIdAndTaskId(@RequestHeader("Authorization") String requestTokenHeader ,@PathVariable String boardId, @PathVariable int taskId) {
+        String userId = extractUserIdFromToken(requestTokenHeader.substring(7));
+        TaskEntity task = taskService.findTaskByBoardIdAndTaskId(userId,boardId, taskId);
         SimpleTaskDTO simpleTaskDTO = modelMapper.map(task, SimpleTaskDTO.class);
         return ResponseEntity.ok(simpleTaskDTO);
     }
 
     @PutMapping("/{boardId}/tasks/{taskId}")
-    public ResponseEntity<DetailTaskDTO> updateTaskForBoard(@PathVariable String boardId, @PathVariable int taskId, @Valid @RequestBody AddEditTaskDTO addEditTaskDTO) {
+    public ResponseEntity<DetailTaskDTO> editTaskForBoard(@RequestHeader("Authorization") String requestTokenHeader ,@PathVariable String boardId, @PathVariable int taskId, @Valid @RequestBody AddEditTaskDTO addEditTaskDTO) {
+        String userId = extractUserIdFromToken(requestTokenHeader.substring(7));
         TaskEntity task = new TaskEntity();
         task.setTitle(addEditTaskDTO.getTitle());
         task.setDescription(addEditTaskDTO.getDescription());
         task.setAssignees(addEditTaskDTO.getAssignees());
         task.setStatus(addEditTaskDTO.getStatus());
 
-        TaskEntity updatedTask = taskService.editTaskForBoard(boardId, taskId, task);
+        TaskEntity updatedTask = taskService.editTaskForBoard(userId,boardId, taskId, task);
         DetailTaskDTO updatedTaskDTO = modelMapper.map(updatedTask, DetailTaskDTO.class);
         return new ResponseEntity<>(updatedTaskDTO, HttpStatus.OK);
     }
