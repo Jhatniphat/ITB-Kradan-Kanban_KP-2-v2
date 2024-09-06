@@ -3,6 +3,7 @@ import TaskListView from "../views/TasklistView.vue";
 import StatusListView from "@/views/StatusListView.vue";
 import LogicPage from "@/components/LogicPage.vue";
 import {useAccountStore} from "@/stores/account";
+import {useBoardStore} from "@/stores/board.js";
 
 
 const router = createRouter({
@@ -21,10 +22,23 @@ const router = createRouter({
             component: () => import("../views/AboutView.vue"),
         },
         {
-            path: "/board/:id",
+            path: "/board/add",
+            name: "add-board",
+            component: () => import("../views/BoardView.vue"),
+        },
+        {
+            path: "/board/:boardId/status",
+            name : "status",
+            component : () => import("../views/StatusListView.vue"),
+            alias: ["/board/:boardId/status/add" , "/board/:boardId/status/:statusId/edit"],
+            //  ? alias is similar to redirect but it doesn't change the URL
+            //  ? "/board/:id/task/add" , "/board/:id/task/:task-id/edit" , "/board/:id/task/:task-id/edit"
+        },
+        {
+            path: "/board/:boardId",
             name : "task",
             component : () => import("../views/TasklistView.vue"),
-            alias: ["/board/:id/task/add" , "/board/:id/task/:task-id/edit" , "/board/:id/task/:task-id/edit"]
+            alias: ["/board/:boardId/task/add" , "/board/:boardId/task/:taskId/edit"]
         //  ? alias is similar to redirect but it doesn't change the URL
         //  ? "/board/:id/task/add" , "/board/:id/task/:task-id/edit" , "/board/:id/task/:task-id/edit"
         },
@@ -32,7 +46,6 @@ const router = createRouter({
             path: "/board",
             name: "board",
             component: () => import("../views/BoardView.vue"),
-            alias: ["/board/add"]
         },
 
         //
@@ -73,9 +86,15 @@ const router = createRouter({
 
 router.beforeEach(async (to, from) => {
     const accountStore = useAccountStore();
+    const boardStore = useBoardStore()
     // const isAuthenticated = !!accountStore.tokenDetail.token;
     const isAuthenticated = accountStore.tokenDetail !== {};
-    console.table(isAuthenticated)
+
+    if (to.name === "task" || to.name === "status") {
+        // boardStore.currentBoard.id = to.params.boardId =
+        console.log(to.params.boardId)
+        boardStore.setCurrentBoardId(to.params.boardId)
+    }
     if (
         // make sure the user is authenticated
         !isAuthenticated &&

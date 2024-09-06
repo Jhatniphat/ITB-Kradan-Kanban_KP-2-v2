@@ -5,6 +5,7 @@ import { ref, watch } from "vue";
 import router from "@/router/index.js";
 import { computed } from "vue";
 import { useAccountStore } from "@/stores/account.js";
+import {useBoardStore} from "@/stores/board.js";
 
 const accountStore = useAccountStore();
 
@@ -16,45 +17,21 @@ const handleLogout = () => {
 };
 
 const route = useRoute();
+function routeChange(to) {
+  const currentBoardId = useBoardStore().currentBoardId
+  console.log("currentBoardId", currentBoardId)
+  if (to === "task"){
+    router.push(`/board/${currentBoardId}`)
+  } else {
+    router.push(`/board/${currentBoardId}/status`)
+  }
+
+}
 let currentRoute = ref(route.path);
 console.log(currentRoute.value);
 </script>
 
 <template>
-  <!--    <div class="navbar bg-base-300 sticky top-0 z-40 flex justify-between">-->
-  <!--      <div class="navbar-start p-4">-->
-  <!--        <div class="flex flex-col text-center ml-4 italic">-->
-  <!--          <h1 class="text-xl font-bold">ITB-Kradan-Kanban</h1>-->
-  <!--          <h1 class="text-sm">By KP-2</h1>-->
-  <!--        </div>-->
-  <!--        <div class="flex flex-col text-center ml-6">-->
-  <!--          <h3 class="text-l font-bold">Home</h3>-->
-  <!--        </div>-->
-  <!--      </div>-->
-  <!--      &lt;!&ndash; Add Status &ndash;&gt;-->
-  <!--      <div class="navbar-end">-->
-  <!--&lt;!&ndash;        <button&ndash;&gt;-->
-  <!--&lt;!&ndash;            class="itbkk-button-add btn btn-square btn-outline w-16"&ndash;&gt;-->
-  <!--&lt;!&ndash;            @click="showAddModal = true"&ndash;&gt;-->
-  <!--&lt;!&ndash;        >&ndash;&gt;-->
-  <!--&lt;!&ndash;          Add Status&ndash;&gt;-->
-  <!--&lt;!&ndash;        </button>&ndash;&gt;-->
-  <!--        <div class="flex flex-col ml-4 italic">-->
-  <!--          <h1 class="text-xl font-bold float-right text-right">Somchai Jaidee</h1>-->
-  <!--        </div>-->
-  <!--      </div>-->
-  <!--      <div class="navbar-end">-->
-  <!--  &lt;!&ndash;      <div class="manage-status">&ndash;&gt;-->
-  <!--  &lt;!&ndash;        <button&ndash;&gt;-->
-  <!--  &lt;!&ndash;            @click="router.push('/status')"&ndash;&gt;-->
-  <!--  &lt;!&ndash;            class="itbkk-manage-status btn btn-square btn-outline w-20 m-2"&ndash;&gt;-->
-  <!--  &lt;!&ndash;        >&ndash;&gt;-->
-  <!--  &lt;!&ndash;          Manage Status&ndash;&gt;-->
-  <!--  &lt;!&ndash;        </button>&ndash;&gt;-->
-  <!--  &lt;!&ndash;      </div>&ndash;&gt;-->
-  <!--      </div>-->
-  <!--    </div>-->
-
   <nav class="bg-gray-800">
     <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
       <div class="relative flex h-16 items-center justify-between">
@@ -121,16 +98,16 @@ console.log(currentRoute.value);
           <div class="hidden sm:ml-6 sm:block">
             <div class="flex space-x-4">
               <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
-              <router-link
-                to="/task"
+              <h5
+                  @click="routeChange('task')"
                 class="rounded-md px-3 py-2 text-sm bg-gray-900 font-medium text-white"
                 aria-current="page"
-                >Task</router-link
+                >Task</h5
               >
-              <router-link
-                to="/status"
+              <h5
+                  @click="routeChange('status')"
                 class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                >Status</router-link
+                >Status</h5
               >
             </div>
           </div>

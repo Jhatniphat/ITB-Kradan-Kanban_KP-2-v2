@@ -9,11 +9,13 @@ import router from "@/router"
 import { useStatusStore } from "@/stores/status.js"
 import EditLimitStatus from "@/components/EditLimitStatus.vue"
 import NavBar from "@/App.vue"
+import {useBoardStore} from "@/stores/board.js";
 
 // ! ================= Variable ======================
 // ? ----------------- Store and Route ---------------
 const statusStore = useStatusStore()
 const route = useRoute()
+const currentBoardId = useBoardStore().currentBoardId
 
 // ? ----------------- Modal ---------------
 const toast = ref({ status: "", msg: "" })
@@ -72,7 +74,7 @@ const closeAddModal = (res) => {
 const openEdit = (id) => {
   selectedId.value = id
   showEdit.value = true
-  router.push(`/status/${id}`)
+  router.push(`/board/${currentBoardId}/status/${id}`)
 }
 
 const closeEdit = (res) => {
@@ -132,14 +134,6 @@ function closeEditLimit(overStatus) {
 </script>
 
 <template>
-  <!--  &lt;!&ndash; Home Button &ndash;&gt;-->
-  <!--  <div class="text-base breadcrumbs flex p-10">-->
-  <!--    <ul>-->
-  <!--      <li @click="router.push('/task')" class="cursor-pointer">Home</li>-->
-  <!--      <li class="text-base font-semibold">Task Status</li>-->
-  <!--    </ul>-->
-  <!--  </div>-->
-
   <!-- content -->
   <div class="opacity">
     <div class="flex flex-col">

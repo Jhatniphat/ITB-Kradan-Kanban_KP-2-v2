@@ -11,12 +11,15 @@ import Modal from "../components/Modal.vue";
 import Taskdetail from "../components/Tasks/Taskdetail.vue";
 import AddTaskModal from "@/components/Tasks/AddTaskModal.vue";
 import EditLimitStatus from "@/components/EditLimitStatus.vue";
+import {useBoardStore} from "@/stores/board.js";
 
 // ! ================= Variable ======================
 // ? ----------------- Store and Route ---------------
 const taskStore = useTaskStore();
 const statusStore = useStatusStore();
 const route = useRoute();
+const currentRoute = route.params?.boardId;
+console.log(currentRoute);
 
 // ? ----------------- Modal -------------------------
 const showDetailModal = ref(false);
@@ -36,9 +39,10 @@ const showErrorModal = ref(false); // * show Error from Edit Limit modal
 const overStatuses = ref([]);
 
 // ! ================= Modal ======================
+const currentBoardId = useBoardStore().currentBoardId;
 const openEditMode = (id) => {
   showDetailModal.value = true;
-  router.push(`/task/${id}`);
+  router.push(`/board/${currentBoardId}/task/${id}/edit`);
 };
 
 const closeAddModal = (res) => {
@@ -114,25 +118,6 @@ const openDeleteModal = (taskTitle, id) => {
   showDeleteModal.value = true;
 };
 
-// ? open = true , close = false
-// function EditLimitModal(openOrClose) {
-//   if (openOrClose) {
-//     limitStatusValue.value = { isEnable: statusStore.getLimitEnable(), limit: statusStore.getLimit() }
-//     showEditLimit.value = true
-//   } else {
-//     statusStore.setLimitEnable(limitStatusValue.value.isEnable)
-//     statusStore.setLimit(limitStatusValue.value.limit)
-//     showEditLimit.value = false
-//     let overStatus = statusStore.getOverStatus()
-//     if (overStatus.length > 0) {
-//       showToast({status: "error", msg: `Has Over Limit Status : ${overStatus.join(" , ")}`}, 5000);
-//     }
-//   }
-// }
-
-// const limitStatusValueError = computed( () => {
-//   return limitStatusValue.value.limit > 30 ? `Limit Can't Be Over 30!!` : '' }
-// )
 // ! ================= open Detail ======================
 const openModal = (id) => {
   selectedId.value = id;
@@ -158,7 +143,7 @@ async function fetchData(id) {
   }
 }
 
-watch(() => route.params.id, fetchData, { immediate: true });
+watch(() => route.params.taskId, fetchData, { immediate: true });
 
 // ! ================= Filter and Sort ======================
 const filterBy = ref([]);
@@ -374,7 +359,7 @@ onBeforeMount(async () => {
             <th>{{ index + 1 }}</th>
             <td class="itbkk-title">
               <!-- <RouterLink :to="`/task/${task.id}`"> -->
-              <button @click="router.push(`/task/${task.id}`)">
+              <button @click="router.push(`/board/${currentBoardId}/task/${task.id}/edit`)">
                 {{ task.title }}
               </button>
               <!-- </RouterLink> -->

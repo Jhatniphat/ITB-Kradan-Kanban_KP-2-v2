@@ -1,11 +1,14 @@
 import router from "@/router";
 import { useAccountStore } from "@/stores/account";
 import {useBoardStore} from "@/stores/board.js";
+import {useTaskStore} from "@/stores/task.js";
 // ! -------------------------------- Task ------------------------------------------
 export async function getAllTasks() {
+  const accountStore = useAccountStore();
+  const taskStore = useTaskStore();
+  const boardId = useBoardStore().currentBoardId;
   try {
-    const accountStore = useAccountStore();
-    let res = await fetch(`${import.meta.env.VITE_API_ROOT}/tasks`, {
+    let res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${accountStore.tokenRaw}`,
@@ -15,19 +18,25 @@ export async function getAllTasks() {
       accountStore.clearTokenDetail();
       router.push("/login");
       return;
+    } else if (res.status === 200) {
+      let item = await res.json();
+        taskStore.tasks = item;
+        return item;
     }
     return await res.json();
   } catch (error) {}
 }
 
 export async function getTaskById(id) {
+  const boardId = useBoardStore().currentBoardId;
+  const accountStore = useAccountStore();
   console.log(`GET !! ${id}`);
   let res, item;
   try {
-    const accountStore = useAccountStore();
-    res = await fetch(`${import.meta.env.VITE_API_ROOT}/tasks/${id}`, {
+    res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks/${id}`, {
       method: "GET",
       headers: {
+
         Authorization: `Bearer ${accountStore.tokenRaw}`,
       },
     });
@@ -51,10 +60,11 @@ export async function getTaskById(id) {
 
 export async function addTask(newTask) {
   let res, item;
+  const boardId = useBoardStore().currentBoardId;
   // console.log(JSON.stringify({ ...newTask }));
   try {
     const accountStore = useAccountStore();
-    res = await fetch(`${import.meta.env.VITE_API_ROOT}/tasks`, {
+    res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -78,10 +88,11 @@ export async function addTask(newTask) {
   }
 }
 
-export async function editTask(id, Task) {
+export async function editTask(taskId, Task) {
+  const boardId = useBoardStore().currentBoardId;
   try {
     const accountStore = useAccountStore();
-    let res = await fetch(`${import.meta.env.VITE_API_ROOT}/tasks/${id}`, {
+    let res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks/${taskId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -105,9 +116,10 @@ export async function editTask(id, Task) {
 }
 
 export async function deleteTask(id) {
+  const boardId = useBoardStore().currentBoardId;
   try {
     const accountStore = useAccountStore();
-    let res = await fetch(`${import.meta.env.VITE_API_ROOT}/tasks/${id}`, {
+    let res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks/${id}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${accountStore.tokenRaw}`,
@@ -132,9 +144,10 @@ export async function deleteTask(id) {
 
 // ! ------------------------------- Status --------------------------------
 export async function getAllStatus() {
+  const boardId = useBoardStore().currentBoardId;
   try {
     const accountStore = useAccountStore();
-    let res = await fetch(`${import.meta.env.VITE_API_ROOT}/statuses`, {
+    let res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${accountStore.tokenRaw}`,
@@ -150,10 +163,11 @@ export async function getAllStatus() {
 }
 
 export async function getStatusById(id) {
+  const boardId = useBoardStore().currentBoardId;
   let res, item;
   try {
     const accountStore = useAccountStore();
-    res = await fetch(`${import.meta.env.VITE_API_ROOT}/statuses/${id}`, {
+    res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses/${id}`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${accountStore.tokenRaw}`,
@@ -178,10 +192,11 @@ export async function getStatusById(id) {
 }
 
 export async function addStatus(newStatus) {
+  const boardId = useBoardStore().currentBoardId;
   let res, item;
   try {
     const accountStore = useAccountStore();
-    res = await fetch(`${import.meta.env.VITE_API_ROOT}/statuses`, {
+    res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -206,10 +221,11 @@ export async function addStatus(newStatus) {
 }
 
 export async function editStatus(id, Status) {
+  const boardId = useBoardStore().currentBoardId;
   let res;
   try {
     const accountStore = useAccountStore();
-    res = await fetch(`${import.meta.env.VITE_API_ROOT}/statuses/${id}`, {
+    res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -234,10 +250,11 @@ export async function editStatus(id, Status) {
 }
 
 export async function deleteStatus(id) {
+  const boardId = useBoardStore().currentBoardId;
   let res, item;
   try {
     const accountStore = useAccountStore();
-    res = await fetch(`${import.meta.env.VITE_API_ROOT}/statuses/${id}`, {
+    res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses/${id}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${accountStore.tokenRaw}`,
@@ -262,11 +279,12 @@ export async function deleteStatus(id) {
 }
 
 export async function transferStatus(oldId, newId) {
+  const boardId = useBoardStore().currentBoardId;
   let res, item;
   try {
     const accountStore = useAccountStore();
     res = await fetch(
-      `${import.meta.env.VITE_API_ROOT}/statuses/${oldId}/${newId}`,
+      `${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses/${oldId}/${newId}`,
       {
         method: "DELETE",
         headers: {
@@ -293,11 +311,12 @@ export async function transferStatus(oldId, newId) {
 }
 
 export async function toggleLimitStatus() {
+  const boardId = useBoardStore().currentBoardId;
   let res, item;
   try {
     const accountStore = useAccountStore();
     res = await fetch(
-      `${import.meta.env.VITE_API_ROOT}/statuses/maximum-task`,
+      `${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses/maximum-task`,
       {
         method: "PATCH",
         headers: {
@@ -317,11 +336,12 @@ export async function toggleLimitStatus() {
 }
 
 export async function getLimitStatus() {
+  const boardId = useBoardStore().currentBoardId;
   let res, item;
   try {
     const accountStore = useAccountStore();
     res = await fetch(
-      `${import.meta.env.VITE_API_ROOT}/statuses/maximum-task`,
+      `${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses/maximum-task`,
       {
         method: "GET",
         headers: {
@@ -362,7 +382,10 @@ export async function getAllBoard() {
       console.table(item)
       // ? because now item is an object not an array
       boardStore.addBoard(item);
-      return await item
+      return { status: 200, payload: item };
+      // return await item
+    } else if (res.status === 400) {
+      return { status: 400, payload: "No board found" };
     }
     // return await res.json();
   } catch (error) {
@@ -377,13 +400,13 @@ export async function addBoard(newBoard) {
   const boardStore = useBoardStore();
   let res, item;
   try {
-    res = await fetch(`${import.meta.env.VITE_API_ROOT}/tasks`, {
+    res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accountStore.tokenRaw}`,
       },
-      body: JSON.stringify({ ...newTask }),
+      body: JSON.stringify({ ...newBoard }),
     });
     if (res.status === 401) {
       accountStore.clearTokenDetail();

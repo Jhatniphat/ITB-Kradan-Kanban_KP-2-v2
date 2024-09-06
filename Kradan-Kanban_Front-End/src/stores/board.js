@@ -1,19 +1,23 @@
 import { defineStore } from "pinia";
-import {getAllBoard} from "@/lib/fetchUtils.js";
+import router from "@/router/index.js";
+
+
 
 export const useBoardStore = defineStore("Board", {
     state: () => ({
         boards: [],
+        currentBoardId: "",
     }),
     getters: {
         getBoardById: (state) => (id) => {
             return state.boards.find((board) => board.id === id);
         },
-    },
-    actions: {
         getAllBoard() {
             return this.boards;
         },
+    },
+    actions: {
+
         addBoard(newBoard) {
             this.boards.push(newBoard);
         },
@@ -27,9 +31,18 @@ export const useBoardStore = defineStore("Board", {
             if (index !== -1) {
                 this.boards.splice(index, 1);
             }
+        },
+        setCurrentBoardId(boardId) {
+            if(boardId !== this.boards.id && this.boards.id !== undefined) {
+                console.log("You are not the owner of this board")
+                router.push("/login")
+            }
+            this.currentBoardId = boardId;
         }
 
+
     },
+
 
     // return { count, doubleCount, increment }
 });

@@ -4,7 +4,9 @@ import { getTaskById, editTask } from "@/lib/fetchUtils.js";
 import router from "@/router";
 import { useTaskStore } from "@/stores/task";
 import { useStatusStore } from "@/stores/status.js";
+import {useBoardStore} from "@/stores/board.js";
 
+const currentBoardId = useBoardStore().currentBoardId;
 const taskStore = useTaskStore();
 const statusStore = useStatusStore();
 const emit = defineEmits(["closeModal", "editMode"]);
@@ -82,13 +84,14 @@ async function fetchTask(id) {
       originalTaskDetails === 500
     ) {
       emit("closeModal", 404);
-      router.push("/task");
+
+      router.push(`/board/${currentBoardId}`);
     }
     originalTask.value = { ...originalTaskDetails };
     taskDetail.value = { ...originalTaskDetails };
 
     if (taskDetail.value === 404) {
-      router.push("/task");
+      router.push(`/board/${currentBoardId}`);
     }
   } catch (err) {
     error.value = err.toString();
@@ -111,14 +114,14 @@ async function saveTask() {
     console.log(error);
   } finally {
     loading.value = false;
-    router.push("/task");
+    router.push(`/board/${currentBoardId}`);
     emit("closeModal", res);
   }
 }
 
 function sendCloseModal() {
   emit("closeModal", null);
-  router.push("/task");
+  router.push(`/board/${currentBoardId}`);
 }
 </script>
 

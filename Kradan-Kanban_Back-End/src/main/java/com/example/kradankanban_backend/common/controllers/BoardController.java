@@ -36,6 +36,8 @@ public class BoardController {
     @Autowired
     private StatusService statusService;
 
+
+//  ! ============================================== BOARD ==============================================
     @GetMapping("/{boardId}")
     public DetailBoardDTO getBoardById(@PathVariable String boardId) {
         return service.getBoardById(boardId);
@@ -63,6 +65,7 @@ public class BoardController {
         }
     }
 
+    //  ! ============================================== TASK ==============================================
     // "/boards/tasks"
 
     @GetMapping("/{boardId}/tasks")
@@ -121,19 +124,9 @@ public class BoardController {
         return ResponseEntity.ok(deletedTask);
     }
 
-    // Add this method to extract userId from JWT token
-    private String extractUserIdFromToken(String token) {
-        try {
-            Claims claims = Jwts.parser()
-                    .setSigningKey("N7KgseMPtJ26AEved0ahUKEwj4563eioyFAxUyUGwGHbTODx0Q4dUDCBA") // Use your secret key here
-                    .parseClaimsJws(token)
-                    .getBody();
-            return claims.get("oid" , String.class); // Assuming userId is stored in the subject
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
-        }
-    }
 
+
+    //  ! ============================================== STATUS ==============================================
     // /board/status
     @GetMapping("/{boardId}/statuses")
     public ResponseEntity<Object> getAll(@PathVariable String boardId) {
@@ -178,5 +171,20 @@ public class BoardController {
     public ResponseEntity<Void> toggleMaximumTask(@PathVariable String boardId) {
         statusService.toggleIsEnable(boardId);
         return ResponseEntity.noContent().build();
+    }
+
+    //  ! ============================================== PRIVATE METHOD ==============================================
+
+    // Add this method to extract userId from JWT token
+    private String extractUserIdFromToken(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                    .setSigningKey("N7KgseMPtJ26AEved0ahUKEwj4563eioyFAxUyUGwGHbTODx0Q4dUDCBA") // Use your secret key here
+                    .parseClaimsJws(token)
+                    .getBody();
+            return claims.get("oid" , String.class); // Assuming userId is stored in the subject
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
+        }
     }
 }
