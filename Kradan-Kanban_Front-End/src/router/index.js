@@ -27,54 +27,33 @@ const router = createRouter({
             component: () => import("../views/BoardView.vue"),
         },
         {
+            path: "/board/:boardId/status/:statusId/edit",
+            name : "status-edit",
+            component : () => import("../views/StatusListView.vue"),
+        },
+        {
             path: "/board/:boardId/status",
             name : "status",
             component : () => import("../views/StatusListView.vue"),
-            alias: ["/board/:boardId/status/add" , "/board/:boardId/status/:statusId/edit"],
-            //  ? alias is similar to redirect but it doesn't change the URL
-            //  ? "/board/:id/task/add" , "/board/:id/task/:task-id/edit" , "/board/:id/task/:task-id/edit"
+            alias: ["/board/:boardId/status/add"],
+        },
+        {
+            path: "/board/:boardId/task/:taskId/edit",
+            name : "task-edit",
+            component : () => import("../views/TasklistView.vue"),
         },
         {
             path: "/board/:boardId",
             name : "task",
             component : () => import("../views/TasklistView.vue"),
-            alias: ["/board/:boardId/task/add" , "/board/:boardId/task/:taskId/edit"]
+            alias: ["/board/:boardId/task/add" ]
         //  ? alias is similar to redirect but it doesn't change the URL
-        //  ? "/board/:id/task/add" , "/board/:id/task/:task-id/edit" , "/board/:id/task/:task-id/edit"
         },
         {
             path: "/board",
             name: "board",
             component: () => import("../views/BoardView.vue"),
         },
-
-        //
-        // {
-        //     path: "/task",
-        //     name: "tasklist",
-        //     component: TaskListView,
-        // },
-        // {
-        //     path: "/task/:id",
-        //     component: TaskListView,
-        // },
-        // {
-        //     path: "/task/:id/edit",
-        //     component: TaskListView,
-        // },
-        // {
-        //     path: "/status",
-        //     name: "statuslist",
-        //     component: StatusListView,
-        // },
-        // {
-        //     path: "/status/:id", // Define a route for editing task
-        //     component: StatusListView,
-        // },
-        // {
-        //     path: "/status/:id/edit",
-        //     component: StatusListView,
-        // },
         {
             path: "/login",
             name: "login",

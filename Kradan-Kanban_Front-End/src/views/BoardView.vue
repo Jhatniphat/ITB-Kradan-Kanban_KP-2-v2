@@ -10,6 +10,7 @@ import Taskdetail from "../components/Tasks/Taskdetail.vue";
 import AddTaskModal from "@/components/Tasks/AddTaskModal.vue";
 import EditLimitStatus from "@/components/EditLimitStatus.vue";
 import {useBoardStore} from "@/stores/board.js";
+import {useAccountStore} from "@/stores/account.js";
 
 // ! ================= Variable ======================
 // ? ----------------- Store and Route ---------------
@@ -21,7 +22,7 @@ const toast = ref({status: "", msg: ""})
 const showAddModal = ref(false);
 // ? ----------------- Common and Local ---------------
 const allBoard = ref([])
-const newBoard = ref({name: ""})
+const newBoard = ref({name: `${useAccountStore().userName} personal board`})
 const errorText = ref({name: ""})
 // ! ================= Life Cycle Hook ===============
 onMounted(() => {
@@ -61,20 +62,29 @@ function openAdd() {
 
 watch(newBoard.value, () => {
   if (newBoard.value.name.trim().length > 120) {
-    showToast({status: "error", msg: "Board name can't long more than 100 character"})
+    errorText.value.name = `Board name can't long more than 120 character`
   }
   if (newBoard.value.name.trim().length === 0) {
-    showToast({status: "error", msg: "Board name can't be empty"})
+    errorText.value.name = `Board name can't be empty`
   }
 })
 
 async function saveAddBoard() {
   console.log(newBoard.value)
+  let result
   try {
-    await addBoard(newBoard.value)
+    result = await addBoard(newBoard.value)
   } catch (err) {
     console.log(err)
     showToast({status: "error", msg: "An error has occurred, please try again later"})
+  } finally {
+    showAddModal.value = false
+    if (result.payload !== null) {
+      showToast({status: "success", msg: "Add board successfuly"})
+      // allBoard.value.push(result.payload)
+      allBoard.value = result.payload
+      router.push(`/board/${result.payload.id}`)
+    } else showToast({status: "error", msg: "Add board Failed"})
   }
 }
 // ! ================= Modal ======================
@@ -117,6 +127,7 @@ const showToast = (toastData) => {
 
 <template>
 
+<!--  todo : Move this add Modal component -->
   <Modal :show-modal="showAddModal">
     <div
         class="flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 rounded-lg w-full h-fit"
@@ -140,19 +151,19 @@ const showToast = (toastData) => {
             }}</span>
           <!-- count input name -->
           <span
-              v-if="newBoard.name.length <= 100 && newBoard.name.length > 0"
+              v-if="newBoard.name.length <= 120 && newBoard.name.length > 0"
               class="justify-end text-gray-400 label-text-alt"
-          >{{ newBoard.name.length }} / 100</span
+          >{{ newBoard.name.length }} / 120</span
           >
           <span
               v-if="newBoard.name.length === 0 && errorText.name !== ''"
               class="flex justify-end text-red-400 label-text-alt"
-          >{{ newBoard.name.length }} / 100</span
+          >{{ newBoard.name.length }} / 120</span
           >
           <span
-              v-if="newBoard.name.length > 100"
+              v-if="newBoard.name.length > 120"
               class="flex justify-end text-red-400 label-text-alt"
-          >{{ newBoard.name.length }} / 100</span
+          >{{ newBoard.name.length }} / 120</span
           >
         </div>
       </label>
@@ -180,7 +191,7 @@ const showToast = (toastData) => {
   </Modal>
 
   <!-- dropdowns status -->
-  <div class="w-3/4 mx-auto mt-10 relative" style="border: coral 1px solid">
+  <div class="w-3/4 mx-auto mt-10 relative">
 
 
     <div class="flex flex-col">
