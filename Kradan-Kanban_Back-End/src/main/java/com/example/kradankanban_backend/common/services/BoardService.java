@@ -67,7 +67,12 @@ public class BoardService {
     @Transactional
     public DetailBoardDTO AddBoard(String userId, String BoardName) {
 
-//        ! ยังไม่ได้ทำให้ดักว่ามีได้แค่ 1 board ต่อ 1 user
+        // ? Check if user already has a board
+        BoardEntity oldBoard = repository.findByUserId(userId);
+        if (oldBoard != null) {
+            throw new BadRequestException("User already has a board");
+        }
+
         BoardEntity board = new BoardEntity();
         board.setUserId(userId);
         board.setBoardName(BoardName);
