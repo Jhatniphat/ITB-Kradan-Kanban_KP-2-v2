@@ -38,7 +38,7 @@ watch(() => route.name, (value) => {
 let showNavBar = ref(false);
 function checkShowNavBar() {
   console.log(currentRoute.value);
-  return currentRoute.value.toString().includes("task") || currentRoute.value.toString().includes("status") ;
+  return currentRoute.value.toString().includes("task") || currentRoute.value.toString().includes("status") || currentRoute.value.toString().includes("board") ;
 }
 
 </script>

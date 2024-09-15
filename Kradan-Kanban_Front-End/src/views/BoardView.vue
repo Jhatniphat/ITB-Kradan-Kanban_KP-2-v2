@@ -21,12 +21,17 @@ const loading = ref(false);
 const toast = ref({status: "", msg: ""})
 const showAddModal = ref(false);
 // ? ----------------- Common and Local ---------------
-const allBoard = ref([])
+const allBoard = ref(useBoardStore().boards)
 const newBoard = ref({name: `${useAccountStore().userName} personal board`})
 const errorText = ref({name: ""})
 // ! ================= Life Cycle Hook ===============
 onMounted(() => {
-  fetchBoardData()
+  if (boardStore.boards.length === 0) {
+    fetchBoardData()
+  } else {
+    allBoard.value = boardStore.boards
+  }
+
   if (route.path === "/board/add") {
     openAdd()
   }
@@ -37,20 +42,22 @@ onMounted(() => {
 async function fetchBoardData() {
   loading.value = true
   try {
-    allBoard.value = await getAllBoard()
+    await getAllBoard()
   } catch (err) {
     console.log(err)
     showToast({status: "error", msg: "An error has occurred, please try again later"})
   } finally {
-    loading.value = false
     if (allBoard.value !== null && allBoard.value !== undefined) {
       if (allBoard.value?.payload !== "No board found") {
         console.log("boardFound", allBoard.value)
-        router.push(`/board/${allBoard.value.payload.id}`)
+        console.table(allBoard.value)
+        console.table(boardStore.boards)
+        allBoard.value = boardStore.boards
       } else {
         allBoard.value = []
       }
     }
+    loading.value = false
   }
 }
 
@@ -79,14 +86,14 @@ async function saveAddBoard() {
     showToast({status: "error", msg: "An error has occurred, please try again later"})
   } finally {
     showAddModal.value = false
-    if (result.payload !== null) {
-      showToast({status: "success", msg: "Add board successfuly"})
-      // allBoard.value.push(result.payload)
+    if (result.status === 200 || result.status === 201) {
+      showToast({status: "success", msg: "Add board successfully"})
       allBoard.value = result.payload
       router.push(`/board/${result.payload.id}`)
     } else showToast({status: "error", msg: "Add board Failed"})
   }
 }
+
 // ! ================= Modal ======================
 const showToast = (toastData) => {
   toast.value = toastData
@@ -127,7 +134,7 @@ const showToast = (toastData) => {
 
 <template>
 
-<!--  todo : Move this add Modal component -->
+  <!--  todo : Move this add Modal component -->
   <Modal :show-modal="showAddModal">
     <div
         class="flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 rounded-lg w-full h-fit"
@@ -194,31 +201,49 @@ const showToast = (toastData) => {
   <div class="w-3/4 mx-auto mt-10 relative">
 
 
-    <div class="flex flex-col">
+    <div class="flex flex-col" style="border: chocolate 1px solid">
       <!--      <h1>{{ allBoard }}</h1>-->
-      <div class="justify-end ">
-        <button
-            class="itbkk-button-add btn btn-square btn-outline w-fit px-5 mr-1 float-right"
-            @click="openAdd()"
-        >
-          Create Personal Board
-        </button>
+      <!--      <div class="justify-end ">-->
+      <!--        <button-->
+      <!--            class="itbkk-button-add btn btn-square btn-outline w-fit px-5 mr-1 float-right"-->
+      <!--            @click="openAdd()"-->
+      <!--        >-->
+      <!--          Create Personal Board-->
+      <!--        </button>-->
+      <!--      </div>-->
+      <h1 class="w-full text-center text-2xl font-bold">Your Board List</h1>
+      <div class="flex flex-wrap w-3/4 p-10 gap-5">
+        <div class="board-list-card">
+          <div class="flex flex-col justify-center items-center h-full">
+            <button
+                class="itbkk-button-add btn btn-square btn-outline w-3/4 float-left mr-1"
+                @click="openAdd()"
+            >
+              Create Personal Board
+            </button>
+          </div>
+        </div>
+        <div class="board-list-card" v-for="board in allBoard" @click="router.push(`/board/${board.id}`)">
+          <h1 class="text-wrap text-xl font-bold text-center">{{ board.name }}</h1>
+          <h1 class="text-wrap text-l font-bold text-center pt-5"> Owner </h1>
+          <h2 class="text-wrap text-m text-center">{{ board.owner.name }}</h2>
+        </div>
       </div>
 
 
-      <table
-          class="table table-lg table-pin-rows table-pin-cols w-3/4 font-semibold mx-auto my-5 text-center text-base rounded-lg border-2 border-slate-500 border-separate border-spacing-1">
-        <thead>
-        <tr>
-          <th>Board Name</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr v-for="board in allboard">
-          <td>{{ board.name }}</td>
-        </tr>
-        </tbody>
-      </table>
+      <!--      <table-->
+      <!--          class="table table-lg table-pin-rows table-pin-cols w-3/4 font-semibold mx-auto my-5 text-center text-base rounded-lg border-2 border-slate-500 border-separate border-spacing-1">-->
+      <!--        <thead>-->
+      <!--        <tr>-->
+      <!--          <th>Board Name</th>-->
+      <!--        </tr>-->
+      <!--        </thead>-->
+      <!--        <tbody>-->
+      <!--        <tr v-for="board in allboard">-->
+      <!--          <td>{{ board.name }}</td>-->
+      <!--        </tr>-->
+      <!--        </tbody>-->
+      <!--      </table>-->
     </div>
     <!--    <div v-if="loading" class="loader"></div>-->
     <!-- Toast -->
@@ -321,6 +346,19 @@ const showToast = (toastData) => {
     box-shadow: 0 -30px #F4DD51, calc(30px * 0.707) calc(-30px * 0.707) #E3AAD6, 30px 0 #F4DD51, 0 0 #E3AAD6,
     0 0 #F4DD51, 0 0 #E3AAD6, 0 0 #F4DD51, 0 0 #E3AAD6
   }
+}
 
+.board-list-card {
+  width: 200px;
+  height: 150px;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  padding: 10px;
+  transition: all 0.3s;
+}
+
+.board-list-card:hover {
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.5);
+  transition: all 0.3s;
 }
 </style>

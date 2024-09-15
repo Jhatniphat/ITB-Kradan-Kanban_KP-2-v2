@@ -40,7 +40,7 @@ public class BoardService {
         }
         DetailBoardDTO.OwnerDTO owner = new DetailBoardDTO.OwnerDTO();
         owner.setOid(board.getUserId());
-        owner.setName(userRepository.findById(board.getUserId()).orElseThrow(() -> new ItemNotFoundException(board.getUserId() + "does not exist'")).getUsername());
+        owner.setName(userRepository.findById(board.getUserId()).orElseThrow(() -> new ItemNotFoundException(board.getUserId() + "does not exist'")).getName());
 
         DetailBoardDTO dto = new DetailBoardDTO();
         dto.setId(board.getBoardId());
@@ -54,7 +54,7 @@ public class BoardService {
         BoardEntity board = repository.findById(boardId).orElseThrow(() -> new ItemNotFoundException(boardId + "does not exist'"));
         DetailBoardDTO.OwnerDTO owner = new DetailBoardDTO.OwnerDTO();
         owner.setOid(board.getUserId());
-        owner.setName(userRepository.findById(board.getUserId()).orElseThrow(() -> new ItemNotFoundException(board.getUserId() + "does not exist'")).getUsername());
+        owner.setName(userRepository.findById(board.getUserId()).orElseThrow(() -> new ItemNotFoundException(board.getUserId() + "does not exist'")).getName());
 
         DetailBoardDTO dto = new DetailBoardDTO();
         dto.setId(board.getBoardId());
@@ -80,7 +80,7 @@ public class BoardService {
 
         DetailBoardDTO.OwnerDTO owner = new DetailBoardDTO.OwnerDTO();
         owner.setOid(userId);
-        owner.setName(userRepository.findById(userId).orElseThrow(() -> new ItemNotFoundException(userId + "does not exist'")).getUsername());
+        owner.setName(userRepository.findById(userId).orElseThrow(() -> new ItemNotFoundException(userId + "does not exist'")).getName());
 
         DetailBoardDTO dto = new DetailBoardDTO();
         dto.setId(board.getBoardId());
@@ -92,9 +92,9 @@ public class BoardService {
             
             List<StatusEntity> statusEntity = new ArrayList<>();
             StatusEntity status1 = new StatusEntity("No Status", "", newBoard.getBoardId());
-            StatusEntity status2 = new StatusEntity("a", "", newBoard.getBoardId());
-            StatusEntity status3 = new StatusEntity("b", "", newBoard.getBoardId());
-            StatusEntity status4 = new StatusEntity("c", "", newBoard.getBoardId());
+            StatusEntity status2 = new StatusEntity("To Do", "", newBoard.getBoardId());
+            StatusEntity status3 = new StatusEntity("Doing", "", newBoard.getBoardId());
+            StatusEntity status4 = new StatusEntity("Done", "", newBoard.getBoardId());
             statusEntity.add(status1);
             statusEntity.add(status2);
             statusEntity.add(status3);
