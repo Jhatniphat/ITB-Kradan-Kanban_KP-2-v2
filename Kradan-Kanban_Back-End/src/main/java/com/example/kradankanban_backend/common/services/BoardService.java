@@ -11,6 +11,7 @@ import com.example.kradankanban_backend.exceptions.BadRequestException;
 import com.example.kradankanban_backend.exceptions.ItemNotFoundException;
 import com.example.kradankanban_backend.shared.UserRepository;
 import io.viascom.nanoid.NanoId;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,21 +34,26 @@ public class BoardService {
     @Autowired
     StatusRepository statusRepository;
 
+    @Autowired
+    private ModelMapper modelMapper;
+
     public DetailBoardDTO getBoardByUserId(String userId) {
         BoardEntity board = repository.findByUserId(userId);
-        if (board == null) {
-            throw new ItemNotFoundException("Board not found");
+//        if (board == null) {
+//            throw new ItemNotFoundException("Board not found");
+//        }
+        if (board != null) {
+            DetailBoardDTO.OwnerDTO owner = new DetailBoardDTO.OwnerDTO();
+            owner.setOid(board.getUserId());
+            owner.setName(userRepository.findById(board.getUserId()).orElseThrow(() -> new ItemNotFoundException(board.getUserId() + "does not exist'")).getName());
+
+            DetailBoardDTO dto = new DetailBoardDTO();
+            dto.setId(board.getBoardId());
+            dto.setName(board.getBoardName());
+            dto.setOwner(owner);
+            return dto;
         }
-        DetailBoardDTO.OwnerDTO owner = new DetailBoardDTO.OwnerDTO();
-        owner.setOid(board.getUserId());
-        owner.setName(userRepository.findById(board.getUserId()).orElseThrow(() -> new ItemNotFoundException(board.getUserId() + "does not exist'")).getName());
-
-        DetailBoardDTO dto = new DetailBoardDTO();
-        dto.setId(board.getBoardId());
-        dto.setName(board.getBoardName());
-        dto.setOwner(owner);
-
-        return dto;
+        return modelMapper.map(repository.findAll(), DetailBoardDTO.class);
     }
 
     public DetailBoardDTO getBoardById(String boardId) {
