@@ -48,6 +48,11 @@ public class TaskEntity {
     @Column(name = "updatedOn", insertable = false, updatable = false)
     private LocalDateTime updatedOn;
 
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "tk_boardId", nullable = false)
+    private BoardEntity tkBoard;
+
 //    @ManyToOne
 //    @JoinColumn(name = "stutus")
 //    private StatusEntity status;

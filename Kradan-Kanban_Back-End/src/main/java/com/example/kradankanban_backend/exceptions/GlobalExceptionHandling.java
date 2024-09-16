@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.List;
 
@@ -54,10 +55,23 @@ public class GlobalExceptionHandling {
         return buildErrorResponse(exception, HttpStatus.BAD_REQUEST, request);
     }
 
+
     @ExceptionHandler(BadRequestException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<ErrorResponse> handleBadRequestException(BadRequestException exception, WebRequest request) {
         return buildErrorResponse(exception, HttpStatus.BAD_REQUEST, request);
+    }
+
+    @ExceptionHandler(WrongBoardException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<ErrorResponse> handleWrongBoardException(WrongBoardException exception, WebRequest request) {
+        return buildErrorResponse(exception, HttpStatus.NOT_FOUND, request);
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<ErrorResponse> handleNoResourceFoundException(NoResourceFoundException exception, WebRequest request) {
+        return buildErrorResponse(exception, HttpStatus.NOT_FOUND, request);
     }
 
     @ExceptionHandler(ResponseStatusException.class)
