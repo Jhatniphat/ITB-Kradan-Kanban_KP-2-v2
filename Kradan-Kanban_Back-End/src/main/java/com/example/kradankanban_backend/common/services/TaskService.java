@@ -11,6 +11,7 @@ import com.example.kradankanban_backend.exceptions.TaskIdNotFound;
 import com.example.kradankanban_backend.common.repositories.StatusRepository;
 import com.example.kradankanban_backend.common.repositories.TaskRepository;
 import com.example.kradankanban_backend.common.services.StatusService;
+import com.example.kradankanban_backend.exceptions.WrongBoardException;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +38,10 @@ public class TaskService {
     private StatusService statusService;
 
     //New TaskService With Personal Board
-    public List<TaskEntity> findAllTasksByBoardId(String userId,String boardId) {
+    public List<TaskEntity> findAllTasksByBoardId(String userId, String boardId) {
+        if (!boardRepository.existsById(boardId)) {
+            throw new WrongBoardException("Board not found");
+        }
         BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
         if (!board.getUserId().equals(userId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this board.");
@@ -46,26 +50,32 @@ public class TaskService {
     }
 
 
-    public TaskEntity findTaskByBoardIdAndTaskId(String userId,String boardId, int taskId) {
+    public TaskEntity findTaskByBoardIdAndTaskId(String userId, String boardId, int taskId) {
+        if (!repository.existsByIdAndTkBoard(taskId, boardRepository.findByBoardId(boardId).orElseThrow(() -> new WrongBoardException("Board not found")))) {
+            throw new WrongBoardException("Board not found");
+        }
         BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
         if (!board.getUserId().equals(userId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this board.");
         }
-        return repository.findByTkBoardAndId(board, taskId).orElseThrow(() -> new ItemNotFoundException("Task ID "+ taskId +" does not exist !!!"));
+        return repository.findByTkBoardAndId(board, taskId).orElseThrow(() -> new ItemNotFoundException("Task ID " + taskId + " does not exist !!!"));
     }
 
-    public TaskEntity addTaskForBoard(String userId,String boardId, TaskEntity task) {
+    public TaskEntity addTaskForBoard(String userId, String boardId, TaskEntity task) {
+        if (!boardRepository.existsById(boardId)) {
+            throw new WrongBoardException("Board not found");
+        }
         BoardEntity board = boardRepository.findByBoardId(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
         if (!board.getUserId().equals(userId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this board.");
         }
         task.setTkBoard(board);
         String newTaskStatus = task.getStatus();
-        if(isNumeric(newTaskStatus)){
+        if (isNumeric(newTaskStatus)) {
             newTaskStatus = statusRepository.findById(Integer.valueOf(newTaskStatus)).orElseThrow(() -> new ItemNotFoundException(task.getStatus() + "does not exist'")).getName();
             task.setStatus(newTaskStatus);
         }
-        statusService.validateStatusLimitToAddEdit(boardId,task.getStatus());
+        statusService.validateStatusLimitToAddEdit(boardId, task.getStatus());
         try {
             return repository.save(task);
         } catch (Exception e) {
@@ -75,6 +85,9 @@ public class TaskService {
 
     @Transactional
     public TaskEntity editTaskForBoard(String userId, String boardId, int taskId, TaskEntity newTask) {
+        if (!repository.existsByIdAndTkBoard(taskId, boardRepository.findByBoardId(boardId).orElseThrow(() -> new WrongBoardException("Board not found")))) {
+            throw new WrongBoardException("Board not found");
+        }
         BoardEntity board = boardRepository.findByBoardId(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
 
         if (!board.getUserId().equals(userId)) {
@@ -100,7 +113,7 @@ public class TaskService {
             if (!statusRepository.existsByName(existingTask.getStatus())) {
                 throw new ItemNotFoundException("Task status does not exist");
             }
-            statusService.validateStatusLimitToAddEdit(boardId,existingTask.getStatus());
+            statusService.validateStatusLimitToAddEdit(boardId, existingTask.getStatus());
 
             return repository.save(existingTask);
         }
@@ -108,6 +121,9 @@ public class TaskService {
 
     @Transactional
     public SimpleTaskDTO deleteTaskByBoardIdAndTaskId(String userId, String boardId, int taskId) {
+        if (!repository.existsByIdAndTkBoard(taskId, boardRepository.findByBoardId(boardId).orElseThrow(() -> new WrongBoardException("Board not found")))) {
+            throw new WrongBoardException("Board not found");
+        }
 
         BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
 
@@ -202,7 +218,7 @@ public class TaskService {
 //        }
 //    }
 
-    private static final List<String> ALLOWED_SORT_FIELDS = Arrays.asList("status.id", "status.name", "id", "title","assignees");
+    private static final List<String> ALLOWED_SORT_FIELDS = Arrays.asList("status.id", "status.name", "id", "title", "assignees");
 
     public List<TaskEntity> findTasks(String sortBy, List<String> filterStatuses) {
         if (sortBy != null && !ALLOWED_SORT_FIELDS.contains(sortBy)) {

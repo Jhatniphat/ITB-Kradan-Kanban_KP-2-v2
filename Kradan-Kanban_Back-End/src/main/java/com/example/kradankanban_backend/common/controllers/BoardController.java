@@ -37,7 +37,7 @@ public class BoardController {
     private StatusService statusService;
 
 
-//  ! ============================================== BOARD ==============================================
+    //  ! ============================================== BOARD ==============================================
     @GetMapping("/{boardId}")
     public DetailBoardDTO getBoardById(@PathVariable String boardId) {
         return service.getBoardById(boardId);
@@ -70,6 +70,7 @@ public class BoardController {
     }
 
     //  ! ============================================== TASK ==============================================
+
     // "/boards/tasks"
 
     @GetMapping("/{boardId}/tasks")
@@ -131,6 +132,7 @@ public class BoardController {
 
 
     //  ! ============================================== STATUS ==============================================
+
     // /board/status
     @GetMapping("/{boardId}/statuses")
     public ResponseEntity<Object> getAll(@PathVariable String boardId) {

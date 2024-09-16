@@ -9,6 +9,7 @@ import com.example.kradankanban_backend.common.repositories.LimitRepository;
 import com.example.kradankanban_backend.common.repositories.StatusRepository;
 import com.example.kradankanban_backend.exceptions.BadRequestException;
 import com.example.kradankanban_backend.exceptions.ItemNotFoundException;
+import com.example.kradankanban_backend.exceptions.WrongBoardException;
 import com.example.kradankanban_backend.shared.UserRepository;
 import io.viascom.nanoid.NanoId;
 import org.modelmapper.ModelMapper;
@@ -57,7 +58,8 @@ public class BoardService {
     }
 
     public DetailBoardDTO getBoardById(String boardId) {
-        BoardEntity board = repository.findById(boardId).orElseThrow(() -> new ItemNotFoundException(boardId + "does not exist'"));
+
+        BoardEntity board = repository.findById(boardId).orElseThrow(() -> new WrongBoardException(boardId + "does not exist'"));
         DetailBoardDTO.OwnerDTO owner = new DetailBoardDTO.OwnerDTO();
         owner.setOid(board.getUserId());
         owner.setName(userRepository.findById(board.getUserId()).orElseThrow(() -> new ItemNotFoundException(board.getUserId() + "does not exist'")).getName());

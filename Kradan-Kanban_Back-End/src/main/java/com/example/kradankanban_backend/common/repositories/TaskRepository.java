@@ -41,4 +41,6 @@ public interface TaskRepository extends JpaRepository<TaskEntity, Integer> {
     Optional<TaskEntity> findByTkBoardAndId(BoardEntity board, int id);
 
     Optional<TaskEntity> findByTkBoard_BoardIdAndId(String boardId, int taskId);
+
+    boolean existsByIdAndTkBoard(int taskId , BoardEntity board);
 }

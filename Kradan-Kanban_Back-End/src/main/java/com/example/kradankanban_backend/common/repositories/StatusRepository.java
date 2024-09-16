@@ -28,4 +28,6 @@ public interface StatusRepository extends JpaRepository<StatusEntity, Integer> {
     List<StatusEntity> findAllByStBoard(String boardId);
 
     Optional<StatusEntity> findByStBoardAndId(String boardId, int id);
+
+    boolean existsByIdAndStBoard(int id, String boardId);
 }
