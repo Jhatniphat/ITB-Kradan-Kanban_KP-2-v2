@@ -113,6 +113,9 @@ CREATE TABLE IF NOT EXISTS `intergrate-kp-2`.`task`
     DEFAULT CHARACTER SET = utf8mb4
     COLLATE = utf8mb4_0900_ai_ci;
 
+DROP USER IF EXISTS 'dev'@'%';
+CREATE USER 'dev'@'%' IDENTIFIED BY 'ip23kp2mysql';
+GRANT ALL ON intergrate-kp-2.* TO 'dev'@'%';
 
 SET SQL_MODE = @OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS = @OLD_FOREIGN_KEY_CHECKS;
