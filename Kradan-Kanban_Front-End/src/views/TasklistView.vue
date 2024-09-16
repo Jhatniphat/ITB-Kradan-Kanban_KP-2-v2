@@ -2,7 +2,7 @@
 // ? import lib
 import { onBeforeMount, ref, watch } from "vue";
 import { useRoute } from "vue-router";
-import { deleteTask, getLimitStatus } from "../lib/fetchUtils.js";
+import {deleteTask, getAllBoard, getLimitStatus} from "../lib/fetchUtils.js";
 import router from "@/router";
 import { useTaskStore } from "@/stores/task";
 import { useStatusStore } from "@/stores/status";
@@ -17,6 +17,7 @@ import {useBoardStore} from "@/stores/board.js";
 // ? ----------------- Store and Route ---------------
 const taskStore = useTaskStore();
 const statusStore = useStatusStore();
+const boardStore = useBoardStore();
 const route = useRoute();
 const currentRoute = route.params?.boardId;
 console.log(currentRoute);
@@ -201,6 +202,17 @@ function sortBtn() {
 }
 
 onBeforeMount(async () => {
+  if (boardStore.boards.length === 0) {
+    loading.value = true
+    try {
+      await getAllBoard();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      console.log(boardStore.currentBoard.name);
+      loading.value = false;
+    }
+  }
   statusStore.getAllStatus();
   statusStore.getLimitEnable();
   const res = await getLimitStatus();
@@ -214,6 +226,9 @@ onBeforeMount(async () => {
 
 <template>
   <!-- dropdowns status -->
+  <div class="w-3/4 mx-auto mt-10 relative" v-if="!loading">
+    <h1>{{ boardStore.currentBoard.name }}</h1>
+  </div>
   <div class="w-3/4 mx-auto mt-10 relative">
     <details class="dropdown">
       <summary class="m-1 btn no-animation itbkk-status-filter">

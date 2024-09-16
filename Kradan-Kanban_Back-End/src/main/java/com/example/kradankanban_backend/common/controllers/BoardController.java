@@ -55,11 +55,15 @@ public class BoardController {
     }
 
     @PostMapping("")
-    public DetailBoardDTO AddNewBoard(@RequestHeader("Authorization") String requestTokenHeader , @RequestBody BoardNameDTO boardNameDTO) {
+    public ResponseEntity<DetailBoardDTO> AddNewBoard(@RequestHeader("Authorization") String requestTokenHeader ,@Valid @RequestBody(required = false) BoardNameDTO boardNameDTO) {
+        if (boardNameDTO == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Request body is missing");
+        }
         if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
             String jwtToken = requestTokenHeader.substring(7);
             String userId = extractUserIdFromToken(jwtToken);
-            return service.AddBoard(userId, boardNameDTO.getName());
+//            return service.AddBoard(userId, boardNameDTO.getName());
+            return new ResponseEntity<>(service.AddBoard(userId, boardNameDTO.getName()), HttpStatus.CREATED);
         } else {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Authorization header must start with Bearer");
         }

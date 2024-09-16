@@ -7,17 +7,22 @@ export const useBoardStore = defineStore("Board", {
     state: () => ({
         boards: [],
         currentBoardId: "",
+        currentBoard: {},
     }),
     getters: {
-        getBoardById: (state) => (id) => {
-            return state.boards.find((board) => board.id === id);
-        },
+        // getBoardById: (state) => (id) => {
+        //     console.log(id)
+        //     console.log(state.boards.find((board) => board.id === id))
+        //     return state.boards.find((board) => board.id === id);
+        // },
         getAllBoard() {
             return this.boards;
         },
     },
     actions: {
-
+        getBoardById(id) {
+            return this.boards.find((board) => board.id === id);
+        },
         addBoard(newBoard) {
             this.boards.push(newBoard);
         },

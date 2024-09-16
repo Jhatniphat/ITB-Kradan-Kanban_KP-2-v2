@@ -1,9 +1,8 @@
 import {createRouter, createWebHistory} from "vue-router";
-import TaskListView from "../views/TasklistView.vue";
-import StatusListView from "@/views/StatusListView.vue";
 import LogicPage from "@/components/LogicPage.vue";
 import {useAccountStore} from "@/stores/account";
 import {useBoardStore} from "@/stores/board.js";
+import {getAllBoard, login, validateToken} from "@/lib/fetchUtils.js";
 
 
 const router = createRouter({
@@ -68,11 +67,16 @@ router.beforeEach(async (to, from) => {
     const boardStore = useBoardStore()
     // const isAuthenticated = !!accountStore.tokenDetail.token;
     const isAuthenticated = accountStore.tokenDetail !== {};
-
+    if (to.name !== "login"){
+        await validateToken()
+        console.log(accountStore.tokenRaw)
+    }
     if (to.name === "task" || to.name === "status") {
         // boardStore.currentBoard.id = to.params.boardId =
-        console.log(to.params.boardId)
         boardStore.setCurrentBoardId(to.params.boardId)
+        if (boardStore.boards.length === 0) {
+            await getAllBoard()
+        }
     }
     if (
         // make sure the user is authenticated

@@ -386,9 +386,11 @@ export async function getAllBoard() {
             let item = await res.json();
             console.table(item)
             // ? because now item is an object not an array
-            boardStore.addBoard(item);
+            // boardStore.addBoard(item);
+            if ( !(Object.keys(item).length === 0 && item.constructor === Object) ) {
+                boardStore.addBoard(item)
+            }
             return {status: 200, payload: item};
-            // return await item
         } else if (res.status === 400) {
             return {status: 400, payload: "No board found"};
         }
@@ -464,6 +466,28 @@ export async function login(username, password) {
                 payload: "There is a problem. Please try again later",
             };
     } catch (error) {
+    }
+}
+
+export async function validateToken() {
+    try {
+        const accountStore = useAccountStore();
+        let res = await fetch(`${import.meta.env.VITE_API_ROOT}/validate-token`, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${accountStore.tokenRaw}`,
+            },
+        }); //GET Method
+
+        if (res.status === 401) {
+            accountStore.clearTokenDetail();
+            router.push("/login");
+            return null;
+        } else if (res.status === 200) {
+            return null
+        }
+    } catch (error) {
+        console.error(error);
     }
 }
 

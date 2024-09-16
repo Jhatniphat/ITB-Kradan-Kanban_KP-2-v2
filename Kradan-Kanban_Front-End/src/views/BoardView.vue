@@ -30,6 +30,8 @@ onMounted(() => {
     fetchBoardData()
   } else {
     allBoard.value = boardStore.boards
+    console.table(allBoard.value)
+    console.log(allBoard.value.length)
   }
 
   if (route.path === "/board/add") {
@@ -49,10 +51,10 @@ async function fetchBoardData() {
   } finally {
     if (allBoard.value !== null && allBoard.value !== undefined) {
       if (allBoard.value?.payload !== "No board found") {
-        console.log("boardFound", allBoard.value)
-        console.table(allBoard.value)
-        console.table(boardStore.boards)
         allBoard.value = boardStore.boards
+        if (allBoard.value.length === 1) {
+          router.push(`/board/${allBoard.value[0].id}`)
+        }
       } else {
         allBoard.value = []
       }
@@ -71,8 +73,10 @@ watch(newBoard.value, () => {
   if (newBoard.value.name.trim().length > 120) {
     errorText.value.name = `Board name can't long more than 120 character`
   }
-  if (newBoard.value.name.trim().length === 0) {
+  else if (newBoard.value.name.trim().length === 0) {
     errorText.value.name = `Board name can't be empty`
+  }else {
+    errorText.value.name = ""
   }
 })
 
@@ -178,15 +182,13 @@ const showToast = (toastData) => {
       <div class="flex flex-row-reverse gap-4 mt-5">
         <button
             @click="showAddModal = false"
-            class="relative inline-flex items-center justify-center p-0.5 mb-2 me-2 overflow-hidden text-sm font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-green-400 to-blue-600 group-hover:from-green-400 group-hover:to-blue-600 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-green-200 dark:focus:ring-green-800">
-      <span
-          class="relative px-5 py-2.5 transition-all ease-in duration-200 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0">
+            class="itbkk-button-confirm btn btn-outline btn-error basis-1/6">
       Cancel
-      </span>
         </button>
         <button type="button"
                 @click="saveAddBoard()"
-                class="transition-all ease-in duration-200 text-white bg-gradient-to-br from-green-400 to-blue-600 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-green-200 dark:focus:ring-green-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">
+                :disabled="errorText.name !== ''"
+                class="itbkk-button-confirm btn btn-outline btn-success basis-1/6">
           Save
         </button>
       </div>
@@ -201,7 +203,7 @@ const showToast = (toastData) => {
   <div class="w-3/4 mx-auto mt-10 relative">
 
 
-    <div class="flex flex-col" style="border: chocolate 1px solid">
+    <div class="flex flex-col">
       <!--      <h1>{{ allBoard }}</h1>-->
       <!--      <div class="justify-end ">-->
       <!--        <button-->
@@ -213,20 +215,16 @@ const showToast = (toastData) => {
       <!--      </div>-->
       <h1 class="w-full text-center text-2xl font-bold">Your Board List</h1>
       <div class="flex flex-wrap w-3/4 p-10 gap-5">
-        <div class="board-list-card">
-          <div class="flex flex-col justify-center items-center h-full">
-            <button
-                class="itbkk-button-add btn btn-square btn-outline w-3/4 float-left mr-1"
-                @click="openAdd()"
-            >
-              Create Personal Board
-            </button>
-          </div>
+        <div class="board-list-card itbkk-button-create place-content-center" @click="openAdd()">
+          <h1 class="text-center text-2xl font-bold top-1/2">
+          Create Personal Board
+          </h1>
+
         </div>
-        <div class="board-list-card" v-for="board in allBoard" @click="router.push(`/board/${board.id}`)">
+        <div class="board-list-card" v-for="board in allBoard" @click="router.push(`/board/${board.id}`)" v-if="allBoard.length > 0">
           <h1 class="text-wrap text-xl font-bold text-center">{{ board.name }}</h1>
           <h1 class="text-wrap text-l font-bold text-center pt-5"> Owner </h1>
-          <h2 class="text-wrap text-m text-center">{{ board.owner.name }}</h2>
+          <h2 class="text-wrap text-m text-center">{{ board?.owner?.name }}</h2>
         </div>
       </div>
 
