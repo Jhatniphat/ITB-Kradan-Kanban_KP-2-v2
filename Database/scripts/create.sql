@@ -98,8 +98,8 @@ CREATE TABLE IF NOT EXISTS `intergrate-kp-2`.`task`
     INDEX `status` (`status` ASC) VISIBLE,
     INDEX `boardId_idx` (`tk_boardId` ASC) VISIBLE,
     CONSTRAINT `task_ibfk_1`
-        FOREIGN KEY (`status`)
-            REFERENCES `intergrate-kp-2`.`status` (`statusName`)
+        FOREIGN KEY (`status` , `tk_boardId`)
+            REFERENCES `intergrate-kp-2`.`status` (`statusName` , `st_boardId`)
             ON DELETE RESTRICT
             ON UPDATE CASCADE,
     CONSTRAINT `tk_boardId`
@@ -115,7 +115,7 @@ CREATE TABLE IF NOT EXISTS `intergrate-kp-2`.`task`
 
 DROP USER IF EXISTS 'dev'@'%';
 CREATE USER 'dev'@'%' IDENTIFIED BY 'ip23kp2mysql';
-GRANT ALL ON intergrate-kp-2.* TO 'dev'@'%';
+GRANT ALL ON `intergrate-kp-2`.* TO 'dev'@'%';
 
 SET SQL_MODE = @OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS = @OLD_FOREIGN_KEY_CHECKS;
