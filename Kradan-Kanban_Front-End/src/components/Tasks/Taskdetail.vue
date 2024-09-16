@@ -4,7 +4,7 @@ import { getTaskById, editTask } from "@/lib/fetchUtils.js";
 import router from "@/router";
 import { useTaskStore } from "@/stores/task";
 import { useStatusStore } from "@/stores/status.js";
-import {useBoardStore} from "@/stores/board.js";
+import { useBoardStore } from "@/stores/board.js";
 
 const currentBoardId = useBoardStore().currentBoardId;
 const taskStore = useTaskStore();
