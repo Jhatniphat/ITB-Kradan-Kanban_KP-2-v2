@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch, computed } from "vue";
-import { getStatusById, editStatus } from "@/lib/fetchUtils";
+import { getStatusById, editStatus, getAllTasks } from "@/lib/fetchUtils";
 import router from "@/router";
 import { useStatusStore } from "@/stores/status";
 import {useBoardStore} from "@/stores/board.js";
@@ -102,6 +102,7 @@ async function saveStatus() {
     loading.value = false;
     router.push(`/board/${currentBoardId}/status`);
     emit("closeModal", res);
+    await getAllTasks()
   }
 }
 
