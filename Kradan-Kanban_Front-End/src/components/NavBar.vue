@@ -108,18 +108,24 @@ function checkShowNavBar() {
             <!--            />-->
           </div>
           <div class="hidden sm:ml-6 sm:block">
-            <div class="flex space-x-4">
+            <div class="flex space-x-4"  v-if="!route.name.includes('board')">
               <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
+<!--              <h5-->
+<!--                  @click="routeChange('task')"-->
+<!--                  class="rounded-md px-3 py-2 text-sm bg-gray-900 font-medium text-white"-->
+<!--                  aria-current="page"-->
+<!--              >Task</h5-->
+<!--              >-->
               <h5
                   @click="routeChange('task')"
-                  class="rounded-md px-3 py-2 text-sm bg-gray-900 font-medium text-white"
+                  class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
                   aria-current="page"
               >Task</h5
               >
               <h5
                   @click="routeChange('status')"
-                  class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-              >Status</h5
+                  class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white itbkk-manage-status"
+              >Manage Status</h5
               >
             </div>
           </div>
@@ -213,16 +219,22 @@ function checkShowNavBar() {
 
     <!-- Mobile menu, show/hide based on menu state. -->
     <div class="sm:hidden" id="mobile-menu">
-      <div class="space-y-1 px-2 pb-3 pt-2">
+      <div class="space-y-1 px-2 pb-3 pt-2" v-if="!route.name.includes('board')">
         <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
         <!--        <a href="#" class="block rounded-md bg-gray-900 px-3 py-2 text-base font-medium text-white" aria-current="page">Dashboard</a>-->
+<!--        <router-link-->
+<!--            to="/task"-->
+<!--            class="block rounded-md bg-gray-900 px-3 py-2 text-base font-medium text-white"-->
+<!--            aria-current="page"-->
+<!--        >Task-->
+<!--        </router-link-->
+<!--        >-->
         <router-link
             to="/task"
-            class="block rounded-md bg-gray-900 px-3 py-2 text-base font-medium text-white"
+            class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
             aria-current="page"
         >Task
-        </router-link
-        >
+        </router-link>
         <router-link
             to="/status"
             class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"

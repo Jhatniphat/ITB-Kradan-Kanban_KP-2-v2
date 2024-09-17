@@ -43,6 +43,10 @@ export const useBoardStore = defineStore("Board", {
                 router.push("/login")
             }
             this.currentBoardId = boardId;
+            this.currentBoard = this.boards.find((board) => board.id === boardId);
+            console.table(this.boards)
+            console.log(boardId)
+            console.log(this.currentBoard)
         }
 
 

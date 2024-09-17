@@ -39,7 +39,6 @@ export async function getTaskById(id) {
         res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks/${id}`, {
             method: "GET",
             headers: {
-
                 Authorization: `Bearer ${accountStore.tokenRaw}`,
             },
         });
@@ -50,8 +49,10 @@ export async function getTaskById(id) {
         }
         if (res.status === 200) {
             item = await res.json();
+            console.table(item)
             item.createdOn = timeFormater(item.createdOn);
             item.updatedOn = timeFormater(item.updatedOn);
+            console.table(item)
             return item;
         } else {
             return res.status;
@@ -428,6 +429,11 @@ export async function addBoard(newBoard) {
             return {status: res.status, payload: "There is a problem. Please try again later"};
         }
     } catch (error) {
+        if (res.status === 401) {
+            accountStore.clearTokenDetail();
+            router.push("/login");
+            return;
+        }
         return error;
     }
 }
@@ -439,7 +445,7 @@ export async function login(username, password) {
     console.log(JSON.stringify({userName: username, password: password}))
     try {
         const accountStore = useAccountStore();
-        res = await fetch(`${import.meta.env.VITE_API_ROOT}/login`, {
+        res = await fetch(`${import.meta.env.VITE_API_ROOT_LOGIN}/login`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -472,7 +478,7 @@ export async function login(username, password) {
 export async function validateToken() {
     try {
         const accountStore = useAccountStore();
-        let res = await fetch(`${import.meta.env.VITE_API_ROOT}/validate-token`, {
+        let res = await fetch(`${import.meta.env.VITE_API_ROOT_LOGIN}/validate-token`, {
             method: "GET",
             headers: {
                 Authorization: `Bearer ${accountStore.tokenRaw}`,
