@@ -227,7 +227,7 @@ onBeforeMount(async () => {
 <template>
   <!-- dropdowns status -->
   <div class="w-3/4 mx-auto mt-10 relative" v-if="!loading">
-    <h1>{{ boardStore.currentBoard.name }}</h1>
+    <h1 class="w-full text-center text-2xl">{{ boardStore.currentBoard.name }}</h1>
   </div>
   <div class="w-3/4 mx-auto mt-10 relative">
     <details class="dropdown">
@@ -269,7 +269,7 @@ onBeforeMount(async () => {
       </button>
 
       <button
-        class="itbkk-button-add btn btn-square btn-outline w-16 float-right"
+        class="btn btn-square btn-outline w-16 float-right"
         @click="showEditLimit = true"
       >
         Limit Status

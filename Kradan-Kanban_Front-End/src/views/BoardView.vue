@@ -141,7 +141,7 @@ const showToast = (toastData) => {
   <!--  todo : Move this add Modal component -->
   <Modal :show-modal="showAddModal">
     <div
-        class="flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 rounded-lg w-full h-fit"
+        class="flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 rounded-lg w-full h-fit itbkk-modal-new"
     >
       <!-- * title -->
       <label class="form-control w-full">
@@ -153,7 +153,7 @@ const showToast = (toastData) => {
             v-model="newBoard.name"
             type="text"
             placeholder="Type here"
-            class="itbkk-title input input-bordered w-full bg-white dark:bg-base-300 dark:text-slate-400"
+            class="itbkk-board-name input input-bordered w-full bg-white dark:bg-base-300 dark:text-slate-400"
         />
         <div class="label">
           <!-- ? Error Text -->
@@ -182,13 +182,14 @@ const showToast = (toastData) => {
       <div class="flex flex-row-reverse gap-4 mt-5">
         <button
             @click="showAddModal = false"
-            class="itbkk-button-confirm btn btn-outline btn-error basis-1/6">
+            class="itbkk-button-cancel btn btn-outline btn-error basis-1/6">
       Cancel
         </button>
         <button type="button"
                 @click="saveAddBoard()"
                 :disabled="errorText.name !== ''"
-                class="itbkk-button-confirm btn btn-outline btn-success basis-1/6">
+                :class="{'disabled': errorText.name !== ''}"
+                class="itbkk-button-ok btn btn-outline btn-success basis-1/6">
           Save
         </button>
       </div>

@@ -65,18 +65,20 @@ const router = createRouter({
 router.beforeEach(async (to, from) => {
     const accountStore = useAccountStore();
     const boardStore = useBoardStore()
-    // const isAuthenticated = !!accountStore.tokenDetail.token;
     const isAuthenticated = accountStore.tokenDetail !== {};
+
     if (to.name !== "login"){
         await validateToken()
         console.log(accountStore.tokenRaw)
     }
     if (to.name === "task" || to.name === "status") {
         // boardStore.currentBoard.id = to.params.boardId =
-        boardStore.setCurrentBoardId(to.params.boardId)
+
         if (boardStore.boards.length === 0) {
             await getAllBoard()
         }
+        boardStore.setCurrentBoardId(to.params.boardId)
+
     }
     if (
         // make sure the user is authenticated

@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 @CrossOrigin(origins = {"http://localhost:5174" , "http://localhost:5173"})
 //@CrossOrigin(origins = "http://ip23kp2.sit.kmutt.ac.th:80")
 @RestController
-@RequestMapping("/boards")
+@RequestMapping("/v3/boards")
 public class BoardController {
     @Autowired
     private BoardService service;
@@ -101,11 +101,11 @@ public class BoardController {
     }
 
     @GetMapping("/{boardId}/tasks/{taskId}")
-    public ResponseEntity<SimpleTaskDTO> getTaskByBoardIdAndTaskId(@RequestHeader("Authorization") String requestTokenHeader ,@PathVariable String boardId, @PathVariable int taskId) {
+    public ResponseEntity<DetailTaskWithTimeOnDTO> getTaskByBoardIdAndTaskId(@RequestHeader("Authorization") String requestTokenHeader ,@PathVariable String boardId, @PathVariable int taskId) {
         String userId = extractUserIdFromToken(requestTokenHeader.substring(7));
         TaskEntity task = taskService.findTaskByBoardIdAndTaskId(userId,boardId, taskId);
-        SimpleTaskDTO simpleTaskDTO = modelMapper.map(task, SimpleTaskDTO.class);
-        return ResponseEntity.ok(simpleTaskDTO);
+        DetailTaskWithTimeOnDTO DetailTask = modelMapper.map(task, DetailTaskWithTimeOnDTO.class);
+        return ResponseEntity.ok(DetailTask);
     }
 
     @PutMapping("/{boardId}/tasks/{taskId}")
