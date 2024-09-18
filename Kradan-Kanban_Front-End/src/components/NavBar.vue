@@ -20,7 +20,6 @@ const route = useRoute();
 
 function routeChange(to) {
   const currentBoardId = useBoardStore().currentBoardId
-  console.log("currentBoardId", currentBoardId)
   if (to === "task") {
     router.push(`/board/${currentBoardId}`)
   } else {
@@ -30,14 +29,12 @@ function routeChange(to) {
 }
 
 let currentRoute = ref(route.name);
-console.log(currentRoute.value);
 watch(() => route.name, (value) => {
   currentRoute.value = value;
   showNavBar.value = checkShowNavBar();
 });
 let showNavBar = ref(false);
 function checkShowNavBar() {
-  console.log(currentRoute.value);
   return currentRoute.value.toString().includes("task") || currentRoute.value.toString().includes("status") || currentRoute.value.toString().includes("board") ;
 }
 

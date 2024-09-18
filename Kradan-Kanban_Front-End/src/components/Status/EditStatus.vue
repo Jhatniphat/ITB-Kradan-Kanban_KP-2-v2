@@ -93,7 +93,6 @@ async function saveStatus() {
     delete statusDetail.value.id;
     delete statusDetail.value.createdOn;
     delete statusDetail.value.updatedOn;
-    console.table(statusDetail.value);
     res = await editStatus(props.statusId, statusDetail.value);
     statusDetail.value = res;
   } catch (error) {

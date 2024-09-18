@@ -10,11 +10,6 @@ export const useBoardStore = defineStore("Board", {
         currentBoard: {},
     }),
     getters: {
-        // getBoardById: (state) => (id) => {
-        //     console.log(id)
-        //     console.log(state.boards.find((board) => board.id === id))
-        //     return state.boards.find((board) => board.id === id);
-        // },
         getAllBoard() {
             return this.boards;
         },
@@ -39,14 +34,10 @@ export const useBoardStore = defineStore("Board", {
         },
         setCurrentBoardId(boardId) {
             if(boardId !== this.boards.id && this.boards.id !== undefined) {
-                console.log("You are not the owner of this board")
                 router.push("/login")
             }
             this.currentBoardId = boardId;
             this.currentBoard = this.boards.find((board) => board.id === boardId);
-            console.table(this.boards)
-            console.log(boardId)
-            console.log(this.currentBoard)
         }
 
 

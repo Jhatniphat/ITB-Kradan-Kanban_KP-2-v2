@@ -30,8 +30,6 @@ onMounted(() => {
     fetchBoardData()
   } else {
     allBoard.value = boardStore.boards
-    console.table(allBoard.value)
-    console.log(allBoard.value.length)
   }
 
   if (route.path === "/board/add") {
@@ -81,7 +79,6 @@ watch(newBoard.value, () => {
 })
 
 async function saveAddBoard() {
-  console.log(newBoard.value)
   let result
   try {
     result = await addBoard(newBoard.value)

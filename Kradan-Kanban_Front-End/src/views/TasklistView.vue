@@ -20,7 +20,6 @@ const statusStore = useStatusStore();
 const boardStore = useBoardStore();
 const route = useRoute();
 const currentRoute = route.params?.boardId;
-console.log(currentRoute);
 
 // ? ----------------- Modal -------------------------
 const showDetailModal = ref(false);
@@ -209,7 +208,6 @@ onBeforeMount(async () => {
     } catch (err) {
       console.error(err);
     } finally {
-      console.log(boardStore.currentBoard.name);
       loading.value = false;
     }
   }
