@@ -35,6 +35,7 @@ jobs:
           password : ${{ secrets.SSH_PASSWORD }}
           username: ${{ secrets.SSH_USERNAME }}
           script: |
+            git pull
             cd ${{ secrets.SSH_WORKDIR }}
             docker compose up -d --build
 
