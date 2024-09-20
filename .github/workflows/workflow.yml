@@ -35,7 +35,7 @@
 #           echo Add other actions to build,
 #           echo test, and deploy your project.
 
-name: CI/CD Pipeline
+name: automate deployment
 
 on:
   push:
@@ -46,7 +46,7 @@ on:
       - main
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     services:
@@ -90,3 +90,42 @@ jobs:
         run: |
           docker-compose -f Docker-compose.yml pull
           docker-compose -f Docker-compose.yml up -d --remove-orphans
+
+# name: GitHub Action
+
+# on:
+#   push:
+#     branches:
+#       - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install OpenVPN
+        run: |
+          sudo apt update
+          sudo apt install -y openvpn openvpn-systemd-resolved
+          
+      - name: Connect to VPN
+        uses: "kota65535/github-openvpn-connect-action@v2"
+        with:
+          config_file: .github/workflows/sitst-client.ovpn
+          username: ${{ secrets.OVPN_USERNAME }}
+          password: ${{ secrets.OVPN_PASSWORD }}
+      - name: Use SSH and Compose Up
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sshpass
+          sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" << 'EOF'
+            source ~/env.sh
+            cd ${{ secrets.WORK_DIR }}
+            git checkout ${{ secrets.MAIN_BRANCH }}
+            git pull
+            docker compose down
+            docker compose up -d --build
+          EOF
+
