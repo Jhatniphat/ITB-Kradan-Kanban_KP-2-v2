@@ -184,7 +184,7 @@ function sendCloseModal() {
             <span class="label-text">Status</span>
           </div>
           <select
-            class="itbkk-status select select-bordered bg-white dark:bg-base-300 dark:text-slate-400"
+            class="itbkk-status select select-bordered bg-white dark:bg-base-300 dark:text-slate-400 itbkk-status"
             v-model="taskData.status"
           >
             <option

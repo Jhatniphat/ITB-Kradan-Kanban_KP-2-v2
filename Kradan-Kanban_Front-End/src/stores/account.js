@@ -2,16 +2,25 @@ import { defineStore } from "pinia";
 
 export const useAccountStore = defineStore("account", {
   state: () => ({
-    tokenDetail: {},
+    tokenDetail: JSON.parse(localStorage.getItem("tokenDetail")) || {},
+    tokenRaw: localStorage.getItem("token") || "",
   }),
   getters: {
-    // Extract the name from the decoded token details
+    token: (state) => state.tokenRaw,
     userName: (state) => state.tokenDetail.name || "",
   },
   actions: {
-    // Action to set the tokenDetail directly
+    setToken(token) {
+      this.tokenRaw = token.access_token;
+      localStorage.setItem("token", token.access_token);
+    },
     setTokenDetail(tokenDetail) {
       this.tokenDetail = tokenDetail;
+      localStorage.setItem("tokenDetail", JSON.stringify(tokenDetail));
+    },
+    clearTokenDetail() {
+      this.tokenDetail = {};
+      localStorage.removeItem("tokenDetail");
     },
   },
 });

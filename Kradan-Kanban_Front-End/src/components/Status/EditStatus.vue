@@ -1,8 +1,10 @@
 <script setup>
 import { ref, watch, computed } from "vue";
-import { getStatusById, editStatus } from "@/lib/fetchUtils";
+import { getStatusById, editStatus, getAllTasks } from "@/lib/fetchUtils";
 import router from "@/router";
 import { useStatusStore } from "@/stores/status";
+import {useBoardStore} from "@/stores/board.js";
+const currentBoardId = useBoardStore().currentBoardId
 const statusStore = useStatusStore();
 const canSave = ref(false);
 const loading = ref(false);
@@ -73,7 +75,7 @@ async function fetchData(id) {
       originalstatusDetails === 500
     ) {
       emit("closeModal", 404);
-      router.push("/status");
+      router.push(`/board/${currentBoardId}/status`);
     }
     originalsDetail.value = { ...originalstatusDetails };
     statusDetail.value = { ...originalstatusDetails };
@@ -91,20 +93,20 @@ async function saveStatus() {
     delete statusDetail.value.id;
     delete statusDetail.value.createdOn;
     delete statusDetail.value.updatedOn;
-    console.table(statusDetail.value);
     res = await editStatus(props.statusId, statusDetail.value);
     statusDetail.value = res;
   } catch (error) {
     console.log(error);
   } finally {
     loading.value = false;
-    router.push("/status");
+    router.push(`/board/${currentBoardId}/status`);
     emit("closeModal", res);
+    await getAllTasks()
   }
 }
 
 function sendCloseModal() {
-  router.push("/status");
+  router.push(`/board/${currentBoardId}/status`);
   emit("closeModal", null);
 }
 </script>

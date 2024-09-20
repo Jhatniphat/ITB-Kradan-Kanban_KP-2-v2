@@ -41,7 +41,6 @@ async function confirmEdit() {
         task: statusStore.countStatus(status),
       })
     );
-    console.table(overStatusObj);
     emit("closeModal", overStatusObj);
   } else emit("closeModal", null);
 }
