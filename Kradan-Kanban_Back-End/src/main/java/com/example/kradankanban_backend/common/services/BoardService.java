@@ -1,6 +1,8 @@
 package com.example.kradankanban_backend.common.services;
 
+
 import com.example.kradankanban_backend.common.dtos.DetailBoardDTO;
+import com.example.kradankanban_backend.common.dtos.VisibilityDTO;
 import com.example.kradankanban_backend.common.entities.BoardEntity;
 import com.example.kradankanban_backend.common.entities.LimitSettings;
 import com.example.kradankanban_backend.common.entities.StatusEntity;
@@ -8,12 +10,17 @@ import com.example.kradankanban_backend.common.repositories.BoardRepository;
 import com.example.kradankanban_backend.common.repositories.LimitRepository;
 import com.example.kradankanban_backend.common.repositories.StatusRepository;
 import com.example.kradankanban_backend.exceptions.BadRequestException;
+import com.example.kradankanban_backend.exceptions.ForbiddenException;
 import com.example.kradankanban_backend.exceptions.ItemNotFoundException;
 import com.example.kradankanban_backend.exceptions.WrongBoardException;
+import com.example.kradankanban_backend.shared.Entities.UserEntity;
 import com.example.kradankanban_backend.shared.UserRepository;
 import io.viascom.nanoid.NanoId;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,7 +58,9 @@ public class BoardService {
             DetailBoardDTO dto = new DetailBoardDTO();
             dto.setId(board.getBoardId());
             dto.setName(board.getBoardName());
+            dto.setVisibility(board.getVisibility());
             dto.setOwner(owner);
+
             return dto;
         }
         return modelMapper.map(repository.findAll(), DetailBoardDTO.class);
@@ -67,7 +76,9 @@ public class BoardService {
         DetailBoardDTO dto = new DetailBoardDTO();
         dto.setId(board.getBoardId());
         dto.setName(board.getBoardName());
+        dto.setVisibility(board.getVisibility());
         dto.setOwner(owner);
+
 
         return dto;
     }
@@ -84,7 +95,9 @@ public class BoardService {
         BoardEntity board = new BoardEntity();
         board.setUserId(userId);
         board.setBoardName(BoardName);
+        board.setVisibility(BoardEntity.Visibility.PRIVATE);
         board.setBoardId(NanoId.generate(10));
+
 
         DetailBoardDTO.OwnerDTO owner = new DetailBoardDTO.OwnerDTO();
         owner.setOid(userId);
@@ -93,11 +106,12 @@ public class BoardService {
         DetailBoardDTO dto = new DetailBoardDTO();
         dto.setId(board.getBoardId());
         dto.setName(board.getBoardName());
+        dto.setVisibility(board.getVisibility());
         dto.setOwner(owner);
 
         try {
             BoardEntity newBoard = repository.save(board);
-            
+
             List<StatusEntity> statusEntity = new ArrayList<>();
             StatusEntity status1 = new StatusEntity("No Status", "", newBoard.getBoardId());
             StatusEntity status2 = new StatusEntity("To Do", "", newBoard.getBoardId());
@@ -120,6 +134,13 @@ public class BoardService {
             System.out.println(e);
             throw new InternalError("Cannot add board");
         }
+    }
 
+    @Transactional
+    public VisibilityDTO editVisibility(String boardId, VisibilityDTO visibility) {
+        BoardEntity board = repository.findById(boardId).orElseThrow(() -> new WrongBoardException(boardId + "does not exist'"));
+        board.setVisibility(visibility.getVisibility());
+        repository.save(board);
+        return visibility;
     }
 }

@@ -1,6 +1,7 @@
 package com.example.kradankanban_backend.common.dtos;
 
 
+import com.example.kradankanban_backend.common.entities.BoardEntity;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.Getter;
@@ -15,6 +16,7 @@ public class DetailBoardDTO {
 
     private String id;
     private String name;
+    private BoardEntity.Visibility visibility;
     private OwnerDTO owner;
 
     @Data
@@ -24,6 +26,8 @@ public class DetailBoardDTO {
         private String oid;
         private String name;
     }
+
+
 
 }
 
