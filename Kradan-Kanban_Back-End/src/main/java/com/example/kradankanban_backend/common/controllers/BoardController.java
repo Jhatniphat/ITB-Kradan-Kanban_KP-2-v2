@@ -70,6 +70,12 @@ public class BoardController {
         }
     }
 
+    @PatchMapping("/{boardId}")
+    public ResponseEntity<VisibilityDTO> updateBoardVisibility(@RequestHeader("Authorization") String requestTokenHeader, @PathVariable String boardId, @RequestBody VisibilityDTO visibility) {
+        VisibilityDTO editVisibility = service.editVisibility(boardId, visibility);
+        return ResponseEntity.ok(editVisibility);
+    }
+
     //  ! ============================================== TASK ==============================================
 
     // "/boards/tasks"
