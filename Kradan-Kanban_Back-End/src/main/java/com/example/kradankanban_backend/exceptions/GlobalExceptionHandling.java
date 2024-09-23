@@ -124,6 +124,6 @@ public class GlobalExceptionHandling {
     @ExceptionHandler(ForbiddenException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ResponseEntity<ErrorResponse> handleForbiddenException(Exception exception, WebRequest request) {
-        return buildErrorResponse(exception, "Unknown error occurred", HttpStatus.INTERNAL_SERVER_ERROR, request);
+        return buildErrorResponse(exception, exception.getMessage() , HttpStatus.FORBIDDEN, request);
     }
 }
