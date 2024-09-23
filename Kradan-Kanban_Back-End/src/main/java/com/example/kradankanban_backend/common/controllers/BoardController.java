@@ -11,9 +11,11 @@ import com.example.kradankanban_backend.common.services.TaskService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,6 +39,14 @@ public class BoardController {
     @Autowired
     private StatusService statusService;
 
+    private String getUserId(HttpServletRequest request) {
+        String userId = null;
+        String jwtToken = request.getHeader("Authorization");;
+        if (jwtToken != null && jwtToken.startsWith("Bearer ")) {
+            userId = extractUserIdFromToken(jwtToken.substring(7));
+        }
+        return userId;
+    }
 
     //  ! ============================================== BOARD ==============================================
     @GetMapping("/{boardId}")
@@ -71,7 +81,9 @@ public class BoardController {
     }
 
     @PatchMapping("/{boardId}")
-    public ResponseEntity<VisibilityDTO> updateBoardVisibility(@RequestHeader("Authorization") String requestTokenHeader, @PathVariable String boardId, @RequestBody VisibilityDTO visibility) {
+    public ResponseEntity<VisibilityDTO> updateBoardVisibility(@PathVariable String boardId, @RequestBody VisibilityDTO visibility,HttpServletRequest request) {
+        String userId = getUserId(request);
+        service.CheckOwnerAndVisibility(boardId, userId, request.getMethod());
         VisibilityDTO editVisibility = service.editVisibility(boardId, visibility);
         return ResponseEntity.ok(editVisibility);
     }
@@ -81,8 +93,9 @@ public class BoardController {
     // "/boards/tasks"
 
     @GetMapping("/{boardId}/tasks")
-    public ResponseEntity<Object> getTasksByBoardId(@RequestHeader("Authorization") String requestTokenHeader ,@PathVariable String boardId) {
-        String userId = extractUserIdFromToken(requestTokenHeader.substring(7));
+    public ResponseEntity<Object> getTasksByBoardId(@PathVariable String boardId, HttpServletRequest request) {
+        String userId = getUserId(request);
+        service.CheckOwnerAndVisibility(boardId, userId, request.getMethod());
         DetailBoardDTO board = service.getBoardById(boardId);
         if (board == null) {
             return new ResponseEntity<>("Board not found", HttpStatus.NOT_FOUND);
@@ -94,8 +107,9 @@ public class BoardController {
     }
 
     @PostMapping("/{boardId}/tasks")
-    public ResponseEntity<DetailTaskDTO> addTaskForBoard(@RequestHeader("Authorization") String requestTokenHeader ,@PathVariable String boardId, @Valid @RequestBody AddEditTaskDTO addEditTaskDTO) {
-        String userId = extractUserIdFromToken(requestTokenHeader.substring(7));
+    public ResponseEntity<DetailTaskDTO> addTaskForBoard(@PathVariable String boardId, @Valid @RequestBody AddEditTaskDTO addEditTaskDTO, HttpServletRequest request) {
+        String userId = getUserId(request);
+        service.CheckOwnerAndVisibility(boardId, userId, request.getMethod());
         TaskEntity task = new TaskEntity();
         task.setTitle(addEditTaskDTO.getTitle());
         task.setDescription(addEditTaskDTO.getDescription());
@@ -108,16 +122,18 @@ public class BoardController {
     }
 
     @GetMapping("/{boardId}/tasks/{taskId}")
-    public ResponseEntity<DetailTaskWithTimeOnDTO> getTaskByBoardIdAndTaskId(@RequestHeader("Authorization") String requestTokenHeader ,@PathVariable String boardId, @PathVariable int taskId) {
-        String userId = extractUserIdFromToken(requestTokenHeader.substring(7));
+    public ResponseEntity<DetailTaskWithTimeOnDTO> getTaskByBoardIdAndTaskId(@PathVariable String boardId, @PathVariable int taskId,HttpServletRequest request) {
+        String userId = getUserId(request);
+        service.CheckOwnerAndVisibility(boardId, userId, request.getMethod());
         TaskEntity task = taskService.findTaskByBoardIdAndTaskId(userId,boardId, taskId);
         DetailTaskWithTimeOnDTO DetailTask = modelMapper.map(task, DetailTaskWithTimeOnDTO.class);
         return ResponseEntity.ok(DetailTask);
     }
 
     @PutMapping("/{boardId}/tasks/{taskId}")
-    public ResponseEntity<DetailTaskDTO> editTaskForBoard(@RequestHeader("Authorization") String requestTokenHeader ,@PathVariable String boardId, @PathVariable int taskId, @Valid @RequestBody AddEditTaskDTO addEditTaskDTO) {
-        String userId = extractUserIdFromToken(requestTokenHeader.substring(7));
+    public ResponseEntity<DetailTaskDTO> editTaskForBoard(@PathVariable String boardId, @PathVariable int taskId, @Valid @RequestBody AddEditTaskDTO addEditTaskDTO,HttpServletRequest request) {
+        String userId = getUserId(request);
+        service.CheckOwnerAndVisibility(boardId, userId, request.getMethod());
         TaskEntity task = new TaskEntity();
         task.setTitle(addEditTaskDTO.getTitle());
         task.setDescription(addEditTaskDTO.getDescription());
@@ -130,8 +146,9 @@ public class BoardController {
     }
 
     @DeleteMapping("/{boardId}/tasks/{taskId}")
-    public ResponseEntity<SimpleTaskDTO> deleteTask(@RequestHeader("Authorization") String requestTokenHeader, @PathVariable String boardId, @PathVariable int taskId) {
-        String userId = extractUserIdFromToken(requestTokenHeader.substring(7));
+    public ResponseEntity<SimpleTaskDTO> deleteTask(@PathVariable String boardId, @PathVariable int taskId, HttpServletRequest request) {
+        String userId = getUserId(request);
+        service.CheckOwnerAndVisibility(boardId, userId, request.getMethod());
         SimpleTaskDTO deletedTask = taskService.deleteTaskByBoardIdAndTaskId(userId, boardId, taskId);
         return ResponseEntity.ok(deletedTask);
     }
@@ -142,46 +159,62 @@ public class BoardController {
 
     // /board/status
     @GetMapping("/{boardId}/statuses")
-    public ResponseEntity<Object> getAll(@PathVariable String boardId) {
+    public ResponseEntity<Object> getAll(@PathVariable String boardId,HttpServletRequest request) {
+        String userId = getUserId(request);
+        service.CheckOwnerAndVisibility(boardId, userId, request.getMethod());
         List<StatusEntity> statuses = statusService.getAll(boardId);
         List<SimpleStatusDTO> simpleStatuses = statuses.stream().map(p -> modelMapper.map(p, SimpleStatusDTO.class)).collect(Collectors.toList());
         return ResponseEntity.ok(simpleStatuses);
     }
 
     @GetMapping("/{boardId}/statuses/{statusId}")
-    public ResponseEntity<Object> getById(@PathVariable String boardId, @PathVariable int statusId) {
+    public ResponseEntity<Object> getById(@PathVariable String boardId, @PathVariable int statusId,HttpServletRequest request) {
+        String userId = getUserId(request);
+        service.CheckOwnerAndVisibility(boardId, userId, request.getMethod());
         return ResponseEntity.ok(statusService.getById(boardId, statusId));
     }
 
     @PostMapping("/{boardId}/statuses")
-    public ResponseEntity<Object> addStatus(@PathVariable String boardId,@Valid @RequestBody StatusEntity status) {
+    public ResponseEntity<Object> addStatus(@PathVariable String boardId,@Valid @RequestBody StatusEntity status, HttpServletRequest request) {
+        String userId = getUserId(request);
+        service.CheckOwnerAndVisibility(boardId, userId, request.getMethod());
         StatusEntity createdStatus = statusService.addStatus(boardId, status);
         SimpleStatusDTO simpleStatusDTO = modelMapper.map(createdStatus, SimpleStatusDTO.class);
         return new ResponseEntity<> (simpleStatusDTO , HttpStatus.CREATED);
     }
 
     @PutMapping("/{boardId}/statuses/{statusId}")
-    public ResponseEntity<Object> updateStatus(@PathVariable String boardId,@PathVariable int statusId, @Valid @RequestBody StatusEntity status) {
+    public ResponseEntity<Object> updateStatus(@PathVariable String boardId,@PathVariable int statusId, @Valid @RequestBody StatusEntity status, HttpServletRequest request) {
+        String userId = getUserId(request);
+        service.CheckOwnerAndVisibility(boardId, userId, request.getMethod());
         return new ResponseEntity<>(statusService.editStatus(boardId, statusId, status) , HttpStatus.OK);
     }
 
     @DeleteMapping("/{boardId}/statuses/{statusId}")
-    public ResponseEntity<Object> deleteStatus(@PathVariable String boardId,@PathVariable int statusId) {
+    public ResponseEntity<Object> deleteStatus(@PathVariable String boardId,@PathVariable int statusId, HttpServletRequest request) {
+        String userId = getUserId(request);
+        service.CheckOwnerAndVisibility(boardId, userId, request.getMethod());
         return new ResponseEntity<>(statusService.deleteStatus(boardId, statusId) , HttpStatus.OK);
     }
 
     @DeleteMapping("/{boardId}/statuses/{oldId}/{newId}")
-    public ResponseEntity<Object> transferStatus(@PathVariable String boardId, @PathVariable int oldId, @PathVariable int newId) {
+    public ResponseEntity<Object> transferStatus(@PathVariable String boardId, @PathVariable int oldId, @PathVariable int newId, HttpServletRequest request) {
+        String userId = getUserId(request);
+        service.CheckOwnerAndVisibility(boardId, userId, request.getMethod());
         return new ResponseEntity<>(statusService.transferStatus(boardId, oldId, newId) , HttpStatus.OK);
     }
 
     @GetMapping("/{boardId}/statuses/maximum-task")
-    public ResponseEntity<Object> getAllLimitSettings(@PathVariable String boardId) {
+    public ResponseEntity<Object> getAllLimitSettings(@PathVariable String boardId, HttpServletRequest request) {
+        String userId = getUserId(request);
+        service.CheckOwnerAndVisibility(boardId, userId, request.getMethod());
         return new ResponseEntity<>(statusService.getLimitData(boardId) , HttpStatus.OK);
     }
 
     @PatchMapping("/{boardId}/statuses/maximum-task")
-    public ResponseEntity<Void> toggleMaximumTask(@PathVariable String boardId) {
+    public ResponseEntity<Void> toggleMaximumTask(@PathVariable String boardId, HttpServletRequest request) {
+        String userId = getUserId(request);
+        service.CheckOwnerAndVisibility(boardId, userId, request.getMethod());
         statusService.toggleIsEnable(boardId);
         return ResponseEntity.noContent().build();
     }
