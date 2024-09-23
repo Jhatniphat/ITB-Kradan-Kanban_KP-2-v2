@@ -150,7 +150,7 @@ public class BoardService {
             if (!isOwner && board.getVisibility().equals(BoardEntity.Visibility.PUBLIC) && !requestMethod.equals("GET")) {
                 throw new ForbiddenException("Not Owner and Public Board");
             }
-        } else if (!requestMethod.equals("GET") && board.getVisibility().equals(BoardEntity.Visibility.PRIVATE)) {
+        } else if (requestMethod.equals("GET") && board.getVisibility().equals(BoardEntity.Visibility.PRIVATE)) {
             throw new ForbiddenException("Not Owner and Private Board");
         }
     }
