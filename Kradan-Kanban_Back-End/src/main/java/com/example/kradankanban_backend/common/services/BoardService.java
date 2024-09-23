@@ -67,7 +67,6 @@ public class BoardService {
     }
 
     public DetailBoardDTO getBoardById(String boardId) {
-
         BoardEntity board = repository.findById(boardId).orElseThrow(() -> new WrongBoardException(boardId + "does not exist'"));
         DetailBoardDTO.OwnerDTO owner = new DetailBoardDTO.OwnerDTO();
         owner.setOid(board.getUserId());
@@ -78,8 +77,6 @@ public class BoardService {
         dto.setName(board.getBoardName());
         dto.setVisibility(board.getVisibility());
         dto.setOwner(owner);
-
-
         return dto;
     }
 
@@ -111,7 +108,6 @@ public class BoardService {
 
         try {
             BoardEntity newBoard = repository.save(board);
-
             List<StatusEntity> statusEntity = new ArrayList<>();
             StatusEntity status1 = new StatusEntity("No Status", "", newBoard.getBoardId());
             StatusEntity status2 = new StatusEntity("To Do", "", newBoard.getBoardId());
@@ -142,5 +138,20 @@ public class BoardService {
         board.setVisibility(visibility.getVisibility());
         repository.save(board);
         return visibility;
+    }
+
+    public void CheckOwnerAndVisibility(String boardId, String userId,String requestMethod) {
+        BoardEntity board = repository.findByBoardId(boardId).orElseThrow(() -> new WrongBoardException(boardId + "does not exist'"));
+        boolean isOwner = board.getUserId().equals(userId);
+        if (userId != null) {
+            if (!isOwner && board.getVisibility().equals(BoardEntity.Visibility.PRIVATE)) {
+                throw new ForbiddenException("Not Owner and Private Board");
+            }
+            if (!isOwner && board.getVisibility().equals(BoardEntity.Visibility.PUBLIC) && !requestMethod.equals("GET")) {
+                throw new ForbiddenException("Not Owner and Public Board");
+            }
+        } else if (!requestMethod.equals("GET") && board.getVisibility().equals(BoardEntity.Visibility.PRIVATE)) {
+            throw new ForbiddenException("Not Owner and Private Board");
+        }
     }
 }
