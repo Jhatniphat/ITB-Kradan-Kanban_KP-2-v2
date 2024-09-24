@@ -72,13 +72,28 @@ router.beforeEach(async (to, from) => {
         console.log(accountStore.tokenRaw)
     }
     if (to.name === "task" || to.name === "status") {
-        // boardStore.currentBoard.id = to.params.boardId =
-
-        if (boardStore.boards.length === 0) {
-            await getAllBoard()
-        }
-        boardStore.setCurrentBoardId(to.params.boardId)
-
+      if (boardStore.boards.length === 0) {
+        await getAllBoard(); // Fetch boards if not fetched yet
+      }
+  
+      const boardId = to.params.boardId;
+      const board = boardStore.getBoardById(boardId);
+  
+      if (!board) {
+        next({ name: "AccessDenied" }); // Redirect if board doesn't exist
+        return;
+      }
+  
+      const isOwner = board.ownerId === accountStore.userId;
+      const isBoardPrivate = board.visibility === "PRIVATE";
+  
+      // **Allow access if the board is public** (even for non-owners)
+      if (isBoardPrivate && !isOwner) {
+        next({ name: "AccessDenied" }); // Deny access if board is private and the user is not the owner
+        return;
+      }
+  
+      boardStore.setCurrentBoardId(boardId);
     }
     if (
         // make sure the user is authenticated
