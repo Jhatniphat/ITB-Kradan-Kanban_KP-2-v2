@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS `intergrate-kp-2`.`board`
     `boardId`   VARCHAR(10)  NOT NULL,
     `boardName` VARCHAR(120) NOT NULL,
     `userId`    VARCHAR(36)  NULL,
+    `visibility` ENUM('PRIVATE','PUBLIC') NOT NULL DEFAULT 'PRIVATE',
     PRIMARY KEY (`boardId`)
 )
     ENGINE = InnoDB
