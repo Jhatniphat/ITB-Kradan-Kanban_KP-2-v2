@@ -438,6 +438,43 @@ export async function addBoard(newBoard) {
     }
 }
 
+
+export async function changeVisibility(mode) {
+    const accountStore = useAccountStore();
+    const boardStore = useBoardStore();
+    const boardId = boardStore.currentBoardId
+    let res;
+    try {
+       res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}`, 
+        {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accountStore.tokenRaw}`, 
+        },
+        body: JSON.stringify({ visibility: mode }), 
+      });
+  
+      if (res.ok) {
+        const resData = await res.json(); 
+        console.log(res.status)
+        return resData;
+      } 
+      if (res.status === 401) {
+        console.log(res.status)
+        accountStore.clearTokenDetail();
+        router.push("/login");
+        return;
+      }
+      else {
+        console.log(res.status)
+        return res.status
+      }
+      } catch (error) {
+        console.log(error.toString());
+      }
+  }
+
 // ! -------------------------- LOGIN ----------------------------
 
 export async function login(username, password) {

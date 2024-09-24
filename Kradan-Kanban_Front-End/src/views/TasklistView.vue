@@ -2,7 +2,12 @@
 // ? import lib
 import { onBeforeMount, ref, watch } from "vue";
 import { useRoute } from "vue-router";
-import {deleteTask, getAllBoard, getLimitStatus} from "../lib/fetchUtils.js";
+import {
+  deleteTask,
+  getAllBoard,
+  getLimitStatus,
+  changeVisibility,
+} from "../lib/fetchUtils.js";
 import router from "@/router";
 import { useTaskStore } from "@/stores/task";
 import { useStatusStore } from "@/stores/status";
@@ -11,7 +16,7 @@ import Modal from "../components/Modal.vue";
 import Taskdetail from "../components/Tasks/Taskdetail.vue";
 import AddTaskModal from "@/components/Tasks/AddTaskModal.vue";
 import EditLimitStatus from "@/components/EditLimitStatus.vue";
-import {useBoardStore} from "@/stores/board.js";
+import { useBoardStore } from "@/stores/board.js";
 
 // ! ================= Variable ======================
 // ? ----------------- Store and Route ---------------
@@ -200,9 +205,68 @@ function sortBtn() {
   }
 }
 
+// ! ================= Visibility ======================
+
+const isPublic = ref(false);
+const showChangeVisibilityModal = ref(false);
+const originalPublicState = ref(false);
+
+function confirmChangeVisibility() {
+  showChangeVisibilityModal.value = true;
+}
+
+function cancelUpdateVisibility() {
+  showChangeVisibilityModal.value = false;
+  isPublic.value = originalPublicState.value;
+  console.log(originalPublicState.value);
+}
+
+async function updateVisibility() {
+  const newMode = isPublic.value ? "PUBLIC" : "PRIVATE";
+  console.log(newMode);
+  console.log(currentBoardId);
+  const res = await changeVisibility(newMode);
+
+  if (res.status !== null || res.status !== "") {
+    toast.value = {
+      status: "success",
+      msg: `Visibility changed to ${newMode}`,
+    };
+  } else {
+    toast.value = {
+      status: "error",
+      msg: "Error changing visibility. Please try again.",
+    };
+  }
+  showChangeVisibilityModal.value = false;
+}
+
+onBeforeMount(() => {
+  const currentBoard = boardStore.currentBoard;
+  isPublic.value = currentBoard.visibility === "PUBLIC";
+  originalPublicState.value = isPublic.value;
+});
+
+// ! ================= Owner's Check ======================
+const isOwner = ref(false);
+
+// // Check ownership of the board
+// onBeforeMount(() => {
+//   const currentBoard = boardStore.currentBoard;
+//   isOwner.value = currentBoard.ownerId === accountStore.userId;
+  
+//   if (!isOwner.value && currentBoard.visibility === "PRIVATE") {
+//     router.push({ name: "AccessDenied" }); // Redirect to AccessDenied if not the owner and board is private
+//   }
+// });
+
 onBeforeMount(async () => {
+  const currentBoard = boardStore.currentBoard;
+  isPublic.value = currentBoard.visibility === "PUBLIC";
+  originalPublicState.value = isPublic.value;
+
   if (boardStore.boards.length === 0) {
-    loading.value = true
+    loading.value = true;
     try {
       await getAllBoard();
     } catch (err) {
@@ -225,7 +289,9 @@ onBeforeMount(async () => {
 <template>
   <!-- dropdowns status -->
   <div class="w-3/4 mx-auto mt-10 relative" v-if="!loading">
-    <h1 class="w-full text-center text-2xl">{{ boardStore.currentBoard.name }}</h1>
+    <h1 class="w-full text-center text-2xl">
+      {{ boardStore.currentBoard.name }}
+    </h1>
   </div>
   <div class="w-3/4 mx-auto mt-10 relative">
     <details class="dropdown">
@@ -258,7 +324,20 @@ onBeforeMount(async () => {
     <button class="itbkk-filter-clear btn" @click="filterBy = []">Reset</button>
 
     <!-- show edit limit modal -->
-    <div class="float-right">
+    <div class="float-right flex flex-row">
+      <div class="form-control w-fit m-2">
+        <label class="cursor-pointer label">
+          <input
+            type="checkbox"
+            class="toggle toggle-primary"
+            v-model="isPublic"
+            @change="confirmChangeVisibility()"
+          />
+          <span class="label-text pl-1">{{
+            isPublic ? "Public" : "Private"
+          }}</span>
+        </label>
+      </div>
       <button
         class="itbkk-button-add btn btn-square btn-outline w-16 float-left mr-1"
         @click="showAddModal = true"
@@ -372,7 +451,11 @@ onBeforeMount(async () => {
             <th>{{ index + 1 }}</th>
             <td class="itbkk-title">
               <!-- <RouterLink :to="`/task/${task.id}`"> -->
-              <button @click="router.push(`/board/${currentBoardId}/task/${task.id}/edit`)">
+              <button
+                @click="
+                  router.push(`/board/${currentBoardId}/task/${task.id}/edit`)
+                "
+              >
                 {{ task.title }}
               </button>
               <!-- </RouterLink> -->
@@ -473,6 +556,41 @@ onBeforeMount(async () => {
     <!-- edit limit modal-->
     <Modal :show-modal="showEditLimit">
       <EditLimitStatus @close-modal="closeEditLimit" />
+    </Modal>
+
+    <Modal :show-modal="showChangeVisibilityModal">
+      <div
+        class="flex flex-col p-5 bg-slate-50 dark:bg-base-100 rounded-lg w-full"
+      >
+        <h1 class="m-2 pb-4 text-2xl font-bold">Board visibility changed!</h1>
+        <hr />
+        <h1 class="itbkk-message font-semibold text-xl p-8">
+          {{
+            isPublic
+              ? "In public, anyone can view the board,task list and task detail of tasks in the board. Do you want to change the visibility to Public?"
+              : "In private, only board owner can access/control board. Do you want to change the visibility to Private?"
+          }}
+        </h1>
+        <hr />
+        <div class="flex flex-row-reverse gap-4 mt-5">
+          <button
+            @click="cancelUpdateVisibility()"
+            class="itbkk-button-cancel btn btn-outline btn-error basis-1/6"
+          >
+            Close
+          </button>
+          <button
+            @click="updateVisibility()"
+            class="itbkk-button-confirm btn btn-outline btn-success basis-1/6"
+          >
+            {{ loading ? "" : "Confirm" }}
+            <span
+              class="loading loading-spinner text-success"
+              v-if="loading"
+            ></span>
+          </button>
+        </div>
+      </div>
     </Modal>
 
     <!-- Error Modal -->
