@@ -345,8 +345,7 @@ export async function getLimitStatus() {
     let res, item;
     try {
         const accountStore = useAccountStore();
-        res = await fetch(
-            `${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses/maximum-task`,
+        res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses/maximum-task`,
             {
                 method: "GET",
                 headers: {
@@ -398,6 +397,32 @@ export async function getAllBoard() {
         // return await res.json();
     } catch (error) {
         console.error(error);
+    }
+}
+
+export async function getBoardById(boardId) {
+    const accountStore = useAccountStore();
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accountStore.tokenRaw}`, // Include the token if needed
+        },
+      });
+      
+      if (res.status === 401) {
+        accountStore.clearTokenDetail();
+        router.push("/login");
+        return null;
+    } else if (res.status === 200) {
+        let item = await res.json();
+        return {status: 200, payload: item};
+    } else if (res.status === 400) {
+        return {status: 400, payload: "No board found"};
+    } 
+    } catch (error) {
+      console.error(error);
     }
 }
 

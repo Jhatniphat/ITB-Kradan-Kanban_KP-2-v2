@@ -42,9 +42,10 @@ const selectedId = ref(0); // * use to show detail and delete
 const limitStatusValue = ref({ isEnable: true, limit: 10 }); // * obj for EditLimit modal
 const showErrorModal = ref(false); // * show Error from Edit Limit modal
 const overStatuses = ref([]);
+const currentBoardId = useBoardStore().currentBoardId;
+// const currentBoardId = ref(route.params.boardId);
 
 // ! ================= Modal ======================
-const currentBoardId = useBoardStore().currentBoardId;
 const openEditMode = (id) => {
   showDetailModal.value = true;
   router.push(`/board/${currentBoardId}/task/${id}/edit`);
@@ -127,15 +128,19 @@ const openDeleteModal = (taskTitle, id) => {
 const openModal = (id) => {
   selectedId.value = id;
   showDetailModal.value = true;
+  
 };
 
 async function fetchData(id) {
-  if (id !== undefined) {
-    openModal(id);
-  }
+  // if (id !== undefined) {
+  //    openModal(id);
+  //  }
   error.value = allTasks.value = null;
   loading.value = false;
   try {
+    // if (boardStore.boards.length === 0) {
+    //   await boardStore.setCurrentBoardId(route.params.boardId);
+    // }
     // replace `getPost` with your data fetching util / API wrapper
     allTasks.value = await taskStore.getAllTasks();
     if (typeof allTasks.value === "object") {
@@ -147,8 +152,29 @@ async function fetchData(id) {
     loading.value = false;
   }
 }
+watch(
+  () => route.params.boardId,
+  async (newBoardId) => {
+    await setCurrentBoard(newBoardId);
+    await fetchData(newBoardId);
+  },
+  { immediate: true }
+);
 
-watch(() => route.params.taskId, fetchData, { immediate: true });
+async function setCurrentBoard(boardId) {
+  try {
+    loading.value = true;
+    await boardStore.setCurrentBoardId(boardId);
+    isPublic.value = boardStore.currentBoard.visibility === "PUBLIC";
+    originalPublicState.value = isPublic.value;
+  } catch (err) {
+    console.error("Error fetching board:", err);
+    error.value = err;
+  } finally {
+    loading.value = false;
+  }
+}
+// watch(() => route.params.taskId, fetchData, { immediate: true });
 
 // ! ================= Filter and Sort ======================
 const filterBy = ref([]);
@@ -224,7 +250,6 @@ function cancelUpdateVisibility() {
 async function updateVisibility() {
   const newMode = isPublic.value ? "PUBLIC" : "PRIVATE";
   console.log(newMode);
-  console.log(currentBoardId);
   const res = await changeVisibility(newMode);
 
   if (res.status !== null || res.status !== "") {
@@ -241,30 +266,21 @@ async function updateVisibility() {
   showChangeVisibilityModal.value = false;
 }
 
-onBeforeMount(() => {
-  const currentBoard = boardStore.currentBoard;
-  isPublic.value = currentBoard.visibility === "PUBLIC";
-  originalPublicState.value = isPublic.value;
-});
+
 
 // ! ================= Owner's Check ======================
-const isOwner = ref(false);
-
+//const isOwner = ref(false);
 // // Check ownership of the board
 // onBeforeMount(() => {
 //   const currentBoard = boardStore.currentBoard;
 //   isOwner.value = currentBoard.ownerId === accountStore.userId;
-  
+
 //   if (!isOwner.value && currentBoard.visibility === "PRIVATE") {
 //     router.push({ name: "AccessDenied" }); // Redirect to AccessDenied if not the owner and board is private
 //   }
 // });
 
 onBeforeMount(async () => {
-  const currentBoard = boardStore.currentBoard;
-  isPublic.value = currentBoard.visibility === "PUBLIC";
-  originalPublicState.value = isPublic.value;
-
   if (boardStore.boards.length === 0) {
     loading.value = true;
     try {
@@ -334,7 +350,7 @@ onBeforeMount(async () => {
             @change="confirmChangeVisibility()"
           />
           <span class="label-text pl-1">{{
-            isPublic ? "Public" : "Private"
+             isPublic ? "Public" : "Private"
           }}</span>
         </label>
       </div>
@@ -453,7 +469,7 @@ onBeforeMount(async () => {
               <!-- <RouterLink :to="`/task/${task.id}`"> -->
               <button
                 @click="
-                  router.push(`/board/${currentBoardId}/task/${task.id}/edit`)
+                  router.push(`/board/${currentBoardId}/task/${id}/edit`)
                 "
               >
                 {{ task.title }}

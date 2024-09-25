@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import LogicPage from "@/components/LogicPage.vue";
 import { useAccountStore } from "@/stores/account";
 import { useBoardStore } from "@/stores/board.js";
-import { getAllBoard, login, validateToken } from "@/lib/fetchUtils.js";
+import { getAllBoard, login, validateToken, getBoardById } from "@/lib/fetchUtils.js";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -73,30 +73,31 @@ router.beforeEach(async (to, from, next) => {
     // Validate token for non-login routes
     if (to.name !== "login") {
       await validateToken();
+      console.log(accountStore.tokenRaw)
     }
   
     if (to.name === "task" || to.name === "status") {
       if (boardStore.boards.length === 0) {
-        await getAllBoard(); // Fetch boards if not fetched yet
+        await getAllBoard(); 
       }
   
       const boardId = to.params.boardId;
-      const board = boardStore.getBoardById(boardId);
+      console.log(boardId)
+      const board =  await getBoardById(boardId);
   
       if (!board) {
-        next({ name: "AccessDenied" }); // Redirect if board doesn't exist
+        console.log("Board have no data!!")
+        next({ name: "AccessDenied" }); 
         return;
       }
   
       const isOwner = board.ownerId === accountStore.userId;
       const isBoardPrivate = board.visibility === "PRIVATE";
   
-      // **Allow access if the board is public** (even for non-owners)
       if (isBoardPrivate && !isOwner) {
-        next({ name: "AccessDenied" }); // Deny access if board is private and the user is not the owner
+        next({ name: "AccessDenied" }); 
         return;
       }
-  
       boardStore.setCurrentBoardId(boardId);
     }
   
