@@ -63,6 +63,7 @@ public class BoardController {
         } else {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Authorization header must start with Bearer");
         }
+
     }
 
     @PostMapping("")
