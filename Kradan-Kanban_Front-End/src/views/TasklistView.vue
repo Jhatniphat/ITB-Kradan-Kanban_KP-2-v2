@@ -418,6 +418,7 @@ function makekanbanData() {
 
     <!-- show edit limit modal -->
     <div class="float-right flex flex-row">
+      <div class="lg:tooltip" :data-tip="isOwner ? '' : 'You must be the owner of board to change the Visibility'">
       <div class="form-control w-fit m-2">
         <label class="cursor-pointer label">
           <input
@@ -432,6 +433,8 @@ function makekanbanData() {
           }}</span>
         </label>
       </div>
+    </div>
+      <div class="lg:tooltip" :data-tip="isOwner ? '' : 'You must be the owner of board to Add a task'">
       <button
         class="itbkk-button-add btn btn-square btn-outline w-16 float-left mr-1"
         @click="showAddModal = true"
@@ -439,7 +442,7 @@ function makekanbanData() {
       >
         + Add
       </button>
-
+  </div>
       <button
         class="btn btn-square btn-outline w-16 float-right"
         @click="showEditLimit = true"
@@ -597,7 +600,7 @@ function makekanbanData() {
                 </div>
                 <div v-if="!isOwner">
                   <li>
-                    <h1>You do not have permission here!!</h1>
+                    <h1>You do not have permission to edit or delete a task!!</h1>
                   </li>
                 </div>
                 </ul>

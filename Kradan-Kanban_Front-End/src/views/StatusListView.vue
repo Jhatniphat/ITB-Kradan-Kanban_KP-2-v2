@@ -172,6 +172,7 @@ function closeEditLimit(overStatus) {
       <!-- show edit limit modal -->
       <div class="w-3/4 mx-auto mt-10 relative">
         <div class="float-right">
+          <div class="lg:tooltip" :data-tip="isOwner ? '' : 'You must be the owner of board to Add a status'">
           <button
             class="itbkk-button-add btn btn-square btn-outline w-16 float-left mr-1"
             @click="showAddModal = true"
@@ -179,7 +180,7 @@ function closeEditLimit(overStatus) {
           >
             + Add
           </button>
-
+        </div>
           <button
             class="itbkk-button-add btn btn-square btn-outline w-16 float-right"
             @click="showEditLimit = true"
@@ -234,6 +235,7 @@ function closeEditLimit(overStatus) {
               v-if="status.name !== 'No Status' && status.name !== 'Done'"
               class="itbkk-action-button"
             >
+            <div class="lg:tooltip" :data-tip="isOwner ? '' : 'You must be the owner of board to Edit a status'">
               <button
                 class="itbkk-button-edit btn m-2"
                 @click="openEdit(status.id)"
@@ -241,6 +243,8 @@ function closeEditLimit(overStatus) {
               >
                 Edit
               </button>
+            </div>
+            <div class="lg:tooltip" :data-tip="isOwner ? '' : 'You must be the owner of board to Delete a status'">
               <button
                 class="itbkk-button-delete btn m-2"
                 @click="openDelete(status.id, status.name)"
@@ -248,6 +252,7 @@ function closeEditLimit(overStatus) {
               >
                 Delete
               </button>
+            </div>
             </td>
           </tr>
         </tbody>
