@@ -42,8 +42,7 @@ const selectedId = ref(0); // * use to show detail and delete
 const limitStatusValue = ref({ isEnable: true, limit: 10 }); // * obj for EditLimit modal
 const showErrorModal = ref(false); // * show Error from Edit Limit modal
 const overStatuses = ref([]);
-const currentBoardId = useBoardStore().currentBoardId;
-// const currentBoardId = ref(route.params.boardId);
+const kanbanData = ref([]);
 
 // ! ================= Modal ======================
 const openEditMode = (id) => {
@@ -138,9 +137,7 @@ async function fetchData(id) {
   error.value = allTasks.value = null;
   loading.value = false;
   try {
-    // if (boardStore.boards.length === 0) {
-    //   await boardStore.setCurrentBoardId(route.params.boardId);
-    // }
+    loading.value = true;
     // replace `getPost` with your data fetching util / API wrapper
     allTasks.value = await taskStore.getAllTasks();
     if (typeof allTasks.value === "object") {
@@ -268,6 +265,8 @@ async function updateVisibility() {
 
 
 
+
+
 // ! ================= Owner's Check ======================
 //const isOwner = ref(false);
 // // Check ownership of the board
@@ -291,7 +290,18 @@ onBeforeMount(async () => {
       loading.value = false;
     }
   }
-  statusStore.getAllStatus();
+
+  if (statusStore.status.length === 0) {
+    loading.value = true;
+    try {
+      await statusStore.getAllStatus();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      loading.value = false;
+    }
+  }
+
   statusStore.getLimitEnable();
   const res = await getLimitStatus();
   statusStore.setLimitEnable(await res);
@@ -300,6 +310,27 @@ onBeforeMount(async () => {
     showDetailModal.value = true;
   }
 });
+
+// ! ================= KanBanData ========================
+watch(() => [filterBy.value, sortBy.value , loading.value , allTasks.value], makekanbanData, {
+  immediate: true,
+  deep: true,
+});
+function makekanbanData(){
+  if (loading.value || allTasks.value === null) return;
+  console.table(taskStore.tasks)
+  console.table(allTasks.value)
+  console.table(statusStore.getAllStatusWithLimit())
+  for (let i = 0; i < statusStore.getAllStatusWithLimit().length; i++) {
+    const status = statusStore.getAllStatusWithLimit()[i];
+    const tasks = allTasks.value?.filter((task) => task.status === status.name);
+    status.tasks = tasks;
+    console.error(status.name)
+    console.table(status)
+    console.table(status.tasks)
+    kanbanData.value?.push(status);
+  }
+}
 </script>
 
 <template>
@@ -521,6 +552,13 @@ onBeforeMount(async () => {
           </tr>
         </tbody>
       </table>
+
+      <!-- kanban board -->
+<!--      <div class="flex flex-row">-->
+<!--        <div class="border-b-amber-300 border-8 border-solid" v-for="status in kanbanData">-->
+<!--          {{ status.name}}-->
+<!--        </div>-->
+<!--      </div>-->
     </div>
 
     <!-- Modal -->
