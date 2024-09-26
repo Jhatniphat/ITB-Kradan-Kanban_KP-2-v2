@@ -542,12 +542,17 @@ function makekanbanData(){
         </tbody>
       </table>
 
-      <!-- kanban board -->
-<!--      <div class="flex flex-row">-->
-<!--        <div class="border-b-amber-300 border-8 border-solid" v-for="status in kanbanData">-->
-<!--          {{ status.name}}-->
-<!--        </div>-->
-<!--      </div>-->
+<!--  kanban board -->
+      <div class="flex flex-row gap-5 w-3/4 mx-auto">
+        <div v-for="status in kanbanData" class="kanban-status-card" :style="{ 'border-top' : status.isLimit ? 'red 1rem solid' : 'green 1rem solid'}">
+          <h5 class="">{{ status.name}}</h5>
+          <div class="kanban-task-list">
+            <div v-for="task in status.tasks" class="kanban-task-card">
+              <span class="kanban-task-title">{{ task.title }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Modal -->
@@ -712,15 +717,53 @@ function makekanbanData(){
   </div>
 </template>
 
+
+
 <style scoped>
 ::backdrop {
   background-image: linear-gradient(
-    45deg,
-    magenta,
-    rebeccapurple,
-    dodgerblue,
-    green
+      45deg,
+      magenta,
+      rebeccapurple,
+      dodgerblue,
+      green
   );
   opacity: 0.75;
+}
+
+.kanban-status-card{
+  border-top: solid 1rem;
+  background-color: #F7F7F7;
+  color: #000000;
+  border-radius: 10px;
+  min-height: 30rem;
+  width: 20rem;
+  font-weight: bold;
+  padding: 1rem;
+
+  .kanban-task-list{
+    display: flex;
+    flex-direction: column;
+    background-color: #F7F7F7;
+
+    .kanban-task-card{
+      font-weight: normal;
+      border-radius: 5px;
+      margin: 5px;
+      box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+      transition: all 0.5s ;
+      padding: 1rem;
+
+      .kanban-task-title {
+        overflow-wrap: break-word;
+      }
+    }
+
+    .kanban-task-card:hover{
+      box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;;
+    }
+
+
+  }
 }
 </style>
