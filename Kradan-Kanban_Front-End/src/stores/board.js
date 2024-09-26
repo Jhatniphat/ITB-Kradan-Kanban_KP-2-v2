@@ -31,24 +31,6 @@ export const useBoardStore = defineStore("Board", {
         this.boards.splice(index, 1);
       }
     },
-    // setCurrentBoardId(boardId) {
-    //   const board = this.boards.find((board) => board.id === boardId);
-    //   if (!board) {
-    //     console.log("ไม่มีบอร์ดดดดดด")
-    //     router.push("/login"); // Redirect if the board doesn't exist
-    //   } else {
-    //     this.currentBoardId = boardId;
-    //     this.currentBoard = board; // Set the current board
-    //   }
-    // },
-  //   setCurrentBoardId(boardId) {
-  //     if(boardId !== this.boards.id && this.boards.id !== undefined) {
-  //         router.push("/login")
-  //     }
-  //     this.currentBoardId = boardId;
-  //     this.currentBoard = this.boards.find((board) => board.id === boardId);
-  //    }
-  // },
     async setCurrentBoardId(boardId) {
       try {
           const board = await getBoardById(boardId); 

@@ -8,6 +8,12 @@ const statusStore = useStatusStore();
 const limitStatusValue = ref({});
 let oldLimitStatusValue = { isEnable: true, limit: 10 };
 const emit = defineEmits(["closeModal"]);
+const props = defineProps({
+  isOwner: {
+    type: Boolean,
+    required: true
+  }
+});
 
 const canConfirmBtn = ref(true);
 const loading = ref(false);
@@ -71,6 +77,7 @@ function closeEdit() {
           type="checkbox"
           class="toggle toggle-primary"
           v-model="limitStatusValue.isEnable"
+          :disabled="!isOwner"
         />
         <span class="label-text pl-1">Enable Limit</span>
       </label>
@@ -81,6 +88,7 @@ function closeEdit() {
         type="number"
         class="input text-base dark:bg-base-300"
         v-model="limitStatusValue.limit"
+        :disabled="!isOwner"
       />
     </div>
     <div class="flex flex-row-reverse gap-4 mt-5">

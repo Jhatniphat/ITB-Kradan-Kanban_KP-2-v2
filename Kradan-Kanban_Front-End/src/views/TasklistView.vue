@@ -17,6 +17,7 @@ import Taskdetail from "../components/Tasks/Taskdetail.vue";
 import AddTaskModal from "@/components/Tasks/AddTaskModal.vue";
 import EditLimitStatus from "@/components/EditLimitStatus.vue";
 import { useBoardStore } from "@/stores/board.js";
+import { useAccountStore } from "@/stores/account.js";
 
 // ! ================= Variable ======================
 // ? ----------------- Store and Route ---------------
@@ -127,7 +128,6 @@ const openDeleteModal = (taskTitle, id) => {
 const openModal = (id) => {
   selectedId.value = id;
   showDetailModal.value = true;
-  
 };
 
 async function fetchData(id) {
@@ -263,71 +263,117 @@ async function updateVisibility() {
   showChangeVisibilityModal.value = false;
 }
 
-
-
-
-
 // ! ================= Owner's Check ======================
-//const isOwner = ref(false);
-// // Check ownership of the board
+const accountStore = useAccountStore();
+const isOwner = ref(false);
 // onBeforeMount(() => {
-//   const currentBoard = boardStore.currentBoard;
-//   isOwner.value = currentBoard.ownerId === accountStore.userId;
+//   const currentBoards = boardStore.currentBoard;
+//   isOwner.value = currentBoards.ownerId === accountStore.tokenDetail.oid;
 
-//   if (!isOwner.value && currentBoard.visibility === "PRIVATE") {
-//     router.push({ name: "AccessDenied" }); // Redirect to AccessDenied if not the owner and board is private
+//   if (!isOwner.value && currentBoards.visibility === "PRIVATE") {
+//     router.push({ name: "AccessDenied" }); 
+//   }
+// });
+
+// onBeforeMount(async () => {
+//   if (boardStore.boards.length === 0) {
+//     loading.value = true;
+//     try {
+//       await getAllBoard();
+//     } catch (err) {
+//       console.error(err);
+//     } finally {
+//       loading.value = false;
+//     }
+//   }
+
+//   if (statusStore.status.length === 0) {
+//     loading.value = true;
+//     try {
+//       await statusStore.getAllStatus();
+//     } catch (err) {
+//       console.error(err);
+//     } finally {
+//       loading.value = false;
+//     }
+//   }
+
+//   statusStore.getLimitEnable();
+//   const res = await getLimitStatus();
+//   statusStore.setLimitEnable(await res);
+//   if (route.params.id !== undefined) {
+//     selectedId.value = parseInt(route.params.id);
+//     showDetailModal.value = true;
 //   }
 // });
 
 onBeforeMount(async () => {
-  if (boardStore.boards.length === 0) {
-    loading.value = true;
-    try {
+  // Initialize loading state
+  loading.value = true;
+
+  try {
+    // Ensure boards are loaded if not already present
+    if (boardStore.boards.length === 0) {
       await getAllBoard();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      loading.value = false;
     }
-  }
 
-  if (statusStore.status.length === 0) {
-    loading.value = true;
-    try {
+    // Fetch and set statuses if not already loaded
+    if (statusStore.status.length === 0) {
       await statusStore.getAllStatus();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      loading.value = false;
     }
-  }
 
-  statusStore.getLimitEnable();
-  const res = await getLimitStatus();
-  statusStore.setLimitEnable(await res);
-  if (route.params.id !== undefined) {
-    selectedId.value = parseInt(route.params.id);
-    showDetailModal.value = true;
+    // Ensure limit status is updated
+    statusStore.getLimitEnable();
+    const res = await getLimitStatus();
+    statusStore.setLimitEnable(res);
+
+    await setCurrentBoard(route.params.boardId);
+
+    const currentBoard = boardStore.currentBoard;
+    console.log(currentBoard.owner.oid)
+    console.log(accountStore.tokenDetail.oid)
+    isOwner.value = currentBoard.owner.oid === accountStore.tokenDetail.oid;
+    console.log(isOwner.value)
+
+    if (!isOwner.value && currentBoard.visibility === "PRIVATE") {
+      router.push({ name: "AccessDenied" });
+    }
+
+    // If a task is selected, open the task detail modal
+    if (route.params.id !== undefined) {
+      selectedId.value = parseInt(route.params.id);
+      showDetailModal.value = true;
+    }
+  } catch (err) {
+    console.error("Error loading data or checking ownership:", err);
+    error.value = err;
+  } finally {
+    // Set loading to false once all operations are complete
+    loading.value = false;
   }
 });
 
 // ! ================= KanBanData ========================
-watch(() => [filterBy.value, sortBy.value , loading.value , allTasks.value], makekanbanData, {
-  immediate: true,
-  deep: true,
-});
-function makekanbanData(){
+watch(
+  () => [filterBy.value, sortBy.value, loading.value, allTasks.value],
+  makekanbanData,
+  {
+    immediate: true,
+    deep: true,
+  }
+);
+function makekanbanData() {
   if (loading.value || allTasks.value === null) return;
-  console.table(taskStore.tasks)
-  console.table(allTasks.value)
-  console.table(statusStore.getAllStatusWithLimit())
+  console.table(taskStore.tasks);
+  console.table(allTasks.value);
+  console.table(statusStore.getAllStatusWithLimit());
   for (let i = 0; i < statusStore.getAllStatusWithLimit().length; i++) {
     const status = statusStore.getAllStatusWithLimit()[i];
     const tasks = allTasks.value?.filter((task) => task.status === status.name);
     status.tasks = tasks;
-    console.error(status.name)
-    console.table(status)
-    console.table(status.tasks)
+    console.error(status.name);
+    console.table(status);
+    console.table(status.tasks);
     kanbanData.value?.push(status);
   }
 }
@@ -378,16 +424,18 @@ function makekanbanData(){
             type="checkbox"
             class="toggle toggle-primary"
             v-model="isPublic"
+            :disabled="!isOwner"
             @change="confirmChangeVisibility()"
           />
           <span class="label-text pl-1">{{
-             isPublic ? "Public" : "Private"
+            isPublic ? "Public" : "Private"
           }}</span>
         </label>
       </div>
       <button
         class="itbkk-button-add btn btn-square btn-outline w-16 float-left mr-1"
         @click="showAddModal = true"
+        :disabled="!isOwner"
       >
         + Add
       </button>
@@ -499,9 +547,7 @@ function makekanbanData(){
             <td class="itbkk-title">
               <!-- <RouterLink :to="`/task/${task.id}`"> -->
               <button
-                @click="
-                  router.push(`/board/${currentBoardId}/task/${id}/edit`)
-                "
+                @click="router.push(`/board/${currentBoardId}/task/${id}/edit`)"
               >
                 {{ task.title }}
               </button>
@@ -522,7 +568,8 @@ function makekanbanData(){
             </td>
             <td class="itbkk-status">{{ task.status }}</td>
             <td class="">
-              <div class="dropdown dropdown-bottom dropdown-end">
+              
+              <div v-if="isOwner" class="dropdown dropdown-bottom dropdown-end" >
                 <div tabindex="0" role="button" class="btn m-1">
                   <svg
                     class="swap-off fill-current"
@@ -540,12 +587,19 @@ function makekanbanData(){
                   tabindex="0"
                   class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
                 >
+                <div v-if="isOwner">
                   <li>
-                    <a @click="openEditMode(task.id)">Edit</a>
+                    <a @click="openEditMode(task.id)" >Edit</a>
                   </li>
                   <li>
                     <a @click="openDeleteModal(task.title, task.id)">Delete</a>
                   </li>
+                </div>
+                <div v-if="!isOwner">
+                  <li>
+                    <h1>You do not have permission here!!</h1>
+                  </li>
+                </div>
                 </ul>
               </div>
             </td>
@@ -554,11 +608,11 @@ function makekanbanData(){
       </table>
 
       <!-- kanban board -->
-<!--      <div class="flex flex-row">-->
-<!--        <div class="border-b-amber-300 border-8 border-solid" v-for="status in kanbanData">-->
-<!--          {{ status.name}}-->
-<!--        </div>-->
-<!--      </div>-->
+      <!--      <div class="flex flex-row">-->
+      <!--        <div class="border-b-amber-300 border-8 border-solid" v-for="status in kanbanData">-->
+      <!--          {{ status.name}}-->
+      <!--        </div>-->
+      <!--      </div>-->
     </div>
 
     <!-- Modal -->
@@ -608,7 +662,7 @@ function makekanbanData(){
     </Modal>
 
     <!-- edit limit modal-->
-    <Modal :show-modal="showEditLimit">
+    <Modal :isOwner="isOwner" :show-modal="showEditLimit">
       <EditLimitStatus @close-modal="closeEditLimit" />
     </Modal>
 
