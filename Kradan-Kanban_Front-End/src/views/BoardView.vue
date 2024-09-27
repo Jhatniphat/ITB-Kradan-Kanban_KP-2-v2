@@ -234,7 +234,7 @@ const showToast = (toastData) => {
         </div>
         <div
           class="board-list-card"
-          v-for="board in allBoard"
+          v-for="board in allBoard[0]"
           @click="router.push(`/board/${board.id}`)"
           v-if="allBoard.length > 0"
         >
