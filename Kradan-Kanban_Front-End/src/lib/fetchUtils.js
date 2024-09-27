@@ -2,6 +2,7 @@ import router from "@/router";
 import {useAccountStore} from "@/stores/account";
 import {useBoardStore} from "@/stores/board.js";
 import {useTaskStore} from "@/stores/task.js";
+import {useStatusStore} from "@/stores/status.js";
 
 // ! -------------------------------- Task ------------------------------------------
 export async function getAllTasks() {
@@ -21,7 +22,6 @@ export async function getAllTasks() {
             return;
         } else if (res.status === 200) {
             let item = await res.json();
-            console.log(item)
             taskStore.tasks = item;
             return item;
         }
@@ -148,7 +148,9 @@ export async function deleteTask(id) {
 
 // ! ------------------------------- Status --------------------------------
 export async function getAllStatus() {
+    let item
     const boardId = useBoardStore().currentBoardId;
+    const statusStore = useStatusStore();
     try {
         const accountStore = useAccountStore();
         let res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses`, {
@@ -160,9 +162,11 @@ export async function getAllStatus() {
         if (res.status === 401) {
             accountStore.clearTokenDetail();
             router.push("/login");
-            return;
+        } else if(res.status === 200) {
+            item = await res.json();
+            statusStore.status = item;
+            return item;
         }
-        return await res.json();
     } catch (error) {
     }
 }
@@ -358,7 +362,11 @@ export async function getLimitStatus() {
             router.push("/login");
             return;
         }
-        if (res.status === 200) return await res.json();
+        if (res.status === 200) {
+            item = await res.json();
+            useStatusStore().setLimitEnable(item);
+            return item;
+        }
     } catch (e) {
         console.log(e.toString());
     }
