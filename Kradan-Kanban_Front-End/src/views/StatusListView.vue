@@ -171,8 +171,8 @@ function closeEditLimit(overStatus) {
     <div class="flex flex-col">
       <!-- show edit limit modal -->
       <div class="w-3/4 mx-auto mt-10 relative">
-        <div class="float-right">
-          <div class="lg:tooltip" :data-tip="isOwner ? '' : 'You must be the owner of board to Add a status'">
+        <div class="float-right flex flex-row">
+          <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You don't have a permission to Add a status">
           <button
             class="itbkk-button-add btn btn-square btn-outline w-16 float-left mr-1"
             @click="showAddModal = true"
@@ -233,9 +233,9 @@ function closeEditLimit(overStatus) {
             </td>
             <td
               v-if="status.name !== 'No Status' && status.name !== 'Done'"
-              class="itbkk-action-button"
+              class="itbkk-action-button flex flex-row"
             >
-            <div class="lg:tooltip" :data-tip="isOwner ? '' : 'You must be the owner of board to Edit a status'">
+            <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You don't have a permission to Edit a status">
               <button
                 class="itbkk-button-edit btn m-2"
                 @click="openEdit(status.id)"
@@ -244,7 +244,7 @@ function closeEditLimit(overStatus) {
                 Edit
               </button>
             </div>
-            <div class="lg:tooltip" :data-tip="isOwner ? '' : 'You must be the owner of board to Delete a status'">
+            <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You don't have a permission to Delete a status">
               <button
                 class="itbkk-button-delete btn m-2"
                 @click="openDelete(status.id, status.name)"
@@ -278,8 +278,8 @@ function closeEditLimit(overStatus) {
     />
   </Modal>
   <!-- edit limit modal-->
-  <Modal :isOwner="isOwner" :show-modal="showEditLimit">
-    <EditLimitStatus @close-modal="closeEditLimit" />
+  <Modal  :show-modal="showEditLimit">
+    <EditLimitStatus :isOwnerOrNot="isOwner" @close-modal="closeEditLimit" />
   </Modal>
 
   <Modal :show-modal="showErrorModal">

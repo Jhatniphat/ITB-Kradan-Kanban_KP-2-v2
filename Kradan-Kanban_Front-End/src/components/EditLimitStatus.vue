@@ -9,12 +9,13 @@ const limitStatusValue = ref({});
 let oldLimitStatusValue = { isEnable: true, limit: 10 };
 const emit = defineEmits(["closeModal"]);
 const props = defineProps({
-  isOwner: {
+  isOwnerOrNot: {
     type: Boolean,
     required: true
   }
 });
 
+const isOwner = props.isOwnerOrNot
 const canConfirmBtn = ref(true);
 const loading = ref(false);
 
@@ -24,6 +25,7 @@ onMounted(() => {
     limit: statusStore.getLimit(),
   };
   oldLimitStatusValue = { ...limitStatusValue.value };
+  
 });
 
 async function confirmEdit() {
@@ -71,7 +73,7 @@ function closeEdit() {
   >
     <h1>Limit Status</h1>
     <hr />
-    <div class="lg:tooltip" :data-tip="isOwner ? '' : 'You must be the owner of board to Enable a Limit status'">
+    <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You don't have a permission to Enable a Limit status">
     <div class="form-control w-fit">
       <label class="cursor-pointer label">
         <input
@@ -84,7 +86,7 @@ function closeEdit() {
       </label>
     </div>
   </div>
-    <div class="lg:tooltip" :data-tip="isOwner ? '' : 'You must be the owner of board to Change a Limit status'">
+    <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You don't have a permission to Change a Limit status">
     <div class="form-control">
       <label class="label text-error">Limit {{ limitStatusValueError }}</label>
       <input
