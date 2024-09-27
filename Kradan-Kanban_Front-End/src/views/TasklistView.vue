@@ -16,8 +16,9 @@ import Modal from "../components/Modal.vue";
 import Taskdetail from "../components/Tasks/Taskdetail.vue";
 import AddTaskModal from "@/components/Tasks/AddTaskModal.vue";
 import EditLimitStatus from "@/components/EditLimitStatus.vue";
-import {useBoardStore} from "@/stores/board.js";
 import LoadingComponent from "@/components/loadingComponent.vue";
+import { useBoardStore } from "@/stores/board.js";
+import { useAccountStore } from "@/stores/account.js";
 
 // ! ================= Variable ======================
 // ? ----------------- Store and Route ---------------
@@ -43,8 +44,7 @@ const selectedId = ref(0); // * use to show detail and delete
 const limitStatusValue = ref({isEnable: true, limit: 10}); // * obj for EditLimit modal
 const showErrorModal = ref(false); // * show Error from Edit Limit modal
 const overStatuses = ref([]);
-const currentBoardId = useBoardStore().currentBoardId;
-// const currentBoardId = ref(route.params.boardId);
+const kanbanData = ref([]);
 
 // ! ================= Modal ======================
 const openEditMode = (id) => {
@@ -138,9 +138,7 @@ async function fetchData([boardId, taskId]) {
   error.value = allTasks.value = null;
   loading.value = true;
   try {
-    // if (boardStore.boards.length === 0) {
-    //   await boardStore.setCurrentBoardId(route.params.boardId);
-    // }
+    loading.value = true;
     // replace `getPost` with your data fetching util / API wrapper
     if (taskStore.tasks.length === 0) {
       allTasks.value = await getAllTasks()
@@ -284,29 +282,93 @@ async function updateVisibility() {
   showChangeVisibilityModal.value = false;
 }
 
-
 // ! ================= Owner's Check ======================
-//const isOwner = ref(false);
-// // Check ownership of the board
+const accountStore = useAccountStore();
+const isOwner = ref(false);
 // onBeforeMount(() => {
-//   const currentBoard = boardStore.currentBoard;
-//   isOwner.value = currentBoard.ownerId === accountStore.userId;
+//   const currentBoards = boardStore.currentBoard;
+//   isOwner.value = currentBoards.ownerId === accountStore.tokenDetail.oid;
 
-//   if (!isOwner.value && currentBoard.visibility === "PRIVATE") {
-//     router.push({ name: "AccessDenied" }); // Redirect to AccessDenied if not the owner and board is private
+//   if (!isOwner.value && currentBoards.visibility === "PRIVATE") {
+//     router.push({ name: "AccessDenied" }); 
+//   }
+// });
+
+// onBeforeMount(async () => {
+//   if (boardStore.boards.length === 0) {
+//     loading.value = true;
+//     try {
+//       await getAllBoard();
+//     } catch (err) {
+//       console.error(err);
+//     } finally {
+//       loading.value = false;
+//     }
+//   }
+
+//   if (statusStore.status.length === 0) {
+//     loading.value = true;
+//     try {
+//       await statusStore.getAllStatus();
+//     } catch (err) {
+//       console.error(err);
+//     } finally {
+//       loading.value = false;
+//     }
+//   }
+
+//   statusStore.getLimitEnable();
+//   const res = await getLimitStatus();
+//   statusStore.setLimitEnable(await res);
+//   if (route.params.id !== undefined) {
+//     selectedId.value = parseInt(route.params.id);
+//     showDetailModal.value = true;
 //   }
 // });
 
 onBeforeMount(async () => {
-  if (boardStore.boards.length === 0) {
-    loading.value = true;
-    try {
+  // Initialize loading state
+  loading.value = true;
+
+  try {
+    // Ensure boards are loaded if not already present
+    if (boardStore.boards.length === 0) {
       await getAllBoard();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      loading.value = false;
     }
+
+    // Fetch and set statuses if not already loaded
+    if (statusStore.status.length === 0) {
+      await statusStore.getAllStatus();
+    }
+
+    // Ensure limit status is updated
+    statusStore.getLimitEnable();
+    const res = await getLimitStatus();
+    statusStore.setLimitEnable(res);
+
+    await setCurrentBoard(route.params.boardId);
+
+    const currentBoard = boardStore.currentBoard;
+    console.log(currentBoard.owner.oid)
+    console.log(accountStore.tokenDetail.oid)
+    isOwner.value = currentBoard.owner.oid === accountStore.tokenDetail.oid;
+    console.log(isOwner.value)
+
+    if (!isOwner.value && currentBoard.visibility === "PRIVATE") {
+      router.push({ name: "AccessDenied" });
+    }
+
+    // If a task is selected, open the task detail modal
+    if (route.params.id !== undefined) {
+      selectedId.value = parseInt(route.params.id);
+      showDetailModal.value = true;
+    }
+  } catch (err) {
+    console.error("Error loading data or checking ownership:", err);
+    error.value = err;
+  } finally {
+    // Set loading to false once all operations are complete
+    loading.value = false;
   }
   // statusStore.getAllStatus();
   // statusStore.getLimitEnable();
@@ -380,13 +442,42 @@ onBeforeMount(async () => {
           + Add
         </button>
 
-        <button
-            class="btn btn-square btn-outline w-16 float-right"
-            @click="showEditLimit = true"
-        >
-          Limit Status
-        </button>
+    <!-- reset button -->
+    <button class="itbkk-filter-clear btn" @click="filterBy = []">Reset</button>
+
+    <!-- show edit limit modal -->
+    <div class="float-right flex flex-row">
+      <div class="lg:tooltip" :data-tip="isOwner ? '' : 'You must be the owner of board to change the Visibility'">
+      <div class="form-control w-fit m-2">
+        <label class="cursor-pointer label">
+          <input
+            type="checkbox"
+            class="toggle toggle-primary"
+            v-model="isPublic"
+            :disabled="!isOwner"
+            @change="confirmChangeVisibility()"
+          />
+          <span class="label-text pl-1">{{
+            isPublic ? "Public" : "Private"
+          }}</span>
+        </label>
       </div>
+    </div>
+      <div class="lg:tooltip" :data-tip="isOwner ? '' : 'You must be the owner of board to Add a task'">
+      <button
+        class="itbkk-button-add btn btn-square btn-outline w-16 float-left mr-1"
+        @click="showAddModal = true"
+        :disabled="!isOwner"
+      >
+        + Add
+      </button>
+  </div>
+      <button
+        class="btn btn-square btn-outline w-16 float-right"
+        @click="showEditLimit = true"
+      >
+        Limit Status
+      </button>
     </div>
 
     <!-- selected filter status -->
@@ -487,9 +578,7 @@ onBeforeMount(async () => {
             <td class="itbkk-title">
               <!-- <RouterLink :to="`/task/${task.id}`"> -->
               <button
-                  @click="
-                  router.push(`/board/${currentBoardId}/task/${id}/edit`)
-                "
+                @click="router.push(`/board/${currentBoardId}/task/${id}/edit`)"
               >
                 {{ task.title }}
               </button>
@@ -510,7 +599,8 @@ onBeforeMount(async () => {
             </td>
             <td class="itbkk-status">{{ task.status }}</td>
             <td class="">
-              <div class="dropdown dropdown-bottom dropdown-end">
+              
+              <div v-if="isOwner" class="dropdown dropdown-bottom dropdown-end" >
                 <div tabindex="0" role="button" class="btn m-1">
                   <svg
                       class="swap-off fill-current"
@@ -528,19 +618,33 @@ onBeforeMount(async () => {
                     tabindex="0"
                     class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
                 >
+                <div v-if="isOwner">
                   <li>
-                    <a @click="openEditMode(task.id)">Edit</a>
+                    <a @click="openEditMode(task.id)" >Edit</a>
                   </li>
                   <li>
                     <a @click="openDeleteModal(task.title, task.id)">Delete</a>
                   </li>
+                </div>
+                <div v-if="!isOwner">
+                  <li>
+                    <h1>You do not have permission to edit or delete a task!!</h1>
+                  </li>
+                </div>
                 </ul>
               </div>
             </td>
           </tr>
-          </tbody>
-        </table>
-      </div>
+        </tbody>
+      </table>
+
+      <!-- kanban board -->
+      <!--      <div class="flex flex-row">-->
+      <!--        <div class="border-b-amber-300 border-8 border-solid" v-for="status in kanbanData">-->
+      <!--          {{ status.name}}-->
+      <!--        </div>-->
+      <!--      </div>-->
+    </div>
 
       <!-- Modal -->
       <!-- DetailsModal -->
@@ -588,10 +692,10 @@ onBeforeMount(async () => {
         </div>
       </Modal>
 
-      <!-- edit limit modal-->
-      <Modal :show-modal="showEditLimit">
-        <EditLimitStatus @close-modal="closeEditLimit"/>
-      </Modal>
+    <!-- edit limit modal-->
+    <Modal :isOwner="isOwner" :show-modal="showEditLimit">
+      <EditLimitStatus @close-modal="closeEditLimit" />
+    </Modal>
 
       <Modal :show-modal="showChangeVisibilityModal">
         <div

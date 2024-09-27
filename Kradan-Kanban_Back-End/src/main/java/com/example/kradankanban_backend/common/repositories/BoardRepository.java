@@ -12,4 +12,6 @@ public interface BoardRepository extends JpaRepository<BoardEntity , String> {
     BoardEntity findByUserId(String userId);
 
     Optional<BoardEntity> findByBoardId(String boardId);
+    List<BoardEntity> findAllByUserIdAndVisibility(String userId, BoardEntity.Visibility visibility);
+    List<BoardEntity> findAllByVisibility(BoardEntity.Visibility visibility);
 }

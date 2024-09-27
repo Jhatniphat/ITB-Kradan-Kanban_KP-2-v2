@@ -16,6 +16,7 @@ export const useBoardStore = defineStore("Board", {
             return this.boards.find((board) => board.id === id);
         },
     },
+<<<<<<< HEAD
     actions: {
         addBoard(newBoard) {
             this.boards.push(newBoard);
@@ -77,4 +78,42 @@ export const useBoardStore = defineStore("Board", {
         }
     }
     // return { count, doubleCount, increment }
+=======
+    getBoardById(id) {
+      return this.boards.find((board) => board.id === id);
+    },
+  },
+  actions: {
+    addBoard(newBoard) {
+      this.boards.push(newBoard);
+    },
+    addManyBoard(newBoards) {
+      newBoards.forEach((board) => {
+        this.boards.push(board);
+      });
+    },
+    deleteBoard(boardId) {
+      const index = this.boards.findIndex((board) => board.id === boardId);
+      if (index !== -1) {
+        this.boards.splice(index, 1);
+      }
+    },
+    async setCurrentBoardId(boardId) {
+      try {
+          const board = await getBoardById(boardId); 
+          if (!board || !board.payload) {
+            console.log("No Board Data!!")
+              // router.push("/login"); 
+          } else {
+              this.currentBoardId = boardId;
+              this.currentBoard = board.payload; 
+          }
+      } catch (error) {
+          console.error("Failed to fetch board:", error);
+          router.push("/login"); 
+      }
+  }
+  }
+  // return { count, doubleCount, increment }
+>>>>>>> origin/sprint-3-FrontEnd
 });

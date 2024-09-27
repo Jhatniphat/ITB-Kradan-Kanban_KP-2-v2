@@ -1,134 +1,166 @@
 <script setup>
-import { onMounted, ref } from "vue"
-import { useRoute } from "vue-router"
-import AddStatusModal from "@/components/Status/AddStatusModal.vue"
-import EditStatus from "@/components/Status/EditStatus.vue"
-import DeleteStatus from "@/components/Status/DeleteStatus.vue"
-import Modal from "@/components/Modal.vue"
-import router from "@/router"
-import { useStatusStore } from "@/stores/status.js"
-import EditLimitStatus from "@/components/EditLimitStatus.vue"
-import NavBar from "@/App.vue"
-import {useBoardStore} from "@/stores/board.js";
+import { onMounted, ref } from "vue";
+import { useRoute } from "vue-router";
+import AddStatusModal from "@/components/Status/AddStatusModal.vue";
+import EditStatus from "@/components/Status/EditStatus.vue";
+import DeleteStatus from "@/components/Status/DeleteStatus.vue";
+import Modal from "@/components/Modal.vue";
+import router from "@/router";
+import { useStatusStore } from "@/stores/status.js";
+import EditLimitStatus from "@/components/EditLimitStatus.vue";
+import NavBar from "@/App.vue";
+import { useBoardStore } from "@/stores/board.js";
+import { useAccountStore } from "@/stores/account.js";
 
 // ! ================= Variable ======================
 // ? ----------------- Store and Route ---------------
-const statusStore = useStatusStore()
-const route = useRoute()
-const currentBoardId = useBoardStore().currentBoardId
+const statusStore = useStatusStore();
+const route = useRoute();
+const accountStore = useAccountStore();
+const boardStore = useBoardStore();
+const currentBoardId = boardStore.currentBoardId;
 
 // ? ----------------- Modal ---------------
-const toast = ref({ status: "", msg: "" })
-const showAddModal = ref(false)
-const showEdit = ref(false)
-const showDelete = ref(false)
-const showEditLimit = ref(false)
-const showErrorModal = ref(false)
+const toast = ref({ status: "", msg: "" });
+const showAddModal = ref(false);
+const showEdit = ref(false);
+const showDelete = ref(false);
+const showEditLimit = ref(false);
+const showErrorModal = ref(false);
 // ? ----------------- Common -------------------------
-const selectedId = ref(0)
-const deleteTitle = ref("")
-const error = ref(null)
-const status = ref(null)
-const loading = ref(false)
-const overStatuses = ref([])
-onMounted(() => {
-  fetchStatusData()
-  if (route.params.id !== undefined) {
-    selectedId.value = parseInt(route.params.id)
-    showEdit.value = true
+const selectedId = ref(0);
+const deleteTitle = ref("");
+const error = ref(null);
+const status = ref(null);
+const loading = ref(false);
+const overStatuses = ref([]);
+const isOwner = ref(false);
+// onMounted(() => {
+//   fetchStatusData()
+//   if (route.params.id !== undefined) {
+//     selectedId.value = parseInt(route.params.id)
+//     showEdit.value = true
+//   }
+// })
+onMounted(async () => {
+  loading.value = true; 
+  try {
+    await fetchStatusData();
+
+    const currentBoards = boardStore.currentBoard;
+    const userOid = accountStore.tokenDetail.oid;
+    console.log(currentBoards);
+    console.log(userOid);
+    if (currentBoards && currentBoards.owner?.oid) {
+      isOwner.value = currentBoards.owner.oid === userOid;
+      console.log(isOwner.value);
+
+      if (!isOwner.value && currentBoards.visibility === "PRIVATE") {
+        router.push({ name: "AccessDenied" });
+      }
+    }
+
+    if (route.params.id !== undefined) {
+      selectedId.value = parseInt(route.params.id);
+      showEdit.value = true;
+    }
+  } catch (err) {
+    error.value = err.toString();
+  } finally {
+    loading.value = false; 
   }
-})
+});
 
 async function fetchStatusData(id) {
   if (id !== undefined) {
-    openEdit(id)
+    openEdit(id);
   }
-  error.value = status.value = null
-  loading.value = true
+  error.value = status.value = null;
+  loading.value = true;
   try {
-    status.value = await statusStore.getAllStatus()
+    status.value = await statusStore.getAllStatus();
   } catch (err) {
-    error.value = err.toString()
+    error.value = err.toString();
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
 // ! ================= Modal ======================
 const showToast = (toastData) => {
-  toast.value = toastData
+  toast.value = toastData;
   setTimeout(() => {
-    toast.value = { ...{ status: "" } }
-  }, 5000)
-}
+    toast.value = { ...{ status: "" } };
+  }, 5000);
+};
 
 const closeAddModal = (res) => {
-  showAddModal.value = false
-  if (res === null) return 0
+  showAddModal.value = false;
+  if (res === null) return 0;
   if (typeof res === "object") {
-    showToast({ status: "success", msg: "Add status successfuly" })
-    statusStore.addStoreStatus(res)
-  } else showToast({ status: "error", msg: "Add status Failed" })
-}
+    showToast({ status: "success", msg: "Add status successfuly" });
+    statusStore.addStoreStatus(res);
+  } else showToast({ status: "error", msg: "Add status Failed" });
+};
 
 const openEdit = (id) => {
-  selectedId.value = id
-  showEdit.value = true
-  router.push(`/board/${currentBoardId}/status/${id}`)
-}
+  selectedId.value = id;
+  showEdit.value = true;
+  router.push(`/board/${currentBoardId}/status/${id}`);
+};
 
 const closeEdit = (res) => {
-  showEdit.value = false
-  if (res === null) return 0
+  showEdit.value = false;
+  if (res === null) return 0;
   // if (res === 404) showToast({status: "error", msg: "An error has occurred, the status does not exist"});
   if (typeof res === "object") {
-    showToast({ status: "success", msg: "Edit status successfuly" })
-    statusStore.editStoreStatus(res)
+    showToast({ status: "success", msg: "Edit status successfuly" });
+    statusStore.editStoreStatus(res);
   } else
     showToast({
       status: "error",
       msg: "An error has occurred, the status does not exist",
-    })
-}
+    });
+};
 
 const openDelete = (id, title) => {
-  selectedId.value = id
-  deleteTitle.value = title
-  showDelete.value = true
-}
+  selectedId.value = id;
+  deleteTitle.value = title;
+  showDelete.value = true;
+};
 
 const closeDelete = (res, numOfTasks) => {
-  showDelete.value = false
-  if (res === null) return 0
+  showDelete.value = false;
+  if (res === null) return 0;
   // if (res === 404)
   if (typeof res === "object") {
-    statusStore.deleteStoreStatus(res)
-    showToast({ status: "success", msg: "Delete status successfuly" })
+    statusStore.deleteStoreStatus(res);
+    showToast({ status: "success", msg: "Delete status successfuly" });
     if (typeof res === "object" && numOfTasks != undefined) {
-      statusStore.deleteStoreStatus(res)
+      statusStore.deleteStoreStatus(res);
       showToast({
         status: "success",
         msg: `Delete and Tranfer ${numOfTasks} tasks successfuly`,
-      })
+      });
     }
   } else {
     showToast(
       { status: "error", msg: "Delete status Failed ,Please restart page" },
       6000
-    )
+    );
   }
-}
+};
 
 function closeEditLimit(overStatus) {
-  showEditLimit.value = false
+  showEditLimit.value = false;
   showToast({
     status: "success",
     msg: `The Kanban now limit ${statusStore.getLimit()} tasks in each status`,
-  })
-  if (overStatus === null || overStatus === undefined) return 0
+  });
+  if (overStatus === null || overStatus === undefined) return 0;
   if (typeof overStatus === "object") {
-    showErrorModal.value = true
-    overStatuses.value = overStatus
+    showErrorModal.value = true;
+    overStatuses.value = overStatus;
   }
 }
 </script>
@@ -140,16 +172,19 @@ function closeEditLimit(overStatus) {
       <!-- show edit limit modal -->
       <div class="w-3/4 mx-auto mt-10 relative">
         <div class="float-right">
+          <div class="lg:tooltip" :data-tip="isOwner ? '' : 'You must be the owner of board to Add a status'">
           <button
             class="itbkk-button-add btn btn-square btn-outline w-16 float-left mr-1"
             @click="showAddModal = true"
+            :disabled="!isOwner"
           >
             + Add
           </button>
-
+        </div>
           <button
             class="itbkk-button-add btn btn-square btn-outline w-16 float-right"
             @click="showEditLimit = true"
+            
           >
             Limit Status
           </button>
@@ -200,18 +235,24 @@ function closeEditLimit(overStatus) {
               v-if="status.name !== 'No Status' && status.name !== 'Done'"
               class="itbkk-action-button"
             >
+            <div class="lg:tooltip" :data-tip="isOwner ? '' : 'You must be the owner of board to Edit a status'">
               <button
                 class="itbkk-button-edit btn m-2"
                 @click="openEdit(status.id)"
+                :disabled="!isOwner"
               >
                 Edit
               </button>
+            </div>
+            <div class="lg:tooltip" :data-tip="isOwner ? '' : 'You must be the owner of board to Delete a status'">
               <button
                 class="itbkk-button-delete btn m-2"
                 @click="openDelete(status.id, status.name)"
+                :disabled="!isOwner"
               >
                 Delete
               </button>
+            </div>
             </td>
           </tr>
         </tbody>
@@ -237,7 +278,7 @@ function closeEditLimit(overStatus) {
     />
   </Modal>
   <!-- edit limit modal-->
-  <Modal :show-modal="showEditLimit">
+  <Modal :isOwner="isOwner" :show-modal="showEditLimit">
     <EditLimitStatus @close-modal="closeEditLimit" />
   </Modal>
 

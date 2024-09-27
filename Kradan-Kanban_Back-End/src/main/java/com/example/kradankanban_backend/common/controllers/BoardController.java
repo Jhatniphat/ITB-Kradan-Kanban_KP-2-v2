@@ -55,7 +55,7 @@ public class BoardController {
     }
 
     @GetMapping("")
-    public ResponseEntity<DetailBoardDTO> getBoardByUserId(@RequestHeader("Authorization") String requestTokenHeader) {
+    public ResponseEntity<List<DetailBoardDTO>> getBoardByUserId(@RequestHeader("Authorization") String requestTokenHeader) {
         if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
             String jwtToken = requestTokenHeader.substring(7);
             String userId = extractUserIdFromToken(jwtToken);
@@ -63,6 +63,7 @@ public class BoardController {
         } else {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Authorization header must start with Bearer");
         }
+
     }
 
     @PostMapping("")
