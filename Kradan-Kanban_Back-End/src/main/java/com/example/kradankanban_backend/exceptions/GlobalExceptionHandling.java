@@ -16,6 +16,7 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+
 import java.util.List;
 
 @RestControllerAdvice
@@ -43,9 +44,9 @@ public class GlobalExceptionHandling {
         return buildErrorResponse(exception, "Username or Password is incorrect" ,HttpStatus.UNAUTHORIZED, request);
     }
 
-    @ExceptionHandler(AuthenticationException.class)
+    @ExceptionHandler({AuthenticationException.class, AuthenticationFailedException.class})
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException exception, WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleAuthenticationException(Exception exception, WebRequest request) {
         return buildErrorResponse(exception, "Username or Password is incorrect" ,HttpStatus.UNAUTHORIZED, request);
     }
 

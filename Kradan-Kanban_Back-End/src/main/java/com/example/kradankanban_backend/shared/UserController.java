@@ -1,5 +1,6 @@
 package com.example.kradankanban_backend.shared;
 
+import com.example.kradankanban_backend.exceptions.AuthenticationFailedException;
 import com.example.kradankanban_backend.shared.dtos.JwtRequestUser;
 import com.example.kradankanban_backend.shared.dtos.JwtResponseTokenDTO;
 import com.example.kradankanban_backend.shared.dtos.UserDataDTO;
@@ -14,10 +15,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.HashMap;
+import java.util.Map;
 
 
 @CrossOrigin(origins = {"http://localhost:5174" , "http://localhost:5173"})
@@ -53,7 +58,8 @@ public class UserController {
         }
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         String token = jwtTokenUtil.generateToken(userDetails);
-        return ResponseEntity.ok(new JwtResponseTokenDTO(token));
+        String refreshToken = jwtTokenUtil.generateRefreshToken(userDetails);
+        return ResponseEntity.ok(new JwtResponseTokenDTO(token, refreshToken));
     }
 
     @GetMapping("/validate-token")
@@ -73,5 +79,34 @@ public class UserController {
             throw new ResponseStatusException(HttpStatus.EXPECTATION_FAILED, "JWT Token does not begin with Bearer String");
         }
         return ResponseEntity.ok(claims);
+    }
+
+    @PostMapping("/token")
+    public ResponseEntity refreshToken(@RequestHeader("Authorization") String tokenHeader) {
+        String refreshToken = null;
+        String oid = null;
+        if (tokenHeader != null) {
+            if (tokenHeader.startsWith("Bearer ")) {
+                refreshToken = tokenHeader.substring(7);
+                try {
+                    oid = jwtTokenUtil.getUsernameFromToken(refreshToken);
+                } catch (IllegalArgumentException e) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+                } catch (ExpiredJwtException e) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+                }
+            } else {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "JWT Token does not begin with Bearer String");
+            }
+        }
+        if (jwtTokenUtil.isTokenExpired(refreshToken)) {
+            throw new AuthenticationFailedException("Refresh Token has expired");
+        }
+        UserDetails userDetails = jwtUserDetailsService.loadUserByOid(oid);
+        System.out.println(userDetails);
+        String newAccessToken = jwtTokenUtil.generateToken(userDetails);
+        Map<String, String> response = new HashMap<>();
+        response.put("access_token", newAccessToken);
+        return ResponseEntity.ok(response);
     }
 }
