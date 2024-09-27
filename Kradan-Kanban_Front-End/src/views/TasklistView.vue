@@ -18,9 +18,11 @@ import AddTaskModal from "@/components/Tasks/AddTaskModal.vue";
 import EditLimitStatus from "@/components/EditLimitStatus.vue";
 import {useBoardStore} from "@/stores/board.js";
 import LoadingComponent from "@/components/loadingComponent.vue";
+import { useAccountStore } from "@/stores/account.js";
 
 // ! ================= Variable ======================
 // ? ----------------- Store and Route ---------------
+const accountStore = useAccountStore();
 const taskStore = useTaskStore();
 const statusStore = useStatusStore();
 const boardStore = useBoardStore();
@@ -46,6 +48,7 @@ const overStatuses = ref([]);
 const currentBoardId = useBoardStore().currentBoardId;
 // const currentBoardId = ref(route.params.boardId);
 const kanbanData = ref([]);
+const isOwner = ref(false);
 // ! ================= Modal ======================
 const openEditMode = (id) => {
   showDetailModal.value = true;
@@ -354,16 +357,10 @@ watch(
 );
 function makekanbanData() {
   if (loading.value || allTasks.value === null) return;
-  console.table(taskStore.tasks);
-  console.table(allTasks.value);
-  console.table(statusStore.getAllStatusWithLimit());
   for (let i = 0; i < statusStore.getAllStatusWithLimit().length; i++) {
     const status = statusStore.getAllStatusWithLimit()[i];
     const tasks = allTasks.value?.filter((task) => task.status === status.name);
     status.tasks = tasks;
-    console.error(status.name);
-    console.table(status);
-    console.table(status.tasks);
     kanbanData.value?.push(status);
   }
 }
