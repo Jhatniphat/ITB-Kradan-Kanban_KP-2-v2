@@ -387,9 +387,10 @@ export async function getAllBoard() {
             console.table(item)
             // ? because now item is an object not an array
             // boardStore.addBoard(item);
-            if ( !(Object.keys(item).length === 0 && item.constructor === Object) ) {
-                boardStore.addBoard(item)
-            }
+            // if ( !(Object.keys(item).length === 0 && item.constructor === Object) ) {
+            //     boardStore.addBoard(item)
+            // }
+            boardStore.boards = item;
             return {status: 200, payload: item};
         } else if (res.status === 400) {
             return {status: 400, payload: "No board found"};
