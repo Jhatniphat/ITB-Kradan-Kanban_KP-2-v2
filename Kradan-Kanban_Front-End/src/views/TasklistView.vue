@@ -534,7 +534,7 @@ function makekanbanData() {
                   <!-- <RouterLink :to="`/task/${task.id}`"> -->
                   <button
                     @click="
-                      router.push(`/board/${currentBoardId}/task/${id}/edit`)
+                      router.push(`/board/${currentBoardId}/task/${task.id}/edit`)
                     "
                   >
                     {{ task.title }}

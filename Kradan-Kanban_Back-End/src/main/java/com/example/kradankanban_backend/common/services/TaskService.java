@@ -55,9 +55,9 @@ public class TaskService {
             throw new WrongBoardException("Board not found");
         }
         BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
-        if (!board.getUserId().equals(userId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this board.");
-        }
+//        if (!board.getUserId().equals(userId)) {
+//            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this board.");
+//        }
         return repository.findByTkBoardAndId(board, taskId).orElseThrow(() -> new ItemNotFoundException("Task ID " + taskId + " does not exist !!!"));
     }
 
