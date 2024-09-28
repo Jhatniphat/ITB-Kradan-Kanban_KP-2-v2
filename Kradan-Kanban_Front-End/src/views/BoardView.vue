@@ -61,8 +61,8 @@ async function fetchBoardData() {
         allBoard.value = boardStore.boards;
         console.log(allBoard);
         if (allBoard.value.length === 1) {
-          console.log(allBoard.value[0][0].id);
-          router.push(`/board/${allBoard.value[0][0].id}`);
+          console.log(allBoard.value[0].id);
+          router.push(`/board/${allBoard.value[0].id}`);
         }
       } else {
         allBoard.value = [];
@@ -234,7 +234,7 @@ const showToast = (toastData) => {
         </div>
         <div
           class="board-list-card"
-          v-for="board in allBoard[0]"
+          v-for="board in allBoard"
           @click="router.push(`/board/${board.id}`)"
           v-if="allBoard.length > 0"
         >
