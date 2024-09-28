@@ -101,10 +101,11 @@ function closeEdit() {
       <button class="btn btn-outline btn-error" @click="closeEdit">
         Close
       </button>
+      <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You don't have a permission to Change a Limit status">
       <button
         class="btn btn-outline btn-success"
         @click="confirmEdit"
-        :disabled="limitStatusValueError !== '' || !canConfirmBtn"
+        :disabled="limitStatusValueError !== '' || !canConfirmBtn || !isOwner"
       >
         {{ loading ? "" : "Confirm" }}
         <span
@@ -112,6 +113,7 @@ function closeEdit() {
           v-if="loading"
         ></span>
       </button>
+    </div>
     </div>
   </div>
 </template>
