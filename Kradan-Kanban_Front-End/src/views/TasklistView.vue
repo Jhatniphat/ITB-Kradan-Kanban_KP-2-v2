@@ -534,7 +534,9 @@ function makekanbanData() {
                   <!-- <RouterLink :to="`/task/${task.id}`"> -->
                   <button
                     @click="
-                      router.push(`/board/${currentBoardId}/task/${task.id}/edit`)
+                      router.push(
+                        `/board/${currentBoardId}/task/${task.id}/edit`
+                      )
                     "
                   >
                     {{ task.title }}
@@ -574,21 +576,23 @@ function makekanbanData() {
                       tabindex="0"
                       class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
                     >
-                    <div v-if="isOwner">
-                      <li>
-                        <a @click="openEditMode(task.id)">Edit</a>
-                      </li>
-                      <li>
-                        <a @click="openDeleteModal(task.title, task.id)"
-                          >Delete</a
-                        >
-                      </li>
-                    </div>
-                    <div v-if="!isOwner">
-                      <li>
-                        <h1>You don't have a permission to Edit or Delete a Task</h1>
-                      </li>
-                    </div>
+                      <div v-if="isOwner">
+                        <li>
+                          <a @click="openEditMode(task.id)">Edit</a>
+                        </li>
+                        <li>
+                          <a @click="openDeleteModal(task.title, task.id)"
+                            >Delete</a
+                          >
+                        </li>
+                      </div>
+                      <div v-if="!isOwner">
+                        <li>
+                          <h1>
+                            You don't have a permission to Edit or Delete a Task
+                          </h1>
+                        </li>
+                      </div>
                     </ul>
                   </div>
                 </td>
@@ -602,6 +606,7 @@ function makekanbanData() {
         <!-- EditModal -->
         <Modal :show-modal="showDetailModal">
           <Taskdetail
+            :isOwnerOrNot="isOwner"
             :taskId="parseInt(selectedId)"
             @closeModal="closeEditModal"
           />
