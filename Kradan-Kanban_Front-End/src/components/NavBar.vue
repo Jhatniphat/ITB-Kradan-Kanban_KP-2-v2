@@ -12,7 +12,8 @@ const accountStore = useAccountStore();
 const userName = computed(() => accountStore.userName);
 
 const handleLogout = () => {
-  accountStore.clearTokenDetail();
+  // accountStore.clearTokenDetail();
+  accountStore.clearToken();
   router.push("/login");
 };
 

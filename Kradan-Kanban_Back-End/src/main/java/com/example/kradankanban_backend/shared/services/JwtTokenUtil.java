@@ -19,6 +19,7 @@ public class JwtTokenUtil implements Serializable {
     @Value("${jwt.secret}")
     private String SECRET_KEY;
     @Value("#{${jwt.max-token-interval-hour}*60*60*1000}")
+//    @Value("#{5000}")
     private long JWT_TOKEN_VALIDITY;
     @Value("#{${jwt.max-refresh-token-interval-hour}*60*60*1000}")
     private long JWT_REFRESH_TOKEN_VALIDITY;

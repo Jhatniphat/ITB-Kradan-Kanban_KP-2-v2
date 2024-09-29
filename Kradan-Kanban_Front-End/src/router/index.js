@@ -2,7 +2,7 @@ import {createRouter, createWebHistory} from "vue-router";
 import LogicPage from "@/components/LogicPage.vue";
 import {useAccountStore} from "@/stores/account";
 import {useBoardStore} from "@/stores/board.js";
-import {getAllBoard, login, validateToken, getBoardById} from "@/lib/fetchUtils.js";
+import {getAllBoard, login, getBoardById} from "@/lib/fetchUtils.js";
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -70,11 +70,9 @@ router.beforeEach(async (to, from, next) => {
     const boardStore = useBoardStore();
     const isAuthenticated = accountStore.tokenDetail !== {};
 
-    // Validate token for non-login routes
-    if (to.name !== "login") {
-        await validateToken();
-        console.log(accountStore.tokenRaw)
-    }
+    // if (to.name !== "login") {
+    //     await checkTokenExpired()
+    // }
 
     if (to.name === "task" || to.name === "status") {
         if (boardStore.boards.length === 0) {
@@ -103,9 +101,9 @@ router.beforeEach(async (to, from, next) => {
     }
 
     // Ensure the user is authenticated if necessary
-    if (!isAuthenticated && to.name !== "login") {
-        return {name: "login"}; // Redirect to login if not authenticated
-    }
+    // if (!isAuthenticated && to.name !== "login") {
+    //     return {name: "login"}; // Redirect to login if not authenticated
+    // }
 
     next(); // Proceed to the route
 });
