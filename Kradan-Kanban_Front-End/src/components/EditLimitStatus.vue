@@ -8,7 +8,14 @@ const statusStore = useStatusStore();
 const limitStatusValue = ref({});
 let oldLimitStatusValue = { isEnable: true, limit: 10 };
 const emit = defineEmits(["closeModal"]);
+const props = defineProps({
+  isOwnerOrNot: {
+    type: Boolean,
+    required: true,
+  },
+});
 
+const isOwner = props.isOwnerOrNot;
 const canConfirmBtn = ref(true);
 const loading = ref(false);
 
@@ -65,41 +72,60 @@ function closeEdit() {
   >
     <h1>Limit Status</h1>
     <hr />
-    <div class="form-control w-fit">
-      <label class="cursor-pointer label">
-        <input
-          type="checkbox"
-          class="toggle toggle-primary"
-          v-model="limitStatusValue.isEnable"
-        />
-        <span class="label-text pl-1">Enable Limit</span>
-      </label>
+    <div
+      :class="isOwner ? '' : 'lg:tooltip'"
+      data-tip="You don't have a permission to Enable a Limit status"
+    >
+      <div class="form-control w-fit">
+        <label class="cursor-pointer label">
+          <input
+            type="checkbox"
+            class="toggle toggle-primary"
+            v-model="limitStatusValue.isEnable"
+            :disabled="!isOwner"
+          />
+          <span class="label-text pl-1">Enable Limit</span>
+        </label>
+      </div>
     </div>
-    <div class="form-control">
-      <label class="label text-error">Limit {{ limitStatusValueError }}</label>
-      <input
-        type="number"
-        class="input text-base dark:bg-base-300"
-        v-model="limitStatusValue.limit"
-      />
+    <div
+      :class="isOwner ? '' : 'lg:tooltip'"
+      data-tip="You don't have a permission to Change a Limit status"
+    >
+      <div class="form-control">
+        <label class="label text-error"
+          >Limit {{ limitStatusValueError }}</label
+        >
+        <input
+          type="number"
+          class="input text-base dark:bg-base-300"
+          v-model="limitStatusValue.limit"
+          :disabled="!isOwner"
+        />
+      </div>
     </div>
     <div class="flex flex-row-reverse gap-4 mt-5">
       <button class="btn btn-outline btn-error" @click="closeEdit">
         Close
       </button>
-      <button
-        class="btn btn-outline btn-success"
-        @click="confirmEdit"
-        :disabled="limitStatusValueError !== '' || !canConfirmBtn"
+      <div
+        :class="isOwner ? '' : 'lg:tooltip'"
+        data-tip="You don't have a permission to Change a Limit status"
       >
-        {{ loading ? "" : "Confirm" }}
-        <span
-          class="loading loading-spinner text-success"
-          v-if="loading"
-        ></span>
-      </button>
+        <button
+          class="btn btn-outline btn-success"
+          @click="confirmEdit"
+          :disabled="limitStatusValueError !== '' || !canConfirmBtn || !isOwner"
+        >
+          {{ loading ? "" : "Confirm" }}
+          <span
+            class="loading loading-spinner text-success"
+            v-if="loading"
+          ></span>
+        </button>
+      </div>
     </div>
-  </div>
+    </div>
 </template>
 
 <style scoped></style>

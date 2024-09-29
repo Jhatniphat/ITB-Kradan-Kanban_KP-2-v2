@@ -18,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class JwtUserDetailsService implements UserDetailsService {
@@ -39,6 +40,23 @@ public class JwtUserDetailsService implements UserDetailsService {
         };
         roles.add(grantedAuthority);
         UserDetails userDetails = new AuthUser(user.getUsername(), user.getPassword() , roles , user.getOid() , user.getEmail() , user.getRole() , user.getName());
+        return userDetails;
+    }
+
+    public UserDetails loadUserByOid(String oid) throws UsernameNotFoundException {
+        Optional<UserEntity> user = repository.findById(oid);
+        if (!user.isPresent()) {
+            throw new BadCredentialsException("token is invalid");
+        }
+        List<GrantedAuthority> roles = new ArrayList<>();
+        GrantedAuthority grantedAuthority = new GrantedAuthority() {
+            @Override
+            public String getAuthority() {
+                return user.get().getRole().toString();
+            }
+        };
+        roles.add(grantedAuthority);
+        UserDetails userDetails = new AuthUser(user.get().getUsername(), user.get().getPassword() , roles , user.get().getOid() , user.get().getEmail() , user.get().getRole() , user.get().getName());
         return userDetails;
     }
 

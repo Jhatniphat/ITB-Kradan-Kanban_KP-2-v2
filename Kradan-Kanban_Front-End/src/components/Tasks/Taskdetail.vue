@@ -15,8 +15,13 @@ const props = defineProps({
     type: Number,
     require: true,
   },
+  isOwnerOrNot: {
+    type: Boolean,
+    required: true,
+  },
 });
 
+const isOwner = props.isOwnerOrNot;
 const editMode = ref(false);
 const statusList = ref([]);
 const canSave = ref(false);
@@ -357,6 +362,7 @@ function sendCloseModal() {
           v-if="!editMode"
           class="btn btn-outline btn-primary basis-1/6"
           @click="editMode = true"
+          :disabled="!isOwner"
         >
           Edit
         </button>

@@ -19,7 +19,10 @@ public class JwtTokenUtil implements Serializable {
     @Value("${jwt.secret}")
     private String SECRET_KEY;
     @Value("#{${jwt.max-token-interval-hour}*60*60*1000}")
+//    @Value("#{5000}")
     private long JWT_TOKEN_VALIDITY;
+    @Value("#{${jwt.max-refresh-token-interval-hour}*60*60*1000}")
+    private long JWT_REFRESH_TOKEN_VALIDITY;
     SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
 
     public String getUsernameFromToken(String token) {
@@ -40,7 +43,7 @@ public class JwtTokenUtil implements Serializable {
         return claims;
     }
 
-    private Boolean isTokenExpired(String token) {
+    public Boolean isTokenExpired(String token) {
         final Date expiration = getExpirationDateFromToken(token);
         return expiration.before(new Date());
     }
@@ -52,18 +55,26 @@ public class JwtTokenUtil implements Serializable {
         claims.put("oid", authUser.getOid());
         claims.put("email", authUser.getEmail());
         claims.put("role", authUser.getRole());
-        return doGenerateToken(claims, userDetails.getUsername());
+        return doGenerateToken(claims, userDetails.getUsername(), JWT_TOKEN_VALIDITY);
     }
 
-    private String doGenerateToken(Map<String, Object> claims, String subject) {
+    public String generateRefreshToken(UserDetails userDetails) {
+        AuthUser authUser = (AuthUser) userDetails;
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("oid", authUser.getOid());
+        return doGenerateToken(claims, authUser.getOid(), JWT_REFRESH_TOKEN_VALIDITY);
+    }
+
+    private String doGenerateToken(Map<String, Object> claims, String subject, long expiration) {
         return Jwts.builder().setHeaderParam("typ", "JWT").
                 setClaims(claims)
                 .setSubject(subject)
                 .setIssuer("https://intproj23.sit.kmutt.ac.th/kp2/")
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY))
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(signatureAlgorithm, SECRET_KEY).compact();
     }
+
 
 
     public Boolean validateToken(String token, UserDetails userDetails) {

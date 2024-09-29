@@ -9,7 +9,7 @@ export async function getAllTasks() {
     const taskStore = useTaskStore();
     const boardId = useBoardStore().currentBoardId;
     try {
-        let res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks`, {
+        let res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks`, {
             method: "GET",
             headers: {
                 Authorization: `Bearer ${accountStore.tokenRaw}`,
@@ -36,7 +36,7 @@ export async function getTaskById(id) {
     console.log(`GET !! ${id}`);
     let res, item;
     try {
-        res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks/${id}`, {
+        res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks/${id}`, {
             method: "GET",
             headers: {
                 Authorization: `Bearer ${accountStore.tokenRaw}`,
@@ -68,7 +68,7 @@ export async function addTask(newTask) {
     // console.log(JSON.stringify({ ...newTask }));
     try {
         const accountStore = useAccountStore();
-        res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks`, {
+        res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -96,7 +96,7 @@ export async function editTask(taskId, Task) {
     const boardId = useBoardStore().currentBoardId;
     try {
         const accountStore = useAccountStore();
-        let res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks/${taskId}`, {
+        let res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks/${taskId}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -123,7 +123,7 @@ export async function deleteTask(id) {
     const boardId = useBoardStore().currentBoardId;
     try {
         const accountStore = useAccountStore();
-        let res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks/${id}`, {
+        let res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks/${id}`, {
             method: "DELETE",
             headers: {
                 Authorization: `Bearer ${accountStore.tokenRaw}`,
@@ -151,7 +151,7 @@ export async function getAllStatus() {
     const boardId = useBoardStore().currentBoardId;
     try {
         const accountStore = useAccountStore();
-        let res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses`, {
+        let res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses`, {
             method: "GET",
             headers: {
                 Authorization: `Bearer ${accountStore.tokenRaw}`,
@@ -172,7 +172,7 @@ export async function getStatusById(id) {
     let res, item;
     try {
         const accountStore = useAccountStore();
-        res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses/${id}`, {
+        res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses/${id}`, {
             method: "GET",
             headers: {
                 Authorization: `Bearer ${accountStore.tokenRaw}`,
@@ -201,7 +201,7 @@ export async function addStatus(newStatus) {
     let res, item;
     try {
         const accountStore = useAccountStore();
-        res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses`, {
+        res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -230,7 +230,7 @@ export async function editStatus(id, Status) {
     let res;
     try {
         const accountStore = useAccountStore();
-        res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses/${id}`, {
+        res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses/${id}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -259,7 +259,7 @@ export async function deleteStatus(id) {
     let res, item;
     try {
         const accountStore = useAccountStore();
-        res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses/${id}`, {
+        res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses/${id}`, {
             method: "DELETE",
             headers: {
                 Authorization: `Bearer ${accountStore.tokenRaw}`,
@@ -288,7 +288,7 @@ export async function transferStatus(oldId, newId) {
     let res, item;
     try {
         const accountStore = useAccountStore();
-        res = await fetch(
+        res = await fetchWithTokenCheck(
             `${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses/${oldId}/${newId}`,
             {
                 method: "DELETE",
@@ -320,7 +320,7 @@ export async function toggleLimitStatus() {
     let res, item;
     try {
         const accountStore = useAccountStore();
-        res = await fetch(
+        res = await fetchWithTokenCheck(
             `${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses/maximum-task`,
             {
                 method: "PATCH",
@@ -345,8 +345,7 @@ export async function getLimitStatus() {
     let res, item;
     try {
         const accountStore = useAccountStore();
-        res = await fetch(
-            `${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses/maximum-task`,
+        res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses/maximum-task`,
             {
                 method: "GET",
                 headers: {
@@ -372,12 +371,18 @@ export async function getAllBoard() {
     try {
         const accountStore = useAccountStore();
         const boardStore = useBoardStore();
-        let res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards`, {
+        const res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards`, {
             method: "GET",
             headers: {
                 Authorization: `Bearer ${accountStore.tokenRaw}`,
             },
         }); //GET Method
+
+        console.table(res)
+
+        if (!res) {
+            console.log("Response is undefined");
+        }
 
         if (res.status === 401) {
             accountStore.clearTokenDetail();
@@ -388,14 +393,41 @@ export async function getAllBoard() {
             console.table(item)
             // ? because now item is an object not an array
             // boardStore.addBoard(item);
-            if ( !(Object.keys(item).length === 0 && item.constructor === Object) ) {
-                boardStore.addBoard(item)
-            }
+            // if ( !(Object.keys(item).length === 0 && item.constructor === Object) ) {
+            //     boardStore.addBoard(item)
+            // }
+            boardStore.boards = item;
             return {status: 200, payload: item};
         } else if (res.status === 400) {
             return {status: 400, payload: "No board found"};
         }
         // return await res.json();
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+export async function getBoardById(boardId) {
+    const accountStore = useAccountStore();
+    try {
+        const res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${accountStore.tokenRaw}`, // Include the token if needed
+            },
+        });
+
+        if (res.status === 401) {
+            accountStore.clearTokenDetail();
+            router.push("/login");
+            return null;
+        } else if (res.status === 200) {
+            let item = await res.json();
+            return {status: 200, payload: item};
+        } else if (res.status === 400) {
+            return {status: 400, payload: "No board found"};
+        }
     } catch (error) {
         console.error(error);
     }
@@ -408,7 +440,7 @@ export async function addBoard(newBoard) {
     const boardStore = useBoardStore();
     let res, item;
     try {
-        res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards`, {
+        res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -438,6 +470,42 @@ export async function addBoard(newBoard) {
     }
 }
 
+
+export async function changeVisibility(mode) {
+    const accountStore = useAccountStore();
+    const boardStore = useBoardStore();
+    const boardId = boardStore.currentBoardId
+    let res;
+    try {
+        res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}`,
+            {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${accountStore.tokenRaw}`,
+                },
+                body: JSON.stringify({visibility: mode}),
+            });
+
+        if (res.ok) {
+            const resData = await res.json();
+            console.log(res.status)
+            return resData;
+        }
+        if (res.status === 401) {
+            console.log(res.status)
+            accountStore.clearTokenDetail();
+            router.push("/login");
+            return;
+        } else {
+            console.log(res.status)
+            return res.status
+        }
+    } catch (error) {
+        console.log(error.toString());
+    }
+}
+
 // ! -------------------------- LOGIN ----------------------------
 
 export async function login(username, password) {
@@ -459,7 +527,6 @@ export async function login(username, password) {
                 status: 200,
                 payload: item,
             };
-
         }
         if (res.status === 401 || res.status === 400) {
             return {
@@ -478,7 +545,7 @@ export async function login(username, password) {
 export async function validateToken() {
     try {
         const accountStore = useAccountStore();
-        let res = await fetch(`${import.meta.env.VITE_API_ROOT_LOGIN}/validate-token`, {
+        let res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT_LOGIN}/validate-token`, {
             method: "GET",
             headers: {
                 Authorization: `Bearer ${accountStore.tokenRaw}`,
@@ -497,7 +564,60 @@ export async function validateToken() {
     }
 }
 
+
 // ! -------------------------- Private function ----------------------------
+async function fetchWithTokenCheck(url, options) {
+    const accountStore = useAccountStore();
+    await checkTokenExpired(); // Wait for checkTokenExpired to complete
+
+    options.headers = {
+        ...options.headers,
+        Authorization: `Bearer ${accountStore.tokenRaw}`,
+    };
+
+    return fetch(url, options); // Proceed with fetch
+}
+
+export async function checkTokenExpired() {
+    const accountStore = useAccountStore();
+
+    if (!accountStore.isAccessTokenExpired()) {
+        console.log("Token is still valid");
+        return;
+    }
+
+    if (accountStore.isAccessTokenExpired() && accountStore.isRefreshTokenExpired()) {
+        console.log("Token is expired");
+        accountStore.clearTokenDetail();
+        router.push("/login");
+        return;
+    }
+
+    if (accountStore.isAccessTokenExpired() && !accountStore.isRefreshTokenExpired()) {
+        try {
+            const res = await fetch(`${import.meta.env.VITE_API_ROOT_LOGIN}/token`, {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${accountStore.refreshToken}`,
+                },
+            });
+
+            if (res.status === 200) {
+                const item = await res.json();
+                console.log("Token Renewed");
+                accountStore.setToken(item);
+                return;
+            } else {
+                throw new Error("Failed to renew token");
+            }
+        } catch (error) {
+            console.error("Error renewing token:", error);
+            accountStore.clearTokenDetail();
+            router.push("/login");
+        }
+    }
+}
 
 function timeFormater(time) {
     return new Date(time).toLocaleString("en-GB", {

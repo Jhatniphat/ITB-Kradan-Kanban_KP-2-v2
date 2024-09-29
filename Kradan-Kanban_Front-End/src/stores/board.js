@@ -1,7 +1,6 @@
-import { defineStore } from "pinia";
+import {defineStore} from "pinia";
 import router from "@/router/index.js";
-
-
+import {getBoardById} from "@/lib/fetchUtils";
 
 export const useBoardStore = defineStore("Board", {
     state: () => ({
@@ -13,11 +12,11 @@ export const useBoardStore = defineStore("Board", {
         getAllBoard() {
             return this.boards;
         },
-    },
-    actions: {
         getBoardById(id) {
             return this.boards.find((board) => board.id === id);
         },
+    },
+    actions: {
         addBoard(newBoard) {
             this.boards.push(newBoard);
         },
@@ -32,17 +31,32 @@ export const useBoardStore = defineStore("Board", {
                 this.boards.splice(index, 1);
             }
         },
-        setCurrentBoardId(boardId) {
-            if(boardId !== this.boards.id && this.boards.id !== undefined) {
-                router.push("/login")
+        findBoardById(id) {
+            return this.boards.find((board) => board.id === id);
+        },
+        async setCurrentBoardId(boardId) {
+            console.log(boardId)
+            if (this.findBoardById(boardId) !== null && this.findBoardById(boardId) !== undefined) {
+                this.currentBoardId = boardId;
+                this.currentBoard = this.findBoardById(boardId);
+                return this.currentBoard;
+            } else {
+                try {
+                    const board = await getBoardById(boardId);
+                    if (!board || !board.payload) {
+                        console.log("No Board Data!!")
+                        router.push({name : "board"});
+                    } else {
+                        this.currentBoardId = boardId;
+                        this.currentBoard = board.payload;
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch board:", error);
+                    router.push("/login");
+                }
             }
-            this.currentBoardId = boardId;
-            this.currentBoard = this.boards.find((board) => board.id === boardId);
+
         }
-
-
-    },
-
-
+    }
     // return { count, doubleCount, increment }
 });
