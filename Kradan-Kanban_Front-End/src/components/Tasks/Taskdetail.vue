@@ -1,10 +1,11 @@
 <script setup>
 import { ref, watch, computed } from "vue";
-import { getTaskById, editTask } from "@/lib/fetchUtils.js";
+import {getTaskById, editTask, getTaskByIdForGuest} from "@/lib/fetchUtils.js";
 import router from "@/router";
 import { useTaskStore } from "@/stores/task";
 import { useStatusStore } from "@/stores/status.js";
 import { useBoardStore } from "@/stores/board.js";
+import {useAccountStore} from "@/stores/account.js";
 
 const currentBoardId = useBoardStore().currentBoardId;
 const taskStore = useTaskStore();
@@ -81,7 +82,13 @@ async function fetchTask(id) {
   loading.value = true;
   statusList.value = statusStore.getAllStatusWithLimit();
   try {
-    const originalTaskDetails = await getTaskById(id);
+    let originalTaskDetails
+    if (useBoardStore().currentBoard.visibility === "PUBLIC" && useAccountStore().tokenRaw === "") {
+      originalTaskDetails = await getTaskByIdForGuest(id);
+    } else {
+      originalTaskDetails = await getTaskById(id);
+    }
+
     console.table(await originalTaskDetails);
     if (
       originalTaskDetails === 404 ||

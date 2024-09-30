@@ -18,7 +18,6 @@ const statusStore = useStatusStore();
 const route = useRoute();
 const accountStore = useAccountStore();
 const boardStore = useBoardStore();
-const currentBoardId = boardStore.currentBoardId;
 
 // ? ----------------- Modal ---------------
 const toast = ref({ status: "", msg: "" });
@@ -49,12 +48,8 @@ onMounted(async () => {
 
     const currentBoards = boardStore.currentBoard;
     const userOid = accountStore.tokenDetail.oid;
-    console.log(currentBoards);
-    console.log(userOid);
     if (currentBoards && currentBoards.owner?.oid) {
       isOwner.value = currentBoards.owner.oid === userOid;
-      console.log(isOwner.value);
-
       if (!isOwner.value && currentBoards.visibility === "PRIVATE") {
         router.push({ name: "AccessDenied" });
       }
@@ -106,7 +101,7 @@ const closeAddModal = (res) => {
 const openEdit = (id) => {
   selectedId.value = id;
   showEdit.value = true;
-  router.push(`/board/${currentBoardId}/status/${id}`);
+  router.push(`/board/${boardStore.currentBoardId}/status/${id}`);
 };
 
 const closeEdit = (res) => {

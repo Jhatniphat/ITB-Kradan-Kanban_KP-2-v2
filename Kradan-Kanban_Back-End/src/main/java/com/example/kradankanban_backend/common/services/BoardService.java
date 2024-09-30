@@ -60,21 +60,30 @@ public class BoardService {
     }
 
     public List<DetailBoardDTO> getBoardByUserId(String userId) {
-        List<BoardEntity> privateBoards = repository.findAllByUserIdAndVisibility(userId, BoardEntity.Visibility.PRIVATE);
-        List<BoardEntity> publicBoards = repository.findAllByVisibility(BoardEntity.Visibility.PUBLIC);
+//        List<BoardEntity> privateBoards = repository.findAllByUserIdAndVisibility(userId, BoardEntity.Visibility.PRIVATE);
+//        List<BoardEntity> publicBoards = repository.findAllByVisibility(BoardEntity.Visibility.PUBLIC);
+//
+//        List<DetailBoardDTO> result = new ArrayList<>();
+//
+//        for (BoardEntity board : privateBoards) {
+//            DetailBoardDTO dto = convertToDetailBoardDTO(board);
+//            result.add(dto);
+//        }
+//
+//        for (BoardEntity board : publicBoards) {
+//            DetailBoardDTO dto = convertToDetailBoardDTO(board);
+//            result.add(dto);
+//        }
+//
+//        return result;
 
         List<DetailBoardDTO> result = new ArrayList<>();
+        List<BoardEntity> boards = repository.findAllByUserId(userId);
 
-        for (BoardEntity board : privateBoards) {
+        for (BoardEntity board : boards) {
             DetailBoardDTO dto = convertToDetailBoardDTO(board);
             result.add(dto);
         }
-
-        for (BoardEntity board : publicBoards) {
-            DetailBoardDTO dto = convertToDetailBoardDTO(board);
-            result.add(dto);
-        }
-
         return result;
     }
 
@@ -175,7 +184,7 @@ public class BoardService {
         return visibility;
     }
 
-    public void CheckOwnerAndVisibility(String boardId, String userId,String requestMethod) {
+    public void CheckOwnerAndVisibility(String boardId, String userId, String requestMethod) {
         BoardEntity board = repository.findByBoardId(boardId).orElseThrow(() -> new WrongBoardException(boardId + "does not exist'"));
         boolean isOwner = board.getUserId().equals(userId);
         if (userId != null) {

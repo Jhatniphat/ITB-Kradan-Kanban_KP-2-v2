@@ -2,7 +2,7 @@ import {createRouter, createWebHistory} from "vue-router";
 import LogicPage from "@/components/LogicPage.vue";
 import {useAccountStore} from "@/stores/account";
 import {useBoardStore} from "@/stores/board.js";
-import {getAllBoard, login, getBoardById} from "@/lib/fetchUtils.js";
+import {getAllBoard, login, getBoardById, getBoardByIdForGuest} from "@/lib/fetchUtils.js";
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -75,13 +75,21 @@ router.beforeEach(async (to, from, next) => {
     // }
 
     if (to.name === "task" || to.name === "status") {
-        if (boardStore.boards.length === 0) {
+        if (boardStore.boards.length === 0 && accountStore.tokenRaw !== "") {
             await getAllBoard();
         }
 
         const boardId = to.params.boardId;
         console.log(boardId)
-        const board = await getBoardById(boardId);
+        let board
+        if (accountStore.tokenRaw === "") {
+            console.log("Guest")
+            board = await getBoardByIdForGuest(boardId);
+        } else {
+            console.log("User")
+            board = await getBoardById(boardId);
+        }
+        // const board = await getBoardById(boardId);
 
         if (!board) {
             console.log("Board have no data!!")

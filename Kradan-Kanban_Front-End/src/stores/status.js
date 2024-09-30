@@ -1,4 +1,4 @@
-import {getAllStatus, getLimitStatus} from "@/lib/fetchUtils";
+import {getAllStatus} from "@/lib/fetchUtils";
 import {defineStore} from "pinia";
 import {useTaskStore} from "@/stores/task.js";
 
