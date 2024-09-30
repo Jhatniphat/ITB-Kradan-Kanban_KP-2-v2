@@ -1,6 +1,7 @@
 package com.example.kradankanban_backend.shared;
 
 import com.example.kradankanban_backend.exceptions.AuthenticationFailedException;
+import com.example.kradankanban_backend.exceptions.BadRequestException;
 import com.example.kradankanban_backend.shared.dtos.JwtRequestUser;
 import com.example.kradankanban_backend.shared.dtos.JwtResponseTokenDTO;
 import com.example.kradankanban_backend.shared.dtos.UserDataDTO;
@@ -8,6 +9,7 @@ import com.example.kradankanban_backend.shared.services.JwtTokenUtil;
 import com.example.kradankanban_backend.shared.services.JwtUserDetailsService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -82,8 +84,9 @@ public class UserController {
     }
 
     @PostMapping("/token")
-    public ResponseEntity refreshToken(@RequestHeader("Authorization") String tokenHeader) {
+    public ResponseEntity refreshToken(HttpServletRequest request) {
         String refreshToken = null;
+        String tokenHeader = request.getHeader("Authorization");
         String oid = null;
         if (tokenHeader != null) {
             if (tokenHeader.startsWith("Bearer ")) {
@@ -98,6 +101,8 @@ public class UserController {
             } else {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "JWT Token does not begin with Bearer String");
             }
+        } else {
+            throw new AuthenticationFailedException("JWT Token does not begin with Bearer String");
         }
         if (jwtTokenUtil.isTokenExpired(refreshToken)) {
             throw new AuthenticationFailedException("Refresh Token has expired");

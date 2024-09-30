@@ -16,6 +16,7 @@ import com.example.kradankanban_backend.exceptions.WrongBoardException;
 import com.example.kradankanban_backend.shared.Entities.UserEntity;
 import com.example.kradankanban_backend.shared.UserRepository;
 import io.viascom.nanoid.NanoId;
+import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class BoardService {
@@ -177,7 +179,7 @@ public class BoardService {
     }
 
     @Transactional
-    public VisibilityDTO editVisibility(String boardId, VisibilityDTO visibility) {
+    public VisibilityDTO editVisibility(@Valid String boardId, VisibilityDTO visibility) {
         BoardEntity board = repository.findById(boardId).orElseThrow(() -> new WrongBoardException(boardId + "does not exist'"));
         board.setVisibility(visibility.getVisibility());
         repository.save(board);
