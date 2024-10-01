@@ -36,7 +36,6 @@ export const useBoardStore = defineStore("Board", {
             return this.boards.find((board) => board.id === id);
         },
         async setCurrentBoardId(boardId) {
-            console.log(boardId)
             if (this.findBoardById(boardId) !== null && this.findBoardById(boardId) !== undefined) {
                 this.currentBoardId = boardId;
                 this.currentBoard = this.findBoardById(boardId);
@@ -45,14 +44,11 @@ export const useBoardStore = defineStore("Board", {
                 try {
                     let board
                     if (useAccountStore().tokenRaw === "") {
-                        console.log("Guest")
                         board = await getBoardByIdForGuest(boardId);
                     } else {
-                        console.log("User")
                         board = await getBoardById(boardId);
                     }
                     if (!board || !board.payload) {
-                        console.log("No Board Data!!")
                         router.push({name: "board"});
                     } else {
                         this.currentBoardId = boardId;

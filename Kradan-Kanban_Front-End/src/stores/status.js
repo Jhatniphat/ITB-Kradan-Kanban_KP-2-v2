@@ -8,30 +8,7 @@ export const useStatusStore = defineStore('status', {
         limitEnable: true
     }),
     actions: {
-        // async getAllStatus() {
-        //     let items
-        //     try {
-        //         items = await getAllStatus()
-        //         this.status = await items
-        //         return this.status
-        //     } catch (error) {
-        //         console.log(error)
-        //     }
-        // },
         getAllStatus() {
-            // if (this.status.length > 0) return this.status;
-            // else {
-            //     let items;
-            //     try {
-            //         items = await getAllStatus();
-            //         this.status = await items;
-            //         if (typeof items !== Number) {
-            //             return this.status;
-            //         }
-            //     } catch (error) {
-            //         console.log(error);
-            //     }
-            // }
             return this.status
         },
         addStoreStatus(newStatus) {
