@@ -27,8 +27,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-@CrossOrigin(origins = {"http://localhost:5174" , "http://localhost:5173"})
+//@CrossOrigin(origins = {"http://localhost:5174" , "http://localhost:5173"})
 //@CrossOrigin(origins = "http://ip23kp2.sit.kmutt.ac.th:80")
+@CrossOrigin(origins = "${cors.allowed-origins}")
 @RestController
 @RequestMapping("")
 public class UserController {
