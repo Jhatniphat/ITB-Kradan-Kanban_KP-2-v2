@@ -50,7 +50,9 @@ public class BoardController {
 
     //  ! ============================================== BOARD ==============================================
     @GetMapping("/{boardId}")
-    public DetailBoardDTO getBoardById(@PathVariable String boardId) {
+    public DetailBoardDTO getBoardById(@PathVariable String boardId, HttpServletRequest request) {
+        String userId = getUserId(request);
+        service.CheckOwnerAndVisibility(boardId, userId, request.getMethod());
         return service.getBoardById(boardId);
     }
 
@@ -82,7 +84,7 @@ public class BoardController {
     }
 
     @PatchMapping("/{boardId}")
-    public ResponseEntity<VisibilityDTO> updateBoardVisibility(@PathVariable String boardId, @RequestBody VisibilityDTO visibility,HttpServletRequest request) {
+    public ResponseEntity<VisibilityDTO> updateBoardVisibility(@PathVariable String boardId, @RequestBody VisibilityDTO visibility, HttpServletRequest request) {
         String userId = getUserId(request);
         service.CheckOwnerAndVisibility(boardId, userId, request.getMethod());
         VisibilityDTO editVisibility = service.editVisibility(boardId, visibility);
@@ -132,7 +134,7 @@ public class BoardController {
     }
 
     @PutMapping("/{boardId}/tasks/{taskId}")
-    public ResponseEntity<DetailTaskDTO> editTaskForBoard(@PathVariable String boardId, @PathVariable int taskId, @Valid @RequestBody AddEditTaskDTO addEditTaskDTO,HttpServletRequest request) {
+    public ResponseEntity<DetailTaskDTO> editTaskForBoard(@PathVariable String boardId, @PathVariable int taskId, @Valid @RequestBody AddEditTaskDTO addEditTaskDTO, HttpServletRequest request) {
         String userId = getUserId(request);
         service.CheckOwnerAndVisibility(boardId, userId, request.getMethod());
         TaskEntity task = new TaskEntity();

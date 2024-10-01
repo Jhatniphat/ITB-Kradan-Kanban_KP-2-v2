@@ -2,6 +2,7 @@ import router from "@/router";
 import {useAccountStore} from "@/stores/account";
 import {useBoardStore} from "@/stores/board.js";
 import {useTaskStore} from "@/stores/task.js";
+import {useStatusStore} from "@/stores/status.js";
 
 // ! -------------------------------- Task ------------------------------------------
 export async function getAllTasks() {
@@ -161,8 +162,11 @@ export async function getAllStatus() {
             accountStore.clearTokenDetail();
             router.push("/login");
             return;
+        } else if (res.status === 200) {
+            useStatusStore().status = await res.json();
+            return await res.json();
         }
-        return await res.json();
+
     } catch (error) {
     }
 }
@@ -342,6 +346,7 @@ export async function toggleLimitStatus() {
 
 export async function getLimitStatus() {
     const boardId = useBoardStore().currentBoardId;
+    const statusStore = useStatusStore();
     let res, item;
     try {
         const accountStore = useAccountStore();
@@ -358,7 +363,10 @@ export async function getLimitStatus() {
             router.push("/login");
             return;
         }
-        if (res.status === 200) return await res.json();
+        if (res.status === 200) {
+            statusStore.setLimitEnable(await res.json());
+            return await res.json();
+        }
     } catch (e) {
         console.log(e.toString());
     }
@@ -503,6 +511,159 @@ export async function changeVisibility(mode) {
         }
     } catch (error) {
         console.log(error.toString());
+    }
+}
+
+// ! -------------------------- GUEST USER -----------------------
+export async function getBoardByIdForGuest(boardId) {
+    const accountStore = useAccountStore();
+    try {
+        const res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (res.status === 401) {
+            accountStore.clearTokenDetail();
+            router.push("/login");
+            return null;
+        } else if (res.status === 200) {
+            let item = await res.json();
+            return {status: 200, payload: item};
+        } else if (res.status === 400) {
+            return {status: 400, payload: "No board found"};
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+export async function getAllStatusForGuest() {
+    const boardId = useBoardStore().currentBoardId;
+    try {
+        const accountStore = useAccountStore();
+        let res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses`, {
+            method: "GET",
+            headers: {},
+        }); //GET Method
+        if (res.status === 401) {
+            accountStore.clearTokenDetail();
+            router.push("/login");
+            return;
+        } else if (res.status === 200) {
+            useStatusStore().status = await res.json();
+            return await res.json();
+        }
+    } catch (error) {
+    }
+}
+
+export async function getStatusByIdForGuest(id) {
+    const boardId = useBoardStore().currentBoardId;
+    let res, item;
+    try {
+        const accountStore = useAccountStore();
+        res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses/${id}`, {
+            method: "GET",
+            headers: {},
+        });
+        if (res.status === 401) {
+            accountStore.clearTokenDetail();
+            router.push("/login");
+            return;
+        }
+        if (res.status === 200) {
+            item = await res.json();
+            item.createdOn = timeFormater(item.createdOn);
+            item.updatedOn = timeFormater(item.updatedOn);
+            return item;
+        } else {
+            return res.status;
+        }
+    } catch (error) {
+        return error;
+    }
+}
+
+export async function getAllTasksForGuest() {
+    const accountStore = useAccountStore();
+    const taskStore = useTaskStore();
+    const boardId = useBoardStore().currentBoardId;
+    try {
+        let res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks`, {
+            method: "GET",
+            headers: {},
+        }); //GET Method
+        if (res.status === 401) {
+            accountStore.clearTokenDetail();
+            router.push("/login");
+            return;
+        } else if (res.status === 200) {
+            let item = await res.json();
+            console.log(item)
+            taskStore.tasks = item;
+            return item;
+        }
+        return await res.json();
+    } catch (error) {
+    }
+}
+
+export async function getTaskByIdForGuest(id) {
+    const boardId = useBoardStore().currentBoardId;
+    const accountStore = useAccountStore();
+    console.log(`GET !! ${id}`);
+    let res, item;
+    try {
+        res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks/${id}`, {
+            method: "GET",
+            headers: {},
+        });
+        if (res.status === 401) {
+            accountStore.clearTokenDetail();
+            router.push("/login");
+            return;
+        }
+        if (res.status === 200) {
+            item = await res.json();
+            console.table(item)
+            item.createdOn = timeFormater(item.createdOn);
+            item.updatedOn = timeFormater(item.updatedOn);
+            console.table(item)
+            return item;
+        } else {
+            return res.status;
+        }
+    } catch (error) {
+        return error;
+    }
+}
+
+export async function getLimitStatusForGuest() {
+    const boardId = useBoardStore().currentBoardId;
+    const statusStore = useStatusStore();
+    let res, item;
+    try {
+        const accountStore = useAccountStore();
+        res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses/maximum-task`,
+            {
+                method: "GET",
+                headers: {},
+            }
+        );
+        if (res.status === 401) {
+            accountStore.clearTokenDetail();
+            router.push("/login");
+            return;
+        }
+        if (res.status === 200) {
+            statusStore.setLimitEnable(await res.json());
+            return await res.json();
+        }
+    } catch (e) {
+        console.log(e.toString());
     }
 }
 

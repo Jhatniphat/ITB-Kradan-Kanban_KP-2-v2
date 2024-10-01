@@ -11,6 +11,7 @@ import EditLimitStatus from "@/components/EditLimitStatus.vue";
 import NavBar from "@/App.vue";
 import { useBoardStore } from "@/stores/board.js";
 import { useAccountStore } from "@/stores/account.js";
+import {getAllStatus, getAllStatusForGuest} from "@/lib/fetchUtils.js";
 
 // ! ================= Variable ======================
 // ? ----------------- Store and Route ---------------
@@ -18,7 +19,6 @@ const statusStore = useStatusStore();
 const route = useRoute();
 const accountStore = useAccountStore();
 const boardStore = useBoardStore();
-const currentBoardId = boardStore.currentBoardId;
 
 // ? ----------------- Modal ---------------
 const toast = ref({ status: "", msg: "" });
@@ -35,13 +35,7 @@ const status = ref(null);
 const loading = ref(false);
 const overStatuses = ref([]);
 const isOwner = ref(false);
-// onMounted(() => {
-//   fetchStatusData()
-//   if (route.params.id !== undefined) {
-//     selectedId.value = parseInt(route.params.id)
-//     showEdit.value = true
-//   }
-// })
+
 onMounted(async () => {
   loading.value = true; 
   try {
@@ -49,19 +43,15 @@ onMounted(async () => {
 
     const currentBoards = boardStore.currentBoard;
     const userOid = accountStore.tokenDetail.oid;
-    console.log(currentBoards);
-    console.log(userOid);
     if (currentBoards && currentBoards.owner?.oid) {
       isOwner.value = currentBoards.owner.oid === userOid;
-      console.log(isOwner.value);
-
       if (!isOwner.value && currentBoards.visibility === "PRIVATE") {
         router.push({ name: "AccessDenied" });
       }
     }
 
-    if (route.params.id !== undefined) {
-      selectedId.value = parseInt(route.params.id);
+    if (route.params.statusId !== undefined) {
+      selectedId.value = parseInt(route.params.statusId);
       showEdit.value = true;
     }
   } catch (err) {
@@ -78,7 +68,11 @@ async function fetchStatusData(id) {
   error.value = status.value = null;
   loading.value = true;
   try {
-    status.value = await statusStore.getAllStatus();
+    if (accountStore.tokenRaw === "") {
+      status.value = await getAllStatusForGuest();
+    } else {
+      status.value = await getAllStatus()
+    }
   } catch (err) {
     error.value = err.toString();
   } finally {
@@ -106,7 +100,7 @@ const closeAddModal = (res) => {
 const openEdit = (id) => {
   selectedId.value = id;
   showEdit.value = true;
-  router.push(`/board/${currentBoardId}/status/${id}`);
+  router.push(`/board/${boardStore.currentBoardId}/status/${id}`);
 };
 
 const closeEdit = (res) => {

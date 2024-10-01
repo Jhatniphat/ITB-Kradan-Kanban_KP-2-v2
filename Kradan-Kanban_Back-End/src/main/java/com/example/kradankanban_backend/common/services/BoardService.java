@@ -16,6 +16,7 @@ import com.example.kradankanban_backend.exceptions.WrongBoardException;
 import com.example.kradankanban_backend.shared.Entities.UserEntity;
 import com.example.kradankanban_backend.shared.UserRepository;
 import io.viascom.nanoid.NanoId;
+import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class BoardService {
@@ -60,21 +62,30 @@ public class BoardService {
     }
 
     public List<DetailBoardDTO> getBoardByUserId(String userId) {
-        List<BoardEntity> privateBoards = repository.findAllByUserIdAndVisibility(userId, BoardEntity.Visibility.PRIVATE);
-        List<BoardEntity> publicBoards = repository.findAllByVisibility(BoardEntity.Visibility.PUBLIC);
+//        List<BoardEntity> privateBoards = repository.findAllByUserIdAndVisibility(userId, BoardEntity.Visibility.PRIVATE);
+//        List<BoardEntity> publicBoards = repository.findAllByVisibility(BoardEntity.Visibility.PUBLIC);
+//
+//        List<DetailBoardDTO> result = new ArrayList<>();
+//
+//        for (BoardEntity board : privateBoards) {
+//            DetailBoardDTO dto = convertToDetailBoardDTO(board);
+//            result.add(dto);
+//        }
+//
+//        for (BoardEntity board : publicBoards) {
+//            DetailBoardDTO dto = convertToDetailBoardDTO(board);
+//            result.add(dto);
+//        }
+//
+//        return result;
 
         List<DetailBoardDTO> result = new ArrayList<>();
+        List<BoardEntity> boards = repository.findAllByUserId(userId);
 
-        for (BoardEntity board : privateBoards) {
+        for (BoardEntity board : boards) {
             DetailBoardDTO dto = convertToDetailBoardDTO(board);
             result.add(dto);
         }
-
-        for (BoardEntity board : publicBoards) {
-            DetailBoardDTO dto = convertToDetailBoardDTO(board);
-            result.add(dto);
-        }
-
         return result;
     }
 
@@ -168,14 +179,14 @@ public class BoardService {
     }
 
     @Transactional
-    public VisibilityDTO editVisibility(String boardId, VisibilityDTO visibility) {
+    public VisibilityDTO editVisibility(@Valid String boardId, VisibilityDTO visibility) {
         BoardEntity board = repository.findById(boardId).orElseThrow(() -> new WrongBoardException(boardId + "does not exist'"));
         board.setVisibility(visibility.getVisibility());
         repository.save(board);
         return visibility;
     }
 
-    public void CheckOwnerAndVisibility(String boardId, String userId,String requestMethod) {
+    public void CheckOwnerAndVisibility(String boardId, String userId, String requestMethod) {
         BoardEntity board = repository.findByBoardId(boardId).orElseThrow(() -> new WrongBoardException(boardId + "does not exist'"));
         boolean isOwner = board.getUserId().equals(userId);
         if (userId != null) {

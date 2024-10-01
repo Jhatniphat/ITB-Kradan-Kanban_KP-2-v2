@@ -2,7 +2,7 @@ import {createRouter, createWebHistory} from "vue-router";
 import LogicPage from "@/components/LogicPage.vue";
 import {useAccountStore} from "@/stores/account";
 import {useBoardStore} from "@/stores/board.js";
-import {getAllBoard, login, getBoardById} from "@/lib/fetchUtils.js";
+import {getAllBoard, login, getBoardById, getBoardByIdForGuest} from "@/lib/fetchUtils.js";
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -28,6 +28,7 @@ const router = createRouter({
             path: "/board/:boardId/status/:statusId/edit",
             name: "status-edit",
             component: () => import("../views/StatusListView.vue"),
+            alias: ["/board/:boardId/status/:statusId"],
         },
         {
             path: "/board/:boardId/status",
@@ -39,6 +40,7 @@ const router = createRouter({
             path: "/board/:boardId/task/:taskId/edit",
             name: "task-edit",
             component: () => import("../views/TasklistView.vue"),
+            alias: ["/board/:boardId/task/:taskId"],
         },
         {
             path: "/board/:boardId",
@@ -74,14 +76,24 @@ router.beforeEach(async (to, from, next) => {
     //     await checkTokenExpired()
     // }
 
-    if (to.name === "task" || to.name === "status") {
-        if (boardStore.boards.length === 0) {
+    // if (to.name === "task" || to.name === "status") {
+    if (to.name.includes("task") || to.name.includes("status")) {
+        if (boardStore.boards.length === 0 && accountStore.tokenRaw !== "") {
             await getAllBoard();
         }
 
         const boardId = to.params.boardId;
+        await boardStore.setCurrentBoardId(boardId);
         console.log(boardId)
-        const board = await getBoardById(boardId);
+        let board
+        if (accountStore.tokenRaw === "") {
+            console.log("Guest")
+            board = await getBoardByIdForGuest(boardId);
+        } else {
+            console.log("User")
+            board = await getBoardById(boardId);
+        }
+        // const board = await getBoardById(boardId);
 
         if (!board) {
             console.log("Board have no data!!")
@@ -97,7 +109,7 @@ router.beforeEach(async (to, from, next) => {
             return;
         }
 
-        boardStore.setCurrentBoardId(boardId);
+
     }
 
     // Ensure the user is authenticated if necessary

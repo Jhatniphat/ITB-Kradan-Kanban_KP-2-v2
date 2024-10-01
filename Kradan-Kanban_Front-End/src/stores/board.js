@@ -1,6 +1,7 @@
 import {defineStore} from "pinia";
 import router from "@/router/index.js";
-import {getBoardById} from "@/lib/fetchUtils";
+import {getBoardById, getBoardByIdForGuest} from "@/lib/fetchUtils";
+import {useAccountStore} from "@/stores/account.js";
 
 export const useBoardStore = defineStore("Board", {
     state: () => ({
@@ -42,10 +43,17 @@ export const useBoardStore = defineStore("Board", {
                 return this.currentBoard;
             } else {
                 try {
-                    const board = await getBoardById(boardId);
+                    let board
+                    if (useAccountStore().tokenRaw === "") {
+                        console.log("Guest")
+                        board = await getBoardByIdForGuest(boardId);
+                    } else {
+                        console.log("User")
+                        board = await getBoardById(boardId);
+                    }
                     if (!board || !board.payload) {
                         console.log("No Board Data!!")
-                        router.push({name : "board"});
+                        router.push({name: "board"});
                     } else {
                         this.currentBoardId = boardId;
                         this.currentBoard = board.payload;

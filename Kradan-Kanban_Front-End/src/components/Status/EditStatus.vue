@@ -1,9 +1,10 @@
 <script setup>
 import { ref, watch, computed } from "vue";
-import { getStatusById, editStatus, getAllTasks } from "@/lib/fetchUtils";
+import {getStatusById, editStatus, getAllTasks, getStatusByIdForGuest} from "@/lib/fetchUtils";
 import router from "@/router";
 import { useStatusStore } from "@/stores/status";
 import {useBoardStore} from "@/stores/board.js";
+import {useAccountStore} from "@/stores/account.js";
 const currentBoardId = useBoardStore().currentBoardId
 const statusStore = useStatusStore();
 const canSave = ref(false);
@@ -68,7 +69,13 @@ async function fetchData(id) {
   error.value = statusDetail.value = null;
   loading.value = true;
   try {
-    const originalstatusDetails = await getStatusById(id);
+    let originalstatusDetails
+    if (useAccountStore().tokenRaw === "") {
+      originalstatusDetails = await getStatusByIdForGuest(id);
+    } else {
+      originalstatusDetails = await getStatusById(id);
+    }
+    // const originalstatusDetails = await getStatusById(id);
     if (
       originalstatusDetails === 404 ||
       originalstatusDetails === 400 ||

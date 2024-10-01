@@ -52,14 +52,11 @@ describe(`TC-PBI19-PERSIONAL-BOARD-1-FE\n
 
         cy.get('.itbkk-modal-new').should('exist').as('modal')
         cy.get('@modal').find('.itbkk-board-name').clear()
-        // ! ลบ 4 ตรงท้ายออก เพราะเกิน 120 ตัวอักษร
-        cy.get('@modal').find('.itbkk-board-name').type('Software Development Kanban Board for the course INT222 Integrated Project II at School of Information Technology in 202')
+        cy.get('@modal').find('.itbkk-board-name').type('Software Development Kanban Board for the course INT222 Integrated Project II at School of Information Technology in 2024')
         cy.get('@modal').find('.itbkk-button-ok').should('exist').click()
         
         cy.wait('@mockAPI').its('response.statusCode').should('eq',401)
-        // ! เพิ่ม Delay 100 ms ก่อนที่จะทำการตรวจสอบ URL
-        cy.wait(100)
-
+        
         cy.url().should('contain','/login')
     })
 
@@ -73,9 +70,6 @@ describe(`TC-PBI19-PERSIONAL-BOARD-1-FE\n
         cy.wait(100)
         cy.wait('@mockAPI').its('response.statusCode').should('eq',401)
 
-        // ! เพิ่ม Delay 100 ms ก่อนที่จะทำการตรวจสอบ URL
-        cy.wait(100)
-
         cy.url().should('contain','/login')
     })
 
@@ -88,8 +82,7 @@ describe(`TC-PBI19-PERSIONAL-BOARD-1-FE\n
 
         cy.get('.itbkk-modal-new').should('exist').as('modal')
         cy.get('@modal').find('.itbkk-board-name').clear()
-        // ! ลบ 4 ตรงท้ายออก เพราะเกิน 120 ตัวอักษร
-        cy.get('@modal').find('.itbkk-board-name').type('Software Development Kanban Board for the course INT222 Integrated Project II at School of Information Technology in 202')
+        cy.get('@modal').find('.itbkk-board-name').type('Software Development Kanban Board for the course INT222 Integrated Project II at School of Information Technology in 2024')
         cy.get('@modal').find('.itbkk-button-ok').should('exist').click()
     })
 
