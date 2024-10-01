@@ -2,7 +2,7 @@ import {createRouter, createWebHistory} from "vue-router";
 import LogicPage from "@/components/LogicPage.vue";
 import {useAccountStore} from "@/stores/account";
 import {useBoardStore} from "@/stores/board.js";
-import {getAllBoard, login, getBoardById, getBoardByIdForGuest} from "@/lib/fetchUtils.js";
+import {getAllBoard, login, getBoardById, getBoardByIdForGuest, checkTokenExpired} from "@/lib/fetchUtils.js";
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -96,6 +96,8 @@ router.beforeEach(async (to, from, next) => {
             next({name: "AccessDenied"});
             return;
         }
+
+        await checkTokenExpired()
 
         const isOwner = board.ownerId === accountStore.userId;
         const isBoardPrivate = board.visibility === "PRIVATE";
