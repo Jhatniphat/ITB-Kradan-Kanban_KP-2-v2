@@ -84,19 +84,15 @@ router.beforeEach(async (to, from, next) => {
 
         const boardId = to.params.boardId;
         await boardStore.setCurrentBoardId(boardId);
-        console.log(boardId)
         let board
         if (accountStore.tokenRaw === "") {
-            console.log("Guest")
             board = await getBoardByIdForGuest(boardId);
         } else {
-            console.log("User")
             board = await getBoardById(boardId);
         }
         // const board = await getBoardById(boardId);
 
         if (!board) {
-            console.log("Board have no data!!")
             next({name: "AccessDenied"});
             return;
         }

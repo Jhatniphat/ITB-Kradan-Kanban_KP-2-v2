@@ -40,7 +40,6 @@ onMounted(() => {
   if (route.path === "/board/add") {
     openAdd();
   }
-  console.log(allBoard.value);
 });
 
 // ! ================= Function ======================
@@ -59,9 +58,7 @@ async function fetchBoardData() {
     if (allBoard.value !== null && allBoard.value !== undefined) {
       if (allBoard.value?.payload !== "No board found") {
         allBoard.value = boardStore.boards;
-        console.log(allBoard);
         if (allBoard.value.length === 1) {
-          console.log(allBoard.value[0].id);
           router.push(`/board/${allBoard.value[0].id}`);
         }
       } else {

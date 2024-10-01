@@ -213,8 +213,6 @@ watch(() => [filterBy.value, sortBy.value , taskStore.tasks], filterData, {
 // });
 
 async function filterData([filter, sort]) {
-  console.log("current BoardId");
-  console.log(currentBoardId);
   let allTasks = [];
   allTasks = taskStore.tasks;
   if (filter.length > 0) {
@@ -269,12 +267,10 @@ function confirmChangeVisibility() {
 function cancelUpdateVisibility() {
   showChangeVisibilityModal.value = false;
   isPublic.value = originalPublicState.value;
-  console.log(originalPublicState.value);
 }
 
 async function updateVisibility() {
   const newMode = isPublic.value ? "PUBLIC" : "PRIVATE";
-  console.log(newMode);
   const res = await changeVisibility(newMode);
 
   if (res.status !== null || res.status !== "") {
@@ -317,7 +313,6 @@ onBeforeMount(async () => {
 
       const currentBoard = boardStore.currentBoard;
       isOwner.value = currentBoard.owner.oid === accountStore.tokenDetail.oid;
-      console.log(isOwner.value);
 
       if (!isOwner.value && currentBoard.visibility === "PRIVATE") {
         router.push({name: "AccessDenied"});

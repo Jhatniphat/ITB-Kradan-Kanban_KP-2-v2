@@ -22,7 +22,6 @@ export async function getAllTasks() {
             return;
         } else if (res.status === 200) {
             let item = await res.json();
-            console.log(item)
             taskStore.tasks = item;
             return item;
         }
@@ -34,7 +33,6 @@ export async function getAllTasks() {
 export async function getTaskById(id) {
     const boardId = useBoardStore().currentBoardId;
     const accountStore = useAccountStore();
-    console.log(`GET !! ${id}`);
     let res, item;
     try {
         res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks/${id}`, {
@@ -66,7 +64,6 @@ export async function getTaskById(id) {
 export async function addTask(newTask) {
     let res, item;
     const boardId = useBoardStore().currentBoardId;
-    // console.log(JSON.stringify({ ...newTask }));
     try {
         const accountStore = useAccountStore();
         res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks`, {
@@ -386,7 +383,6 @@ export async function getAllBoard() {
             },
         }); //GET Method
 
-        console.table(res)
 
         if (!res) {
             console.log("Response is undefined");
@@ -398,7 +394,6 @@ export async function getAllBoard() {
             return null;
         } else if (res.status === 200) {
             let item = await res.json();
-            console.table(item)
             // ? because now item is an object not an array
             // boardStore.addBoard(item);
             // if ( !(Object.keys(item).length === 0 && item.constructor === Object) ) {
@@ -497,16 +492,13 @@ export async function changeVisibility(mode) {
 
         if (res.ok) {
             const resData = await res.json();
-            console.log(res.status)
             return resData;
         }
         if (res.status === 401) {
-            console.log(res.status)
             accountStore.clearTokenDetail();
             router.push("/login");
             return;
         } else {
-            console.log(res.status)
             return res.status
         }
     } catch (error) {
@@ -602,7 +594,6 @@ export async function getAllTasksForGuest() {
             return;
         } else if (res.status === 200) {
             let item = await res.json();
-            console.log(item)
             taskStore.tasks = item;
             return item;
         }
@@ -614,7 +605,6 @@ export async function getAllTasksForGuest() {
 export async function getTaskByIdForGuest(id) {
     const boardId = useBoardStore().currentBoardId;
     const accountStore = useAccountStore();
-    console.log(`GET !! ${id}`);
     let res, item;
     try {
         res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks/${id}`, {
@@ -671,7 +661,6 @@ export async function getLimitStatusForGuest() {
 
 export async function login(username, password) {
     let res, item;
-    console.log(JSON.stringify({userName: username, password: password}))
     try {
         const accountStore = useAccountStore();
         res = await fetch(`${import.meta.env.VITE_API_ROOT_LOGIN}/login`, {
@@ -743,12 +732,10 @@ export async function checkTokenExpired() {
     const accountStore = useAccountStore();
 
     if (!accountStore.isAccessTokenExpired()) {
-        console.log("Token is still valid");
         return;
     }
 
     if (accountStore.isAccessTokenExpired() && accountStore.isRefreshTokenExpired()) {
-        console.log("Token is expired");
         accountStore.clearTokenDetail();
         router.push("/login");
         return;
@@ -766,7 +753,6 @@ export async function checkTokenExpired() {
 
             if (res.status === 200) {
                 const item = await res.json();
-                console.log("Token Renewed");
                 accountStore.setToken(item);
                 return;
             } else {
