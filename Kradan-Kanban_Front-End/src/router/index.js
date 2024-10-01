@@ -28,6 +28,7 @@ const router = createRouter({
             path: "/board/:boardId/status/:statusId/edit",
             name: "status-edit",
             component: () => import("../views/StatusListView.vue"),
+            alias: ["/board/:boardId/status/:statusId"],
         },
         {
             path: "/board/:boardId/status",
@@ -39,6 +40,7 @@ const router = createRouter({
             path: "/board/:boardId/task/:taskId/edit",
             name: "task-edit",
             component: () => import("../views/TasklistView.vue"),
+            alias: ["/board/:boardId/task/:taskId"],
         },
         {
             path: "/board/:boardId",
@@ -74,12 +76,14 @@ router.beforeEach(async (to, from, next) => {
     //     await checkTokenExpired()
     // }
 
-    if (to.name === "task" || to.name === "status") {
+    // if (to.name === "task" || to.name === "status") {
+    if (to.name.includes("task") || to.name.includes("status")) {
         if (boardStore.boards.length === 0 && accountStore.tokenRaw !== "") {
             await getAllBoard();
         }
 
         const boardId = to.params.boardId;
+        await boardStore.setCurrentBoardId(boardId);
         console.log(boardId)
         let board
         if (accountStore.tokenRaw === "") {
@@ -105,7 +109,7 @@ router.beforeEach(async (to, from, next) => {
             return;
         }
 
-        boardStore.setCurrentBoardId(boardId);
+
     }
 
     // Ensure the user is authenticated if necessary

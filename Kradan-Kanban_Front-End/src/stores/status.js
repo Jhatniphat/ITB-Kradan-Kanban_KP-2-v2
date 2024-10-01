@@ -1,4 +1,3 @@
-import {getAllStatus} from "@/lib/fetchUtils";
 import {defineStore} from "pinia";
 import {useTaskStore} from "@/stores/task.js";
 
@@ -19,20 +18,21 @@ export const useStatusStore = defineStore('status', {
         //         console.log(error)
         //     }
         // },
-        async getAllStatus() {
-            if (this.status.length > 0) return this.status;
-            else {
-                let items;
-                try {
-                    items = await getAllStatus();
-                    this.status = await items;
-                    if (typeof items !== Number) {
-                        return this.status;
-                    }
-                } catch (error) {
-                    console.log(error);
-                }
-            }
+        getAllStatus() {
+            // if (this.status.length > 0) return this.status;
+            // else {
+            //     let items;
+            //     try {
+            //         items = await getAllStatus();
+            //         this.status = await items;
+            //         if (typeof items !== Number) {
+            //             return this.status;
+            //         }
+            //     } catch (error) {
+            //         console.log(error);
+            //     }
+            // }
+            return this.status
         },
         addStoreStatus(newStatus) {
             this.status.push(newStatus)

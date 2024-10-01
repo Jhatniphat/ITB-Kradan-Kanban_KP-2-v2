@@ -11,6 +11,7 @@ import EditLimitStatus from "@/components/EditLimitStatus.vue";
 import NavBar from "@/App.vue";
 import { useBoardStore } from "@/stores/board.js";
 import { useAccountStore } from "@/stores/account.js";
+import {getAllStatus, getAllStatusForGuest} from "@/lib/fetchUtils.js";
 
 // ! ================= Variable ======================
 // ? ----------------- Store and Route ---------------
@@ -34,13 +35,7 @@ const status = ref(null);
 const loading = ref(false);
 const overStatuses = ref([]);
 const isOwner = ref(false);
-// onMounted(() => {
-//   fetchStatusData()
-//   if (route.params.id !== undefined) {
-//     selectedId.value = parseInt(route.params.id)
-//     showEdit.value = true
-//   }
-// })
+
 onMounted(async () => {
   loading.value = true; 
   try {
@@ -55,8 +50,8 @@ onMounted(async () => {
       }
     }
 
-    if (route.params.id !== undefined) {
-      selectedId.value = parseInt(route.params.id);
+    if (route.params.statusId !== undefined) {
+      selectedId.value = parseInt(route.params.statusId);
       showEdit.value = true;
     }
   } catch (err) {
@@ -73,7 +68,11 @@ async function fetchStatusData(id) {
   error.value = status.value = null;
   loading.value = true;
   try {
-    status.value = await statusStore.getAllStatus();
+    if (accountStore.tokenRaw === "") {
+      status.value = await getAllStatusForGuest();
+    } else {
+      status.value = await getAllStatus()
+    }
   } catch (err) {
     error.value = err.toString();
   } finally {
