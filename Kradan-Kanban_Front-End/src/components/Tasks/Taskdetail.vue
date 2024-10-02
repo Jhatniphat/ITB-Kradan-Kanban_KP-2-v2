@@ -144,7 +144,7 @@ function sendCloseModal() {
   ></div>
   <!-- Title -->
   <div
-    class="flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 rounded-lg w-full"
+    class="flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 rounded-lg w-full itbkk-modal-task"
     v-if="loading === false"
   >
     <div v-if="editMode">
@@ -229,7 +229,7 @@ function sendCloseModal() {
             v-model="taskDetail.description"
             class="itbkk-description textarea textarea-bordered h-72 bg-white dark:bg-base-300 dark:text-slate-400 resize-none"
             placeholder="No Description Provided"
-            :class="taskDetail.description === '' ? 'italic text-gray-600' : ''"
+            :class="taskDetail.description === '' || taskDetail.description === null ? 'italic text-gray-600' : ''"
             >{{
               taskDetail.description == "" || taskDetail.description === null
                 ? "No Description Provided"

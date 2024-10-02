@@ -562,7 +562,7 @@ function makekanbanData() {
               </td>
               <td class="itbkk-status">{{ task.status }}</td>
               <td class="">
-                <div class="dropdown dropdown-bottom dropdown-end">
+                <div class="dropdown dropdown-bottom dropdown-end itbkk-button-action">
                   <div tabindex="0" role="button" class="btn m-1">
                     <svg
                         class="swap-off fill-current"
@@ -582,7 +582,7 @@ function makekanbanData() {
                   >
                     <div v-if="isOwner">
                       <li>
-                        <a @click="openEditMode(task.id)">Edit</a>
+                        <a class="itbkk-button-edit" @click="openEditMode(task.id)">Edit</a>
                       </li>
                       <li>
                         <a @click="openDeleteModal(task.title, task.id)"

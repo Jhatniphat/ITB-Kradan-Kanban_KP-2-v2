@@ -204,7 +204,7 @@ function closeEditLimit(overStatus) {
           </tr>
           <tr
             v-if="status !== null"
-            v-for="(status, index) in status"
+            v-for="(status, index) in statusStore.status"
             :key="status.id"
             class="itbkk-item hover"
           >
