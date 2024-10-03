@@ -423,6 +423,12 @@ export async function getAllBoard() {
 }
 
 export async function getBoardById(boardId) {
+    const boardStore = useBoardStore();
+    console.log(boardStore.isBoardExist(boardId))
+    if (boardStore.isBoardExist(boardId)) {
+
+        return useBoardStore().findBoardById(boardId);
+    }
 
     const accountStore = useAccountStore();
     try {
@@ -521,6 +527,10 @@ export async function changeVisibility(mode) {
 
 // ! -------------------------- GUEST USER -----------------------
 export async function getBoardByIdForGuest(boardId) {
+    if (useBoardStore().isBoardExist(boardId)) {
+
+        return useBoardStore().findBoardById(boardId);
+    }
     const accountStore = useAccountStore();
     try {
         const res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}`, {

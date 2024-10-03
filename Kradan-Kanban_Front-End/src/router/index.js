@@ -84,6 +84,7 @@ router.beforeEach(async (to, from, next) => {
 
         const boardId = to.params.boardId;
         await boardStore.setCurrentBoardId(boardId);
+
         let board
         if (accountStore.tokenRaw === "") {
             board = await getBoardByIdForGuest(boardId);
