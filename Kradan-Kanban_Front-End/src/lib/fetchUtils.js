@@ -9,6 +9,9 @@ export async function getAllTasks() {
     const accountStore = useAccountStore();
     const taskStore = useTaskStore();
     const boardId = useBoardStore().currentBoardId;
+    if (taskStore.tasks.length > 0) {
+        return taskStore.tasks;
+    }
     try {
         let res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks`, {
             method: "GET",
@@ -146,6 +149,9 @@ export async function deleteTask(id) {
 
 // ! ------------------------------- Status --------------------------------
 export async function getAllStatus() {
+    if (useStatusStore().status.length > 0) {
+        return useStatusStore().status;
+    }
     const boardId = useBoardStore().currentBoardId;
     try {
         const accountStore = useAccountStore();
@@ -342,6 +348,9 @@ export async function toggleLimitStatus() {
 }
 
 export async function getLimitStatus() {
+    if (useStatusStore().limitEnable !== null) {
+        return useStatusStore().limitEnable;
+    }
     const boardId = useBoardStore().currentBoardId;
     const statusStore = useStatusStore();
     let res, item;
@@ -373,6 +382,9 @@ export async function getLimitStatus() {
 
 // ? doesn't require param , func will get param from account store
 export async function getAllBoard() {
+    if (useBoardStore().boards.length > 0) {
+        return useBoardStore().boards;
+    }
     try {
         const accountStore = useAccountStore();
         const boardStore = useBoardStore();
@@ -411,6 +423,7 @@ export async function getAllBoard() {
 }
 
 export async function getBoardById(boardId) {
+
     const accountStore = useAccountStore();
     try {
         const res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}`, {
@@ -533,6 +546,9 @@ export async function getBoardByIdForGuest(boardId) {
 }
 
 export async function getAllStatusForGuest() {
+    if (useStatusStore().status.length > 0) {
+        return useStatusStore().status;
+    }
     const boardId = useBoardStore().currentBoardId;
     try {
         const accountStore = useAccountStore();
@@ -583,6 +599,9 @@ export async function getAllTasksForGuest() {
     const accountStore = useAccountStore();
     const taskStore = useTaskStore();
     const boardId = useBoardStore().currentBoardId;
+    if (taskStore.tasks.length > 0) {
+        return taskStore.tasks;
+    }
     try {
         let res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks`, {
             method: "GET",
@@ -634,6 +653,9 @@ export async function getTaskByIdForGuest(id) {
 export async function getLimitStatusForGuest() {
     const boardId = useBoardStore().currentBoardId;
     const statusStore = useStatusStore();
+    if (useStatusStore().limitEnable !== null) {
+        return useStatusStore().limitEnable;
+    }
     let res, item;
     try {
         const accountStore = useAccountStore();
