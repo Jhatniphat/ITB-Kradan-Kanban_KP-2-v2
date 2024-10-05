@@ -23,7 +23,6 @@ export const useAccountStore = defineStore("account", {
                     this.refreshToken = token.refresh_token;
                     localStorage.setItem("refresh_token", token.refresh_token);
                 }
-
             },
             setTokenDetail(tokenDetail) {
                 this.tokenDetail = tokenDetail;

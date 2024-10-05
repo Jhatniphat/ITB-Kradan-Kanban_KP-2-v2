@@ -389,6 +389,7 @@ export async function getAllBoard() {
         const accountStore = useAccountStore();
         const boardStore = useBoardStore();
         const res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards`, {
+        // const res = await fetchWithTokenCheck(`http://127.0.0.1:8000/board/collab`, {
             method: "GET",
             headers: {
                 Authorization: `Bearer ${accountStore.tokenRaw}`,
