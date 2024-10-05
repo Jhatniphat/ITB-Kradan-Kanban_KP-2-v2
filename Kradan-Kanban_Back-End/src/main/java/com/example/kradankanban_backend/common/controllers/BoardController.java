@@ -3,9 +3,11 @@ package com.example.kradankanban_backend.common.controllers;
 
 import com.example.kradankanban_backend.common.dtos.*;
 import com.example.kradankanban_backend.common.entities.BoardEntity;
+import com.example.kradankanban_backend.common.entities.CollabEntity;
 import com.example.kradankanban_backend.common.entities.StatusEntity;
 import com.example.kradankanban_backend.common.entities.TaskEntity;
 import com.example.kradankanban_backend.common.services.BoardService;
+import com.example.kradankanban_backend.common.services.CollabService;
 import com.example.kradankanban_backend.common.services.StatusService;
 import com.example.kradankanban_backend.common.services.TaskService;
 import io.jsonwebtoken.Claims;
@@ -34,6 +36,8 @@ public class BoardController {
     private BoardService service;
     @Autowired
     private TaskService taskService;
+    @Autowired
+    private CollabService collabService;
     @Autowired
     private ModelMapper modelMapper;
     @Autowired
@@ -221,6 +225,39 @@ public class BoardController {
         statusService.toggleIsEnable(boardId);
         return ResponseEntity.noContent().build();
     }
+
+    //  ! ============================================== COLLAB ==============================================
+
+    @GetMapping("/{boardId}/collab")
+    public ResponseEntity<List<CollabEntity>> getAllCollaborators(@PathVariable String boardId, HttpServletRequest request) {
+        List<CollabEntity> collab = collabService.getAllCollaborators(boardId);
+        return ResponseEntity.ok(collab);
+    }
+
+    @GetMapping("{boardId}/collab/{collabId}")
+    public ResponseEntity<CollabEntity> getCollaborator(@PathVariable String boardId, @PathVariable String collabId) {
+        CollabEntity collab = collabService.getCollaborators(boardId, collabId);
+        return ResponseEntity.ok(collab);
+    }
+
+    @PostMapping("{boardId}/collab")
+    public ResponseEntity<CollabEntity> addCollaborator(@PathVariable String boardId, @RequestBody CollabRequestDTO collabRequestDTO) {
+        CollabEntity collab = collabService.addCollaborator(boardId, collabRequestDTO);
+        return new ResponseEntity<>(collab, HttpStatus.CREATED);
+    }
+
+    @PatchMapping("{boardId}/collab/{collabId}")
+    public ResponseEntity<CollabEntity> updateAccessCollaborator(@PathVariable String boardId, @PathVariable String collabId, @RequestBody CollabEntity collabEntity) {
+        CollabEntity collab = collabService.updateAccessCollaborator(boardId, collabId, collabEntity);
+        return ResponseEntity.ok(collab);
+    }
+
+    @DeleteMapping("{boardId}/collab/{collabId}")
+    public ResponseEntity<CollabEntity> deleteCollaborator(@PathVariable String boardId, @PathVariable String collabId) {
+        CollabEntity collab = collabService.deleteCollaborator(boardId, collabId);
+        return ResponseEntity.ok(collab);
+    }
+
 
     //  ! ============================================== PRIVATE METHOD ==============================================
 
