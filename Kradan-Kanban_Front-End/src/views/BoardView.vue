@@ -183,6 +183,7 @@ const showToast = (toastData) => {
             type="text"
             placeholder="Type here"
             class="itbkk-board-name input input-bordered w-full bg-white dark:bg-base-300 dark:text-slate-400"
+            maxlength="120"
         />
         <div class="label">
           <!-- ? Error Text -->
@@ -236,7 +237,7 @@ const showToast = (toastData) => {
         <div class="flex-1">filter</div>
         <h1 class="text-center text-2xl font-bold flex-1">Personal Board</h1>
         <div class="flex-1">
-          <button class="btn btn-primary itbkk-button-add float-right">
+          <button class="btn btn-primary itbkk-button-create float-right" @click="openAdd()">
             Create Personal Board
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M4 12H20M12 4V20" stroke="#ffffff" stroke-width="2" stroke-linecap="round"

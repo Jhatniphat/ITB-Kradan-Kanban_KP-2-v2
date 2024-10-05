@@ -104,6 +104,7 @@ const showToast = (toastData, timeOut = 3000) => {
 
 // ! ================= Delete Confirm ======================
 const deleteTaskTitle = ref("");
+const deleteTaskId = ref(0);
 
 const deleteThisTask = async () => {
   let res;
@@ -126,6 +127,7 @@ const deleteThisTask = async () => {
 
 const openDeleteModal = (taskTitle, id) => {
   deleteTaskTitle.value = taskTitle;
+  deleteTaskId.value = id
   selectedId.value = id;
   showDeleteModal.value = true;
 };
@@ -585,7 +587,7 @@ function makekanbanData() {
                         <a class="itbkk-button-edit" @click="openEditMode(task.id)">Edit</a>
                       </li>
                       <li>
-                        <a @click="openDeleteModal(task.title, task.id)"
+                        <a class="itbkk-button-delete" @click="openDeleteModal(task.title, task.id)"
                         >Delete</a
                         >
                       </li>
@@ -631,7 +633,7 @@ function makekanbanData() {
             <hr/>
             <h1 class="itbkk-message font-semibold text-xl p-8">
               <!-- Do you want to delete the task "{{ deleteTaskTitle }}" -->
-              ARE YOU SURE TO DELETE THIS TASK ?
+              Do you want to delete the task number {{ deleteTaskId}} , {{ deleteTaskTitle }}
             </h1>
             <hr/>
             <div class="flex flex-row-reverse gap-4 mt-5">

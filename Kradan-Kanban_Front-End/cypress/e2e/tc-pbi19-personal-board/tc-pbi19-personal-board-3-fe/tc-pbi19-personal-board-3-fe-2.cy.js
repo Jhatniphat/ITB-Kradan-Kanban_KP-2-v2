@@ -26,6 +26,7 @@ describe(`TC-PBI19-PERSIONAL-BOARD-3-FE-1\n
     })
 
     it('[Step 5] should have add task button and click to open task add modal',()=>{
+        cy.wait(500)
         cy.get('.itbkk-button-add').should('exist').click() ;
 
         cy.get('.itbkk-modal-task').should('exist').as('modal')

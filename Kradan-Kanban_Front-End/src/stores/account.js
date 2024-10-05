@@ -1,5 +1,6 @@
 import {defineStore} from "pinia";
 import VueJwtDecode from 'vue-jwt-decode'
+import {useBoardStore} from "@/stores/board.js";
 
 export const useAccountStore = defineStore("account", {
         state: () => ({

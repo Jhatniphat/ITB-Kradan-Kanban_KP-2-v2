@@ -389,14 +389,11 @@ export async function getAllBoard() {
         const accountStore = useAccountStore();
         const boardStore = useBoardStore();
         const res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards`, {
-        // const res = await fetchWithTokenCheck(`http://127.0.0.1:8000/board/collab`, {
             method: "GET",
             headers: {
                 Authorization: `Bearer ${accountStore.tokenRaw}`,
             },
         }); //GET Method
-
-
         if (!res) {
             console.log("Response is undefined");
         }
@@ -407,11 +404,6 @@ export async function getAllBoard() {
             return null;
         } else if (res.status === 200) {
             let item = await res.json();
-            // ? because now item is an object not an array
-            // boardStore.addBoard(item);
-            // if ( !(Object.keys(item).length === 0 && item.constructor === Object) ) {
-            //     boardStore.addBoard(item)
-            // }
             boardStore.boards = item;
             return {status: 200, payload: item};
         } else if (res.status === 400) {
@@ -474,7 +466,7 @@ export async function addBoard(newBoard) {
         if (res.status === 401) {
             accountStore.clearTokenDetail();
             router.push("/login");
-            return;
+            return {status: res.status, payload: "Unauthorized"};
         }
         if (res.status === 201 || res.status === 200) {
             item = await res.json();
@@ -483,12 +475,8 @@ export async function addBoard(newBoard) {
         } else {
             return {status: res.status, payload: "There is a problem. Please try again later"};
         }
+
     } catch (error) {
-        if (res.status === 401) {
-            accountStore.clearTokenDetail();
-            router.push("/login");
-            return;
-        }
         return error;
     }
 }
