@@ -11,6 +11,8 @@ describe(`TC-PBI19-PERSIONAL-BOARD-4-FE-1\n
         cy.get('.itbkk-username').type('itbkk.somchai')
         cy.get('.itbkk-password').type('ip23/SOM')
         cy.get('.itbkk-button-signin').click()
+
+        cy.wait(1000) // ! wait for the page to load
     }) ;
     
 
@@ -21,10 +23,12 @@ describe(`TC-PBI19-PERSIONAL-BOARD-4-FE-1\n
     })
 
     it('[Step 1.1] should have "Manage Status" and click to open the Status list page',()=>{
+        // cy.wait(1000) // ! wait for the page to load
         cy.get('.itbkk-manage-status').should('exist').click() ;
     })
 
     it('[Step 1.1] Status table shoud contain "No Status","To Do"," Doing" and "Done".',()=>{
+        // cy.wait(1000) // ! wait for the page to load
         cy.get('.itbkk-manage-status').should('exist').click() ;
         cy.wait(100) ;
 
@@ -44,6 +48,7 @@ describe(`TC-PBI19-PERSIONAL-BOARD-4-FE-1\n
     })
 
     it('[Step 1.2] should have an Add Status and click the button to show the modal window and add status "To Review".',()=>{
+        // cy.wait(1000) // ! wait for the page to load
         cy.get('.itbkk-manage-status').should('exist').click() ;
         cy.wait(100) ;
 
@@ -62,6 +67,7 @@ describe(`TC-PBI19-PERSIONAL-BOARD-4-FE-1\n
     })
 
     it('[Step 1.3] should have add task button and click to open task add modal and add "user1 first task" with "To Review".',()=>{
+        // cy.wait(1000) // ! wait for the page to load
         cy.get('.itbkk-button-add').should('exist').click() ;
 
         cy.get('.itbkk-modal-task').should('exist').as('modal')
@@ -71,12 +77,14 @@ describe(`TC-PBI19-PERSIONAL-BOARD-4-FE-1\n
     })
 
     it('[Step 1.3] Should have task title "user1 first task" with "To Review".',()=>{
+        // cy.wait(1000) // ! wait for the page to load
         cy.get('.itbkk-title').contains('user1 first task').parents('.itbkk-item').as('item')
         cy.get('@item').contains('.itbkk-assignees','Unassigned')
         cy.get('@item').contains('.itbkk-status',"To Review")
     })
 
     it('[Step 1.4] should have add task button and click to open task add modal and add "user1 second task" with "Doing".',()=>{
+        // cy.wait(1000) // ! wait for the page to load
         cy.get('.itbkk-button-add').should('exist').click() ;
 
         cy.get('.itbkk-modal-task').should('exist').as('modal')
@@ -86,12 +94,14 @@ describe(`TC-PBI19-PERSIONAL-BOARD-4-FE-1\n
     })
 
     it('[Step 1.4] Should have task title "user1 second task" with "Doing".',()=>{
+        // cy.wait(1000) // ! wait for the page to load
         cy.get('.itbkk-title').contains('user1 second task').parents('.itbkk-item').as('item')
         cy.get('@item').contains('.itbkk-assignees','Unassigned')
         cy.get('@item').contains('.itbkk-status',"Doing")
     })
 
     it('[Step 1.5] Should change "Doing" status to "In Progress" status.', ()=>{
+        // cy.wait(1000) // ! wait for the page to load
         cy.get('.itbkk-manage-status').should('exist').click() ;
         cy.wait(100) ;
 
@@ -103,7 +113,7 @@ describe(`TC-PBI19-PERSIONAL-BOARD-4-FE-1\n
         cy.get('@modal').find('.itbkk-status-name','Doing')
         cy.get('@modal').find('.itbkk-status-name').clear()
         cy.get('@modal').find('.itbkk-status-name').type('In Progress')
-        cy.get('@modal').find('.itbkk-button-confirm').click() 
+        cy.get('@modal').find('.itbkk-button-confirm').click({force: true})  //! force click
         cy.wait(100)
     })
 

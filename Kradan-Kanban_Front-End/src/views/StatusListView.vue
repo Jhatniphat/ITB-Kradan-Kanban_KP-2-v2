@@ -176,7 +176,7 @@ function closeEditLimit(overStatus) {
           </button>
         </div>
           <button
-            class="itbkk-button-add btn btn-square btn-outline w-16 float-right"
+            class="btn btn-square btn-outline w-16 float-right"
             @click="showEditLimit = true"
             
           >

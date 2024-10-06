@@ -562,7 +562,7 @@ function makekanbanData() {
                       : task.assignees
                 }}
               </td>
-              <td class="itbkk-status">{{ task.status }}</td>
+              <td class="itbkk-status itbkk-status-name">{{ task.status }}</td>
               <td class="">
                 <div class="dropdown dropdown-bottom dropdown-end itbkk-button-action">
                   <div tabindex="0" role="button" class="btn m-1">

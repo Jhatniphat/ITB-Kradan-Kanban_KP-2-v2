@@ -43,10 +43,10 @@ onMounted(async () => {
   try {
     statusList.value = await getAllStatus();
   } catch (error) {}
-  statusList.value.splice(
-    statusList.value.findIndex((status) => status.id === props.deleteId),
-    1
-  );
+  // statusList.value.splice(
+  //   statusList.value.findIndex((status) => status.id === props.deleteId),
+  //   1
+  // );
 });
 
 const deleteThisStatus = async () => {

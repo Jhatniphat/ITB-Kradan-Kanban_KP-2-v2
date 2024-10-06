@@ -62,6 +62,8 @@ export const useStatusStore = defineStore('status', {
             const newStatus = this.findById(newId)
             if (newStatus.name === 'No Status' || newStatus.name === 'Done') return true
             const oldStatus = this.findById(oldId)
+            console.table(newStatus)
+            console.table(oldStatus)
             return (this.countStatus(newStatus.name) + this.countStatus(oldStatus.name)) <= this.getLimit()
         },
         getLimit() {

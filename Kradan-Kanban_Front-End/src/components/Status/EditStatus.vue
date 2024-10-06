@@ -60,7 +60,8 @@ watch(
     canSave.value =
       Errortext.value.name === "" &&
       Errortext.value.description === "" &&
-      JSON.stringify(newVal) !== JSON.stringify(originalsDetail.value);
+        newVal.value?.toString() !== originalsDetail.value?.toString();
+    // JSON.stringify(newVal) !== JSON.stringify(originalsDetail.value);
   },
   { deep: true }
 );
