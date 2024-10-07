@@ -240,19 +240,19 @@ public class BoardController {
         return ResponseEntity.ok(collab);
     }
 
-    @PostMapping("{boardId}/collab")
+    @PostMapping("{boardId}/collabs")
     public ResponseEntity<CollabEntity> addCollaborator(@PathVariable String boardId, @RequestBody CollabRequestDTO collabRequestDTO) {
         CollabEntity collab = collabService.addCollaborator(boardId, collabRequestDTO);
         return new ResponseEntity<>(collab, HttpStatus.CREATED);
     }
 
-    @PatchMapping("{boardId}/collab/{collabId}")
+    @PatchMapping("{boardId}/collabs/{collabId}")
     public ResponseEntity<CollabEntity> updateAccessCollaborator(@PathVariable String boardId, @PathVariable String collabId, @RequestBody CollabEntity collabEntity) {
         CollabEntity collab = collabService.updateAccessCollaborator(boardId, collabId, collabEntity);
         return ResponseEntity.ok(collab);
     }
 
-    @DeleteMapping("{boardId}/collab/{collabId}")
+    @DeleteMapping("{boardId}/collabs/{collabId}")
     public ResponseEntity<CollabEntity> deleteCollaborator(@PathVariable String boardId, @PathVariable String collabId) {
         CollabEntity collab = collabService.deleteCollaborator(boardId, collabId);
         return ResponseEntity.ok(collab);

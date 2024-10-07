@@ -62,10 +62,10 @@ public class JwtUserDetailsService implements UserDetailsService {
         return userDetails;
     }
 
-    public static UserDetails getCurrentUser() {
+    public static AuthUser getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
-            return (UserDetails) authentication.getPrincipal();
+        if (authentication != null && authentication.getPrincipal() instanceof AuthUser) {
+            return (AuthUser) authentication.getPrincipal();
         }
         return null;
     }

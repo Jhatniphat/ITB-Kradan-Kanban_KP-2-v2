@@ -1,5 +1,6 @@
 package com.example.kradankanban_backend.common.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -21,6 +22,11 @@ public class CollabEntity {
 
     @Enumerated(EnumType.STRING)
     private AccessRight accessRight = AccessRight.READ;
+
+    @ManyToOne
+    @JoinColumn(name = "board_boardId", insertable = false, updatable = false)
+    @JsonBackReference
+    private BoardEntity board;
 
     @Column(name = "added_On", insertable = false, updatable = false)
     @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ssXXX", timezone="UTC")
