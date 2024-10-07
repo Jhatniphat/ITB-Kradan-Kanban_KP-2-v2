@@ -115,7 +115,7 @@ const transferTheStatus = async (newId) => {
       <h1 class="m-2 pb-4 text-2xl font-bold">Delete a Satus</h1>
       <hr />
       <h1 class="itbkk-message font-semibold text-xl p-8">
-        Do you want to delete the "{{ deleteTitle }}" Status?
+        Do you want to delete the {{ deleteTitle }} status?
       </h1>
       <hr />
       <div class="flex flex-row-reverse gap-4 mt-5">
@@ -143,7 +143,7 @@ const transferTheStatus = async (newId) => {
       <hr />
       <div class="p-3 flex flex-col">
         <h1 class="itbkk-message font-semibold text-xl">
-          There are {{ numOfTasks }} tasks in "{{ deleteTitle }}" Status?
+          There are {{ numOfTasks }} tasks in {{ deleteTitle }} status?
         </h1>
         <div class="flex flex-row">
           <h1 class="font-semibold text-xl">Transfer to</h1>

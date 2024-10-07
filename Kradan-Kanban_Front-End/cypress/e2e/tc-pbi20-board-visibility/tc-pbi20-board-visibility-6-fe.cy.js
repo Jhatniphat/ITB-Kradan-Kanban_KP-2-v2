@@ -12,6 +12,7 @@ describe(`TC-PBI20-BOARD-VISIBILITY-1-FE\n
 
         cy.wait(100)
         cy.visit('/board/iZbduus70n')  // <------ add your board id here
+        cy.wait(1000)
     }) ;
 
     it('[Step 1] Should open the /board/:id page', () => {

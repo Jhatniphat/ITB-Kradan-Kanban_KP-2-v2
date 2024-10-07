@@ -505,7 +505,7 @@ export async function changeVisibility(mode) {
         if (res.status === 401) {
             accountStore.clearTokenDetail();
             router.push("/login");
-            return;
+            return res.status
         } else {
             return res.status
         }
@@ -516,6 +516,7 @@ export async function changeVisibility(mode) {
 
 // ! -------------------------- GUEST USER -----------------------
 export async function getBoardByIdForGuest(boardId) {
+    console.log("FOR GUEST")
     if (useBoardStore().isBoardExist(boardId)) {
 
         return useBoardStore().findBoardById(boardId);
@@ -530,13 +531,16 @@ export async function getBoardByIdForGuest(boardId) {
         });
 
         if (res.status === 401) {
+            console.log("401")
             accountStore.clearTokenDetail();
             router.push("/login");
             return null;
         } else if (res.status === 200) {
+            console.log("200")
             let item = await res.json();
             return {status: 200, payload: item};
         } else if (res.status === 400) {
+            console.log("400")
             return {status: 400, payload: "No board found"};
         }
     } catch (error) {
@@ -751,13 +755,14 @@ async function fetchWithTokenCheck(url, options) {
 
 export async function checkTokenExpired() {
     const accountStore = useAccountStore();
-
+    console.log("Checking token expiry");
     if (!accountStore.isAccessTokenExpired()) {
         return;
     }
 
     if (accountStore.isAccessTokenExpired() && accountStore.isRefreshTokenExpired()) {
         accountStore.clearTokenDetail();
+        console.log("Token expired");
         router.push("/login");
         return;
     }

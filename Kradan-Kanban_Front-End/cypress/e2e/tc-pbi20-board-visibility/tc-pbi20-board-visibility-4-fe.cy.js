@@ -12,6 +12,7 @@ describe(`TC-PBI20-BOARD-VISIBILITY-1-FE\n
 
         cy.wait(100)
         cy.url().should('contain','/board')
+        cy.wait(1000)
     }) ;
 
     it('[Step 1] Open the login page at /login and open the /board page', () => {

@@ -199,7 +199,6 @@ async function setCurrentBoard(boardId) {
   }
 }
 
-// watch(() => route.params.taskId, fetchData, { immediate: true });
 
 // ! ================= Filter and Sort ======================
 const filterBy = ref([]);
@@ -208,11 +207,6 @@ watch(() => [filterBy.value, sortBy.value , taskStore.tasks], filterData, {
   immediate: true,
   deep: true,
 });
-// watch(filterBy, (newValue) => {
-//   if (newValue.length === 0) {
-//     filteredTasks.value = allTasks.value;
-//   }
-// });
 
 async function filterData([filter, sort]) {
   let allTasks = [];
@@ -411,7 +405,7 @@ function makekanbanData() {
               <label class="cursor-pointer label">
                 <input
                     type="checkbox"
-                    class="toggle toggle-primary"
+                    class="toggle toggle-primary itbkk-board-visibility"
                     v-model="isPublic"
                     @change="confirmChangeVisibility()"
                     :disabled="!isOwner"
@@ -582,23 +576,23 @@ function makekanbanData() {
                       tabindex="0"
                       class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
                   >
-                    <div v-if="isOwner">
+                    <div>
                       <li>
-                        <a class="itbkk-button-edit" @click="openEditMode(task.id)">Edit</a>
+                        <button class="itbkk-button-edit button" :disabled="!isOwner" :class="{ disabled : !isOwner}" @click="openEditMode(task.id)">Edit</button>
                       </li>
                       <li>
-                        <a class="itbkk-button-delete" @click="openDeleteModal(task.title, task.id)"
-                        >Delete</a
+                        <button class="itbkk-button-delete button" :disabled="!isOwner" :class="{ disabled : !isOwner}" @click="openDeleteModal(task.title, task.id)"
+                        >Delete</button
                         >
                       </li>
                     </div>
-                    <div v-if="!isOwner">
-                      <li>
-                        <h1>
-                          You don't have a permission to Edit or Delete a Task
-                        </h1>
-                      </li>
-                    </div>
+<!--                    <div v-if="!isOwner">-->
+<!--                      <li>-->
+<!--                        <h1>-->
+<!--                          You don't have a permission to Edit or Delete a Task-->
+<!--                        </h1>-->
+<!--                      </li>-->
+<!--                    </div>-->
                   </ul>
                 </div>
               </td>
@@ -667,17 +661,17 @@ function makekanbanData() {
 
         <Modal :show-modal="showChangeVisibilityModal">
           <div
-              class="flex flex-col p-5 bg-slate-50 dark:bg-base-100 rounded-lg w-full"
+              class="flex flex-col p-5 bg-slate-50 dark:bg-base-100 rounded-lg w-full itbkk-modal-alert"
           >
             <h1 class="m-2 pb-4 text-2xl font-bold">
               Board visibility changed!
             </h1>
             <hr/>
-            <h1 class="itbkk-message font-semibold text-xl p-8">
+            <h1 class="itbkk-message font-semibold text-xl p-8 ">
               {{
                 isPublic
-                    ? "In public, anyone can view the board,task list and task detail of tasks in the board. Do you want to change the visibility to Public?"
-                    : "In private, only board owner can access/control board. Do you want to change the visibility to Private?"
+                    ? "In public, anyone can view the board,task list and task detail of tasks in the board. Do you want to change board visibility to public?"
+                    : "In private, only board owner can access/control board. Do you want to change board visibility to private?"
               }}
             </h1>
             <hr/>
