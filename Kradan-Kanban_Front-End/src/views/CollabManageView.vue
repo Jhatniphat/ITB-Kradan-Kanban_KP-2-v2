@@ -2,7 +2,7 @@
 import { onBeforeMount, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import {
-  getAllBoard,
+  getAllCollabs,
   getAllTasks,
   getAllStatus,
   getAllTasksForGuest,
@@ -15,6 +15,7 @@ import { useBoardStore } from "@/stores/board.js";
 import LoadingComponent from "@/components/loadingComponent.vue";
 import { useAccountStore } from "@/stores/account.js";
 import AddCollab from "@/components/Collab/AddCollabModal.vue";
+import router from "@/router/index.js";
 
 // ! ================= Variable ======================
 // ? ----------------- Store and Route ---------------
@@ -34,35 +35,29 @@ const error = ref(null);
 const showErrorModal = ref(false); // * show Error from Edit Limit modal
 const overStatuses = ref([]);
 const currentBoardId = boardStore.currentBoardId;
-
 const isOwner = ref(false);
+const allCollabs = ref([]);
 
-const allCollabs = [
-  {
-    id: 1,
-    title: "John Doe",
-    assignees: "john.doe@example.com",
-    status: "Read",
-  },
-  {
-    id: 2,
-    title: "Jane Smith",
-    assignees: "jane.smith@example.com",
-    status: "Write",
-  },
-  {
-    id: 3,
-    title: "Alice Johnson",
-    assignees: "alice.johnson@example.com",
-    status: "Write",
-  },
-  {
-    id: 4,
-    title: "Bob Brown",
-    assignees: "bob.brown@example.com",
-    status: "Read",
-  },
-];
+// Function to fetch collaborators
+const fetchCollaborators = async () => {
+  loading.value = true;
+  const response = await getAllCollabs(currentBoardId);
+  if (response.error) {
+    error.value = response.message;
+    showToast({ status: "error", msg: response.message });
+  } else {
+    allCollabs.value = response; // Set the collaborator data
+  }
+  loading.value = false;
+};
+
+// Fetch collaborators when the component is mounted
+onBeforeMount(async () => {
+  await fetchCollaborators();
+
+  const currentBoard = boardStore.currentBoard;
+  isOwner.value = currentBoard.owner.oid === accountStore.tokenDetail.oid;
+});
 
 const closeAddModal = (res) => {
   showAddModal.value = false;
@@ -98,11 +93,11 @@ const showToast = (toastData, timeOut = 3000) => {
       </div>
       <div class="w-3/4 mx-auto mt-10 relative">
         <div class="inline-flex">
-          <h1 class="itbkk-board-name m-2">
+          <a class="itbkk-board-name m-2" @click="router.push(`/board/${boardStore.currentBoardId}`)">
             {{ boardStore.currentBoard.name }}
-          </h1>
-          <h1 class="m-2">></h1>
-          <h1 class="m-2">Collaborator</h1>
+          </a>
+          <p class="mr-2 mt-3">></p>
+          <p class="mr-2 mt-3">Collaborator</p>
         </div>
         <!-- show Add Collab modal -->
         <div class="float-right flex flex-row">
@@ -113,6 +108,7 @@ const showToast = (toastData, timeOut = 3000) => {
             <button
               class="itbkk-collaborator-add btn btn-outline w-40 float-left mb-2"
               @click="showAddModal = true"
+              :disabled="!isOwner"
             >
               Add Collaborator
             </button>
@@ -178,7 +174,8 @@ const showToast = (toastData, timeOut = 3000) => {
                     {{ task.status }}
                   </td>
                   <td>
-                    <div>
+                    <div :class="isOwner ? '' : 'lg:tooltip'"
+                    data-tip="You don't have a permission to Remove a Collaborator">
                       <button
                         class="itbkk-collab-remove btn m-2"
                         :disabled="!isOwner"

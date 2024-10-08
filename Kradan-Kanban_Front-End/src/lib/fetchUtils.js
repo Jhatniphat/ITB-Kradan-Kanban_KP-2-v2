@@ -740,7 +740,7 @@ export async function getLimitStatusForGuest() {
 
 // ! -------------------------- COLLABORATOR ----------------------------
 
-export async function getCollaborators() {
+export async function getAllCollabs() {
   const boardId = useBoardStore().currentBoardId;
   try {
     const accountStore = useAccountStore();
@@ -759,10 +759,10 @@ export async function getCollaborators() {
       router.push("/login");
       return null;
     } else if (res.status === 200) {
+      console.log(res)
       return await res.json();
     } else {
-      console.error(`Error fetching collaborators: ${res.statusText}`);
-      return null;
+      return { status: res.status, error: true };
     }
   } catch (error) {
     console.error("Failed to fetch collaborators:", error);
