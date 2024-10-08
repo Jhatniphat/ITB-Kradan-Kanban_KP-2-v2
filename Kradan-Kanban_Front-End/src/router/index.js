@@ -37,6 +37,11 @@ const router = createRouter({
             alias: ["/board/:boardId/status/add"],
         },
         {
+            path: "/board/:boardId/collab",
+            name: "collab",
+            component: () => import("../views/CollabManageView.vue"),
+        },
+        {
             path: "/board/:boardId/task/:taskId/edit",
             name: "task-edit",
             component: () => import("../views/TasklistView.vue"),
