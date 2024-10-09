@@ -54,7 +54,7 @@ const fetchCollaborators = async () => {
 // Fetch collaborators when the component is mounted
 onBeforeMount(async () => {
   await fetchCollaborators();
-
+  console.log(allCollabs);
   const currentBoard = boardStore.currentBoard;
   isOwner.value = currentBoard.owner.oid === accountStore.tokenDetail.oid;
 });
@@ -93,7 +93,10 @@ const showToast = (toastData, timeOut = 3000) => {
       </div>
       <div class="w-3/4 mx-auto mt-10 relative">
         <div class="inline-flex">
-          <a class="itbkk-board-name m-2" @click="router.push(`/board/${boardStore.currentBoardId}`)">
+          <a
+            class="itbkk-board-name m-2"
+            @click="router.push(`/board/${boardStore.currentBoardId}`)"
+          >
             {{ boardStore.currentBoard.name }}
           </a>
           <p class="mr-2 mt-3">></p>
@@ -139,43 +142,37 @@ const showToast = (toastData, timeOut = 3000) => {
                 </tr>
                 <tr
                   v-if="allCollabs !== null"
-                  v-for="(task, index) in allCollabs"
-                  :key="task.id"
+                  v-for="(collab, index) in allCollabs"
+                  :key="collab.id"
                   class="itbkk-item hover"
                 >
                   <th>{{ index + 1 }}</th>
                   <td class="itbkk-name">
-                    {{ task.title }}
+                    {{ collab.userId }}
                   </td>
                   <td class="itbkk-email">
-                    {{ task.assignees }}
+                    {{ collab.userId }}
                   </td>
                   <td class="itbkk-status itbkk-access-right">
-                    <!-- <label class="form-control w-full max-w-xs">
-                    <div class="label">
-                      <span class="label-text">{{ task.status }}t</span>
-                    </div>
+                    <label class="form-control w-full max-w-xs">
+                    <!-- <div class="label">
+                      <span class="label-text"></span>
+                    </div> -->
                     <select
                       class="itbkk-access-right select select-bordered bg-white dark:bg-base-300 dark:text-slate-400"
-                      v-model="task.status"
+                      v-model="collab.accessRight"
                     >
-                      <option
-                        v-for="status in statusStore.getAllStatusWithLimit()"
-                        :value="status.name"
-                        :disabled="status.isLimit"
-                      >
-                        {{ status.name }}
-                        <span class="text-error">
-                          {{ status.isLimit ? "(max)" : "" }}
-                        </span>
+                      <option>
+                        {{ collab.accessRight }}
                       </option>
                     </select>
-                  </label> -->
-                    {{ task.status }}
+                  </label> 
                   </td>
                   <td>
-                    <div :class="isOwner ? '' : 'lg:tooltip'"
-                    data-tip="You don't have a permission to Remove a Collaborator">
+                    <div
+                      :class="isOwner ? '' : 'lg:tooltip'"
+                      data-tip="You don't have a permission to Remove a Collaborator"
+                    >
                       <button
                         class="itbkk-collab-remove btn m-2"
                         :disabled="!isOwner"
