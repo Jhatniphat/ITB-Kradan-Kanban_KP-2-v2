@@ -1,12 +1,10 @@
 package com.example.kradankanban_backend.common.services;
 
 
+import com.example.kradankanban_backend.common.dtos.CollabDTO;
 import com.example.kradankanban_backend.common.dtos.DetailBoardDTO;
 import com.example.kradankanban_backend.common.dtos.VisibilityDTO;
-import com.example.kradankanban_backend.common.entities.BoardEntity;
-import com.example.kradankanban_backend.common.entities.CollabId;
-import com.example.kradankanban_backend.common.entities.LimitSettings;
-import com.example.kradankanban_backend.common.entities.StatusEntity;
+import com.example.kradankanban_backend.common.entities.*;
 import com.example.kradankanban_backend.common.repositories.BoardRepository;
 import com.example.kradankanban_backend.common.repositories.CollabRepository;
 import com.example.kradankanban_backend.common.repositories.LimitRepository;
@@ -30,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 public class BoardService {
@@ -63,8 +62,23 @@ public class BoardService {
         dto.setName(board.getBoardName());
         dto.setVisibility(board.getVisibility());
         dto.setOwner(owner);
-        dto.setCollaborators(board.getCollaborators());
+
+        List<CollabDTO> collaborators = collabRepository.findByBoardId(board.getBoardId()).stream()
+                .map(this::mapToCollabDTO)
+                .collect(Collectors.toList());
+        dto.setCollaborators(collaborators);
         return dto;
+    }
+
+    private CollabDTO mapToCollabDTO(CollabEntity collabEntity) {
+        UserEntity user = userRepository.findById(collabEntity.getUserId()).orElseThrow(() -> new ItemNotFoundException("User not found"));
+        CollabDTO collabDTO = new CollabDTO();
+        collabDTO.setOid(user.getOid());
+        collabDTO.setName(user.getName());
+        collabDTO.setEmail(user.getEmail());
+        collabDTO.setAccessRight(collabEntity.getAccessRight());
+        collabDTO.setAddedOn(collabEntity.getAddedOn());
+        return collabDTO;
     }
 
 
@@ -87,12 +101,13 @@ public class BoardService {
 //        return result;
 
         List<DetailBoardDTO> result = new ArrayList<>();
-        List<BoardEntity> boards = repository.findAllByUserId(userId);
 
-        for (BoardEntity board : boards) {
-            DetailBoardDTO dto = convertToDetailBoardDTO(board);
-            result.add(dto);
-        }
+        List<BoardEntity> ownerBoard = repository.findAllByUserId(userId);
+        result.addAll(ownerBoard.stream().map(this::convertToDetailBoardDTO).toList());
+
+        List<BoardEntity> collabBoard = boardRepository.findAllByCollaboratorUserId(userId);
+        result.addAll(collabBoard.stream().map(this::convertToDetailBoardDTO).toList());
+
         return result;
     }
 
