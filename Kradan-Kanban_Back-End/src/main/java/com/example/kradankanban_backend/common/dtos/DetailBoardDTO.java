@@ -30,6 +30,6 @@ public class DetailBoardDTO {
         private String name;
     }
 
-    private List<CollabEntity> collaborators;
+    private List<CollabDTO> collaborators;
 }
 
