@@ -38,8 +38,9 @@ public class CollabService {
     public CollabEntity addCollaborator(String boardId, CollabRequestDTO collabRequestDTO) {
         BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("No Board found"));
         UserEntity user = userRepository.findByEmail(collabRequestDTO.getEmail()).orElseThrow(() -> new ItemNotFoundException("No Collaborator found"));
-
-
+        if (board.getUserId().equals(user.getOid())) {
+            throw new BadRequestException("Board owner cannot be added as a collaborator");
+        }
         CollabEntity collabEntity = new CollabEntity();
         collabEntity.setBoardId(boardId);
         collabEntity.setUserId(user.getOid());

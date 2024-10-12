@@ -63,9 +63,10 @@ public class BoardService {
         dto.setName(board.getBoardName());
         dto.setVisibility(board.getVisibility());
         dto.setOwner(owner);
-        dto.setCollaborationList(board.getCollaborationList());
+        dto.setCollaborators(board.getCollaborators());
         return dto;
     }
+
 
     public List<DetailBoardDTO> getBoardByUserId(String userId) {
 //        List<BoardEntity> privateBoards = repository.findAllByUserIdAndVisibility(userId, BoardEntity.Visibility.PRIVATE);

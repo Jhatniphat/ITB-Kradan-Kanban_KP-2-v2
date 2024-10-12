@@ -10,6 +10,8 @@ import com.example.kradankanban_backend.common.services.BoardService;
 import com.example.kradankanban_backend.common.services.CollabService;
 import com.example.kradankanban_backend.common.services.StatusService;
 import com.example.kradankanban_backend.common.services.TaskService;
+import com.example.kradankanban_backend.shared.Entities.UserEntity;
+import com.example.kradankanban_backend.shared.services.JwtUserDetailsService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureException;
@@ -20,6 +22,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -42,6 +46,8 @@ public class BoardController {
     private ModelMapper modelMapper;
     @Autowired
     private StatusService statusService;
+    @Autowired
+    private JwtUserDetailsService jwtUserDetailsService;
 
     private String getUserId(HttpServletRequest request) {
         String userId = null;
@@ -228,34 +234,47 @@ public class BoardController {
 
     //  ! ============================================== COLLAB ==============================================
 
-    @GetMapping("/{boardId}/collab")
-    public ResponseEntity<List<CollabEntity>> getAllCollaborators(@PathVariable String boardId, HttpServletRequest request) {
-        List<CollabEntity> collab = collabService.getAllCollaborators(boardId);
-        return ResponseEntity.ok(collab);
+    @GetMapping("/{boardId}/collabs")
+    public ResponseEntity<List<CollabDTO>> getAllCollaborators(@PathVariable String boardId, HttpServletRequest request) {
+        List<CollabEntity> collabEntities = collabService.getAllCollaborators(boardId);
+        List<CollabDTO> collabDTOs = collabEntities.stream().map(collabEntity -> {
+            UserEntity user = jwtUserDetailsService.getUserById(collabEntity.getUserId());
+            CollabDTO collabDTO = modelMapper.map(collabEntity, CollabDTO.class);
+            modelMapper.map(user, collabDTO);
+            return collabDTO;
+        }).collect(Collectors.toList());
+        return ResponseEntity.ok(collabDTOs);
     }
 
-    @GetMapping("{boardId}/collab/{collabId}")
-    public ResponseEntity<CollabEntity> getCollaborator(@PathVariable String boardId, @PathVariable String collabId) {
-        CollabEntity collab = collabService.getCollaborators(boardId, collabId);
-        return ResponseEntity.ok(collab);
+    @GetMapping("{boardId}/collabs/{collabId}")
+    public ResponseEntity<CollabDTO> getCollaborator(@PathVariable String boardId, @PathVariable String collabId) {
+        CollabEntity collabEntity = collabService.getCollaborators(boardId, collabId);
+        UserEntity user = jwtUserDetailsService.getUserById(collabEntity.getUserId());
+        CollabDTO collabDTO = modelMapper.map(collabEntity, CollabDTO.class);
+        modelMapper.map(user, collabDTO);
+        return ResponseEntity.ok(collabDTO);
+
     }
 
     @PostMapping("{boardId}/collabs")
-    public ResponseEntity<CollabEntity> addCollaborator(@PathVariable String boardId, @RequestBody CollabRequestDTO collabRequestDTO) {
-        CollabEntity collab = collabService.addCollaborator(boardId, collabRequestDTO);
-        return new ResponseEntity<>(collab, HttpStatus.CREATED);
+    public ResponseEntity<CollabDTO> addCollaborator(@PathVariable String boardId, @RequestBody CollabRequestDTO collabRequestDTO) {
+        CollabEntity collabEntity = collabService.addCollaborator(boardId, collabRequestDTO);
+        CollabDTO collabDTO = modelMapper.map(collabEntity, CollabDTO.class);
+        UserEntity user = jwtUserDetailsService.getUserById(collabEntity.getUserId());
+        modelMapper.map(user, collabDTO);
+        return new ResponseEntity<>(collabDTO, HttpStatus.CREATED);
     }
 
     @PatchMapping("{boardId}/collabs/{collabId}")
-    public ResponseEntity<CollabEntity> updateAccessCollaborator(@PathVariable String boardId, @PathVariable String collabId, @RequestBody CollabEntity collabEntity) {
-        CollabEntity collab = collabService.updateAccessCollaborator(boardId, collabId, collabEntity);
-        return ResponseEntity.ok(collab);
+    public ResponseEntity<CollabEntity> updateAccessCollaborator(@PathVariable String boardId, @PathVariable String collabId, @RequestBody CollabDTO CollabDTO) {
+        CollabEntity collabEntity = modelMapper.map(CollabDTO, CollabEntity.class);
+        return ResponseEntity.ok(collabEntity);
     }
 
     @DeleteMapping("{boardId}/collabs/{collabId}")
     public ResponseEntity<CollabEntity> deleteCollaborator(@PathVariable String boardId, @PathVariable String collabId) {
-        CollabEntity collab = collabService.deleteCollaborator(boardId, collabId);
-        return ResponseEntity.ok(collab);
+        CollabEntity collabEntity = collabService.deleteCollaborator(boardId, collabId);
+        return ResponseEntity.ok(collabEntity);
     }
 
 
