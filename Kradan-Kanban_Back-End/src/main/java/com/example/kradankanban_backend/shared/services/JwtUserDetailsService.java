@@ -26,6 +26,8 @@ import java.util.Optional;
 public class JwtUserDetailsService implements UserDetailsService {
     @Autowired
     private UserRepository repository;
+    @Autowired
+    private UserRepository userRepository;
 
     @Override
     public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
@@ -68,6 +70,10 @@ public class JwtUserDetailsService implements UserDetailsService {
             return (AuthUser) authentication.getPrincipal();
         }
         return null;
+    }
+
+    public UserEntity getUserById(String oid) {
+        return userRepository.findById(oid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
     }
 
     public boolean Authentication(String username, String password){

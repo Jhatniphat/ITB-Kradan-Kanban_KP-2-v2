@@ -36,7 +36,7 @@ public class BoardEntity {
 
     @OneToMany(mappedBy = "board", fetch = FetchType.EAGER)
     @JsonManagedReference
-    private List<CollabEntity> collaborationList;
+    private List<CollabEntity> collaborators;
 
     @Column(name = "visibility", nullable = false)
     @Enumerated(EnumType.STRING)
