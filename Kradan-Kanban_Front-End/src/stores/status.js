@@ -47,7 +47,6 @@ export const useStatusStore = defineStore('status', {
                     isLimit: this.limitEnable ? this.countStatus(s.name) >= this.limit : false
                 })
             })
-            console.table(limitStatus)
             return limitStatus
         },
         getOverStatus() {

@@ -51,6 +51,7 @@ const currentBoardId = useBoardStore().currentBoardId;
 // const currentBoardId = ref(route.params.boardId);
 const kanbanData = ref([]);
 const isOwner = ref(false);
+const taskListType = ref(taskStore.taskListType);
 // ! ================= Modal ======================
 const openEditMode = (id) => {
   showDetailModal.value = true;
@@ -363,6 +364,7 @@ function makekanbanData() {
         <h1 class="w-full text-center text-2xl">
           {{ boardStore.currentBoard.name }}
         </h1>
+
       </div>
       <div class="w-3/4 mx-auto mt-10 relative">
         <details class="dropdown">
@@ -395,6 +397,11 @@ function makekanbanData() {
         <button class="itbkk-filter-clear btn" @click="filterBy = []">
           Reset
         </button>
+        <button class="btn ml-1"
+                @click="taskStore.taskListType === 'Table' ? taskStore.taskListType = 'Kanban' : taskStore.taskListType = 'Table' ">
+          Change View To {{ taskStore.taskListType === 'Table' ? 'Kanban' : 'Table' }}
+        </button>
+
 
         <!-- show edit limit modal -->
         <div class="float-right flex flex-row">
@@ -461,147 +468,152 @@ function makekanbanData() {
       <!-- Content -->
       <div class="opacity">
         <div class="flex flex-col">
-          <!-- Table -->
-          <!--          <table-->
-          <!--              class="table table-lg table-pin-rows table-pin-cols w-3/4 font-semibold mx-auto my-5 text-center text-base rounded-lg border-2 border-slate-500 border-separate border-spacing-1"-->
-          <!--          >-->
-          <!--            &lt;!&ndash; head &ndash;&gt;-->
-          <!--            <thead>-->
-          <!--            <tr>-->
-          <!--              <th>No</th>-->
-          <!--              <th>Title</th>-->
-          <!--              <th>Assignees</th>-->
-          <!--              &lt;!&ndash; sort button &ndash;&gt;-->
-          <!--              <button class="itbkk-status-sort" @click="sortBtn()">-->
-          <!--                <th class="flex justify-center">-->
-          <!--                  Status-->
-          <!--                  &lt;!&ndash; default sort button &ndash;&gt;-->
-          <!--                  <svg-->
-          <!--                      v-if="sortBy === ''"-->
-          <!--                      xmlns="http://www.w3.org/2000/svg"-->
-          <!--                      width="18"-->
-          <!--                      height="18"-->
-          <!--                      viewBox="0 0 24 24"-->
-          <!--                  >-->
-          <!--                    <path-->
-          <!--                        fill="currentColor"-->
-          <!--                        d="M11 9h9v2h-9zm0 4h7v2h-7zm0-8h11v2H11zm0 12h5v2h-5zm-6 3h2V8h3L6 4L2 8h3z"-->
-          <!--                    />-->
-          <!--                  </svg>-->
-          <!--                  &lt;!&ndash; ASC Button &ndash;&gt;-->
-          <!--                  <svg-->
-          <!--                      v-if="sortBy === 'ASC'"-->
-          <!--                      class="text-pink-400"-->
-          <!--                      xmlns="http://www.w3.org/2000/svg"-->
-          <!--                      width="18"-->
-          <!--                      height="18"-->
-          <!--                      viewBox="0 0 24 24"-->
-          <!--                  >-->
-          <!--                    <path-->
-          <!--                        fill="#323ffb"-->
-          <!--                        d="M11 9h9v2h-9zm0 4h7v2h-7zm0-8h11v2H11zm0 12h5v2h-5zm-6 3h2V8h3L6 4L2 8h3z"-->
-          <!--                    />-->
-          <!--                  </svg>-->
-          <!--                  &lt;!&ndash; DESC Button &ndash;&gt;-->
-          <!--                  <svg-->
-          <!--                      v-if="sortBy === 'DESC'"-->
-          <!--                      class="text-pink-400"-->
-          <!--                      xmlns="http://www.w3.org/2000/svg"-->
-          <!--                      width="18"-->
-          <!--                      height="18"-->
-          <!--                      viewBox="0 0 24 24"-->
-          <!--                  >-->
-          <!--                    <path-->
-          <!--                        fill="#323ffb"-->
-          <!--                        d="m6 20l4-4H7V4H5v12H2zm5-12h9v2h-9zm0 4h7v2h-7zm0-8h11v2H11zm0 12h5v2h-5z"-->
-          <!--                    />-->
-          <!--                  </svg>-->
-          <!--                </th>-->
-          <!--              </button>-->
-          <!--              <th>Action</th>-->
-          <!--            </tr>-->
-          <!--            </thead>-->
-          <!--            <tbody>-->
-          <!--            &lt;!&ndash; Listing &ndash;&gt;-->
-          <!--            <tr v-if="allTasks === null">-->
-          <!--              <td colspan="4">Waiting For Data</td>-->
-          <!--            </tr>-->
-          <!--            <tr-->
-          <!--                v-if="allTasks !== null"-->
-          <!--                v-for="(task, index) in filteredTasks"-->
-          <!--                :key="task.id"-->
-          <!--                class="itbkk-item hover"-->
-          <!--            >-->
-          <!--              <th>{{ index + 1 }}</th>-->
-          <!--              <td class="itbkk-title">-->
-          <!--                &lt;!&ndash; <RouterLink :to="`/task/${task.id}`"> &ndash;&gt;-->
-          <!--                <button-->
-          <!--                    @click="-->
-          <!--                      router.push(`/board/${boardStore.currentBoardId}/task/${task.id}/edit`)-->
-          <!--                    "-->
-          <!--                >-->
-          <!--                  {{ task.title }}-->
-          <!--                </button>-->
-          <!--                &lt;!&ndash; </RouterLink> &ndash;&gt;-->
-          <!--              </td>-->
-          <!--              <td-->
-          <!--                  class="itbkk-assignees"-->
-          <!--                  :style="{-->
-          <!--                    fontStyle: task.assignees ? 'normal' : 'italic',-->
-          <!--                    color: task.assignees ? '' : 'gray',-->
-          <!--                  }"-->
-          <!--              >-->
-          <!--                {{-->
-          <!--                  task.assignees === null || task.assignees == ""-->
-          <!--                      ? "Unassigned"-->
-          <!--                      : task.assignees-->
-          <!--                }}-->
-          <!--              </td>-->
-          <!--              <td class="itbkk-status itbkk-status-name">{{ task.status }}</td>-->
-          <!--              <td class="">-->
-          <!--                <div class="dropdown dropdown-bottom dropdown-end itbkk-button-action">-->
-          <!--                  <div tabindex="0" role="button" class="btn m-1">-->
-          <!--                    <svg-->
-          <!--                        class="swap-off fill-current"-->
-          <!--                        xmlns="http://www.w3.org/2000/svg"-->
-          <!--                        width="32"-->
-          <!--                        height="32"-->
-          <!--                        viewBox="0 0 512 512"-->
-          <!--                    >-->
-          <!--                      <path-->
-          <!--                          d="M64,384H448V341.33H64Zm0-106.67H448V234.67H64ZM64,128v42.67H448V128Z"-->
-          <!--                      />-->
-          <!--                    </svg>-->
-          <!--                  </div>-->
-          <!--                  <ul-->
-          <!--                      tabindex="0"-->
-          <!--                      class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"-->
-          <!--                  >-->
-          <!--                    <div>-->
-          <!--                      <li>-->
-          <!--                        <button class="itbkk-button-edit button" :disabled="!isOwner" :class="{ disabled : !isOwner}" @click="openEditMode(task.id)">Edit</button>-->
-          <!--                      </li>-->
-          <!--                      <li>-->
-          <!--                        <button class="itbkk-button-delete button" :disabled="!isOwner" :class="{ disabled : !isOwner}" @click="openDeleteModal(task.title, task.id)"-->
-          <!--                        >Delete</button-->
-          <!--                        >-->
-          <!--                      </li>-->
-          <!--                    </div>-->
-          <!--&lt;!&ndash;                    <div v-if="!isOwner">&ndash;&gt;-->
-          <!--&lt;!&ndash;                      <li>&ndash;&gt;-->
-          <!--&lt;!&ndash;                        <h1>&ndash;&gt;-->
-          <!--&lt;!&ndash;                          You don't have a permission to Edit or Delete a Task&ndash;&gt;-->
-          <!--&lt;!&ndash;                        </h1>&ndash;&gt;-->
-          <!--&lt;!&ndash;                      </li>&ndash;&gt;-->
-          <!--&lt;!&ndash;                    </div>&ndash;&gt;-->
-          <!--                  </ul>-->
-          <!--                </div>-->
-          <!--              </td>-->
-          <!--            </tr>-->
-          <!--            </tbody>-->
-          <!--          </table>-->
+          <!--           Table-->
 
-          <div class="flex flex-row flex-nowrap gap-5 w-3/4 mx-auto overflow-x-scroll mt-3">
+            <table
+                v-if="taskStore.taskListType === 'Table'"
+                class="table table-lg table-pin-rows table-pin-cols w-3/4 font-semibold mx-auto my-5 text-center text-base rounded-lg border-2 border-slate-500 border-separate border-spacing-1"
+            >
+              <!-- head -->
+              <thead>
+              <tr>
+                <th>No</th>
+                <th>Title</th>
+                <th>Assignees</th>
+                <!-- sort button -->
+                <button class="itbkk-status-sort" @click="sortBtn()">
+                  <th class="flex justify-center">
+                    Status
+                    <!-- default sort button -->
+                    <svg
+                        v-if="sortBy === ''"
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                    >
+                      <path
+                          fill="currentColor"
+                          d="M11 9h9v2h-9zm0 4h7v2h-7zm0-8h11v2H11zm0 12h5v2h-5zm-6 3h2V8h3L6 4L2 8h3z"
+                      />
+                    </svg>
+                    <!-- ASC Button -->
+                    <svg
+                        v-if="sortBy === 'ASC'"
+                        class="text-pink-400"
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                    >
+                      <path
+                          fill="#323ffb"
+                          d="M11 9h9v2h-9zm0 4h7v2h-7zm0-8h11v2H11zm0 12h5v2h-5zm-6 3h2V8h3L6 4L2 8h3z"
+                      />
+                    </svg>
+                    <!-- DESC Button -->
+                    <svg
+                        v-if="sortBy === 'DESC'"
+                        class="text-pink-400"
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                    >
+                      <path
+                          fill="#323ffb"
+                          d="m6 20l4-4H7V4H5v12H2zm5-12h9v2h-9zm0 4h7v2h-7zm0-8h11v2H11zm0 12h5v2h-5z"
+                      />
+                    </svg>
+                  </th>
+                </button>
+                <th>Action</th>
+              </tr>
+              </thead>
+              <tbody>
+              <!-- Listing -->
+              <tr v-if="allTasks === null">
+                <td colspan="4">Waiting For Data</td>
+              </tr>
+              <tr
+                  v-if="allTasks !== null"
+                  v-for="(task, index) in filteredTasks"
+                  :key="task.id"
+                  class="itbkk-item hover"
+              >
+                <th>{{ index + 1 }}</th>
+                <td class="itbkk-title">
+                  <!-- <RouterLink :to="`/task/${task.id}`"> -->
+                  <button
+                      @click="
+                                router.push(`/board/${boardStore.currentBoardId}/task/${task.id}/edit`)
+                              "
+                  >
+                    {{ task.title }}
+                  </button>
+                  <!-- </RouterLink> -->
+                </td>
+                <td
+                    class="itbkk-assignees"
+                    :style="{
+                              fontStyle: task.assignees ? 'normal' : 'italic',
+                              color: task.assignees ? '' : 'gray',
+                            }"
+                >
+                  {{
+                    task.assignees === null || task.assignees == ""
+                        ? "Unassigned"
+                        : task.assignees
+                  }}
+                </td>
+                <td class="itbkk-status itbkk-status-name">{{ task.status }}</td>
+                <td class="">
+                  <div class="dropdown dropdown-bottom dropdown-end itbkk-button-action">
+                    <div tabindex="0" role="button" class="btn m-1">
+                      <svg
+                          class="swap-off fill-current"
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="32"
+                          height="32"
+                          viewBox="0 0 512 512"
+                      >
+                        <path
+                            d="M64,384H448V341.33H64Zm0-106.67H448V234.67H64ZM64,128v42.67H448V128Z"
+                        />
+                      </svg>
+                    </div>
+                    <ul
+                        tabindex="0"
+                        class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
+                    >
+                      <li>
+                        <button class="itbkk-button-edit button" :disabled="!isOwner" :class="{ disabled : !isOwner}"
+                                @click="openEditMode(task.id)">Edit
+                        </button>
+                      </li>
+                      <li>
+                        <button class="itbkk-button-delete button" :disabled="!isOwner" :class="{ disabled : !isOwner}"
+                                @click="openDeleteModal(task.title, task.id)"
+                        >Delete
+                        </button
+                        >
+                      </li>
+                      <!--                    <div v-if="!isOwner">-->
+                      <!--                      <li>-->
+                      <!--                        <h1>-->
+                      <!--                          You don't have a permission to Edit or Delete a Task-->
+                      <!--                        </h1>-->
+                      <!--                      </li>-->
+                      <!--                    </div>-->
+                    </ul>
+                  </div>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+
+          <div v-if="taskStore.taskListType === 'Kanban'"
+               class="flex flex-row flex-nowrap gap-5 w-3/4 mx-auto overflow-x-scroll mt-3">
             <div v-for="status in kanbanData" class="kanban-status-card"
                  :style="{ 'border-top' : status.isLimit ? 'red 0.5rem solid' : 'green 0.5rem solid'}">
               <h5 class="kanban-status-name">{{ status.name }}</h5>
@@ -830,7 +842,7 @@ function makekanbanData() {
     </div>
   </transition>
   <transition>
-    <loading-component v-if="loading"></loading-component>
+    <loading-component v-if="loading" class="absolute top-1/2"></loading-component>
   </transition>
 </template>
 
@@ -855,6 +867,7 @@ function makekanbanData() {
 .v-enter-from,
 .v-leave-to {
   opacity: 0;
+  z-index: -1;
 }
 
 .kanban-status-card {
@@ -995,8 +1008,6 @@ function makekanbanData() {
     .kanban-task-card:hover {
       box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;;
     }
-
-
   }
 }
 </style>

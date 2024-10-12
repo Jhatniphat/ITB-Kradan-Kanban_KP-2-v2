@@ -6,6 +6,7 @@ import {useTaskStore} from "@/stores/task";
 import {useStatusStore} from "@/stores/status.js";
 import {useBoardStore} from "@/stores/board.js";
 import {useAccountStore} from "@/stores/account.js";
+import LoadingComponent from "@/components/loadingComponent.vue";
 
 const currentBoardId = useBoardStore().currentBoardId;
 const taskStore = useTaskStore();
@@ -143,9 +144,11 @@ function sendCloseModal() {
 
 <template>
   <div
-      class="flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 rounded-lg w-full"
+      class="flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 rounded-lg w-full min-h-96"
       v-if="loading === true"
-  ></div>
+  >
+    <loading-component class="absolute top-1/2"/>
+  </div>
   <!-- Title -->
   <div
       class="flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 rounded-lg w-full itbkk-modal-task"

@@ -5,6 +5,7 @@ import router from "@/router";
 import { useStatusStore } from "@/stores/status";
 import {useBoardStore} from "@/stores/board.js";
 import {useAccountStore} from "@/stores/account.js";
+import LoadingComponent from "@/components/loadingComponent.vue";
 const currentBoardId = useBoardStore().currentBoardId
 const statusStore = useStatusStore();
 const canSave = ref(false);
@@ -121,7 +122,15 @@ function sendCloseModal() {
 
 <template>
   <div
+      class="flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 rounded-lg w-full min-h-96"
+      v-if="loading === true"
+  >
+    <loading-component class="absolute top-1/2"/>
+  </div>
+
+  <div
     class="itbkk-modal-status flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 dark:text-slate-400 rounded-lg w-full"
+    v-if="loading === false"
   >
     <label class="form-control w-full">
       <div class="label">
