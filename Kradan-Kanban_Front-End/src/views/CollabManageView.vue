@@ -143,15 +143,15 @@ const showToast = (toastData, timeOut = 3000) => {
                 <tr
                   v-if="allCollabs !== null"
                   v-for="(collab, index) in allCollabs"
-                  :key="collab.id"
+                  :key="collab.oid"
                   class="itbkk-item hover"
                 >
                   <th>{{ index + 1 }}</th>
                   <td class="itbkk-name">
-                    {{ collab.userId }}
+                    {{ collab.name }}
                   </td>
                   <td class="itbkk-email">
-                    {{ collab.userId }}
+                    {{ collab.email }}
                   </td>
                   <td class="itbkk-status itbkk-access-right">
                     <label class="form-control w-full max-w-xs">

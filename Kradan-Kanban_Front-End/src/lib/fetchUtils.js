@@ -745,7 +745,7 @@ export async function getAllCollabs() {
   try {
     const accountStore = useAccountStore();
     const res = await fetchWithTokenCheck(
-      `${import.meta.env.VITE_API_ROOT}/boards/${boardId}/collab`,
+      `${import.meta.env.VITE_API_ROOT}/boards/${boardId}/collabs`,
       {
         method: "GET",
         headers: {
@@ -753,7 +753,7 @@ export async function getAllCollabs() {
         },
       }
     );
-
+    console.log(res.status)
     if (res.status === 401) {
       accountStore.clearTokenDetail();
       router.push("/login");

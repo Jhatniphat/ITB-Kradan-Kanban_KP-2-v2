@@ -424,14 +424,10 @@ function makekanbanData() {
               </label>
             </div>
           </div>
-          <div
-            :class="isOwner ? '' : 'lg:tooltip'"
-            data-tip="You don't have a permission to Add a Task"
-          >
+          <div>
             <button
               class="itbkk-button-add btn btn-outline w-28 float-left mr-2"
               @click="router.push(`/board/${boardStore.currentBoardId}/collab`)"
-              :disabled="!isOwner"
             >
               Manage Collaborator
             </button>
@@ -620,62 +616,103 @@ function makekanbanData() {
           <!--            </tbody>-->
           <!--          </table>-->
 
-          <div class="flex flex-row flex-nowrap gap-5 w-3/4 mx-auto overflow-x-scroll mt-3">
-            <div v-for="status in kanbanData" class="kanban-status-card"
-                 :style="{ 'border-top' : status.isLimit ? 'red 0.5rem solid' : 'green 0.5rem solid'}">
+          <div
+            class="flex flex-row flex-nowrap gap-5 w-3/4 mx-auto overflow-x-scroll mt-3"
+          >
+            <div
+              v-for="status in kanbanData"
+              class="kanban-status-card"
+              :style="{
+                'border-top': status.isLimit
+                  ? 'red 0.5rem solid'
+                  : 'green 0.5rem solid',
+              }"
+            >
               <h5 class="kanban-status-name">{{ status.name }}</h5>
               <div class="kanban-task-list">
                 <div v-for="task in status.tasks" class="kanban-task-card">
                   <div>
                     <p class="kanban-task-title">{{ task.title }}</p>
                     <div class="kanban-task-action">
-                      <input type="checkbox" :id="`kanban-task-action-${task.id}`">
+                      <input
+                        type="checkbox"
+                        :id="`kanban-task-action-${task.id}`"
+                      />
                       <label :for="`kanban-task-action-${task.id}`">
-                        <svg width="1rem" height="1rem" viewBox="0 0 24 24" version="1.1"
-                             xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                        <svg
+                          width="1rem"
+                          height="1rem"
+                          viewBox="0 0 24 24"
+                          version="1.1"
+                          xmlns="http://www.w3.org/2000/svg"
+                          xmlns:xlink="http://www.w3.org/1999/xlink"
+                        >
                           <title>Kebab-Menu</title>
-                          <g id="Kebab-Menu" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                            <rect id="Container" x="0" y="0" width="24" height="24">
-                            </rect>
+                          <g
+                            id="Kebab-Menu"
+                            stroke="none"
+                            stroke-width="1"
+                            fill="none"
+                            fill-rule="evenodd"
+                          >
+                            <rect
+                              id="Container"
+                              x="0"
+                              y="0"
+                              width="24"
+                              height="24"
+                            ></rect>
                             <path
-                                d="M12,6 C12.5522847,6 13,5.55228475 13,5 C13,4.44771525 12.5522847,4 12,4 C11.4477153,4 11,4.44771525 11,5 C11,5.55228475 11.4477153,6 12,6 Z"
-                                id="shape-03" stroke="#030819" stroke-width="2" stroke-linecap="round"
-                                stroke-dasharray="0,0">
-                            </path>
+                              d="M12,6 C12.5522847,6 13,5.55228475 13,5 C13,4.44771525 12.5522847,4 12,4 C11.4477153,4 11,4.44771525 11,5 C11,5.55228475 11.4477153,6 12,6 Z"
+                              id="shape-03"
+                              stroke="#030819"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-dasharray="0,0"
+                            ></path>
                             <path
-                                d="M12,13 C12.5522847,13 13,12.5522847 13,12 C13,11.4477153 12.5522847,11 12,11 C11.4477153,11 11,11.4477153 11,12 C11,12.5522847 11.4477153,13 12,13 Z"
-                                id="shape-03" stroke="#030819" stroke-width="2" stroke-linecap="round"
-                                stroke-dasharray="0,0">
-                            </path>
+                              d="M12,13 C12.5522847,13 13,12.5522847 13,12 C13,11.4477153 12.5522847,11 12,11 C11.4477153,11 11,11.4477153 11,12 C11,12.5522847 11.4477153,13 12,13 Z"
+                              id="shape-03"
+                              stroke="#030819"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-dasharray="0,0"
+                            ></path>
                             <path
-                                d="M12,20 C12.5522847,20 13,19.5522847 13,19 C13,18.4477153 12.5522847,18 12,18 C11.4477153,18 11,18.4477153 11,19 C11,19.5522847 11.4477153,20 12,20 Z"
-                                id="shape-03" stroke="#030819" stroke-width="2" stroke-linecap="round"
-                                stroke-dasharray="0,0">
-                            </path>
+                              d="M12,20 C12.5522847,20 13,19.5522847 13,19 C13,18.4477153 12.5522847,18 12,18 C11.4477153,18 11,18.4477153 11,19 C11,19.5522847 11.4477153,20 12,20 Z"
+                              id="shape-03"
+                              stroke="#030819"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-dasharray="0,0"
+                            ></path>
                           </g>
                         </svg>
                       </label>
                       <div class="kanban-task-action-menu">
                         <a @click="openEditMode(task.id)">Edit</a>
-                        <a @click="openDeleteModal(task.title, task.id)">Delete</a>
+                        <a @click="openDeleteModal(task.title, task.id)"
+                          >Delete</a
+                        >
                       </div>
                     </div>
                   </div>
                   <div class="kanban-task-assignee">
-                    <img src="../assets/people.png" height="32" width="32"/>
-                    <p v-if="task.assignees === null || task.assignees === ''" class="italic text-gray-500">
-                      Unassigned</p>
+                    <img src="../assets/people.png" height="32" width="32" />
+                    <p
+                      v-if="task.assignees === null || task.assignees === ''"
+                      class="italic text-gray-500"
+                    >
+                      Unassigned
+                    </p>
                     <p v-else>{{ task.assignees }}</p>
                   </div>
                   <!--              action btn    -->
-
                 </div>
               </div>
             </div>
           </div>
-
         </div>
-
 
         <!-- Modal -->
         <!-- DetailsModal -->
@@ -703,7 +740,8 @@ function makekanbanData() {
             <hr />
             <h1 class="itbkk-message font-semibold text-xl p-8">
               <!-- Do you want to delete the task "{{ deleteTaskTitle }}" -->
-              Do you want to delete the task number {{ deleteTaskId }} , {{ deleteTaskTitle }}
+              Do you want to delete the task number {{ deleteTaskId }} ,
+              {{ deleteTaskTitle }}
             </h1>
             <hr />
             <div class="flex flex-row-reverse gap-4 mt-5">
@@ -878,7 +916,7 @@ function makekanbanData() {
 .kanban-status-card {
   flex: 0 0 20%;
   border-top: solid 1rem;
-  background-color: #F7F7F7;
+  background-color: #f7f7f7;
   color: #000000;
   border-radius: 10px;
   min-height: 40rem;
@@ -886,7 +924,6 @@ function makekanbanData() {
   font-weight: bold;
   padding: 0.5rem;
   text-wrap: wrap;
-
 
   .kanban-status-name {
     font-size: 1rem;
@@ -897,7 +934,7 @@ function makekanbanData() {
   .kanban-task-list {
     display: flex;
     flex-direction: column;
-    background-color: #F7F7F7;
+    background-color: #f7f7f7;
 
     .kanban-task-card {
       font-weight: normal;
@@ -991,13 +1028,15 @@ function makekanbanData() {
         opacity: 1;
       }
 
-      .kanban-task-action input[type="checkbox"]:checked ~ .kanban-task-action-menu {
+      .kanban-task-action
+        input[type="checkbox"]:checked
+        ~ .kanban-task-action-menu {
         /*opacity: 100%;
         //transition: opacity 1s ease;
         //display: block;*/
         max-height: 500px; /* ตั้ง max-height มากพอให้ครอบคลุมความสูงทั้งหมดของเมนู */
         opacity: 1;
-        transition: max-height 1.5s ease
+        transition: max-height 1.5s ease;
       }
 
       .kanban-task-action input[type="checkbox"] ~ .kanban-task-action-menu {
@@ -1011,10 +1050,8 @@ function makekanbanData() {
     }
 
     .kanban-task-card:hover {
-      box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;;
+      box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
     }
-
-
   }
 }
 </style>

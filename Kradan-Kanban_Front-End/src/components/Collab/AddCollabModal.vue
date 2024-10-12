@@ -10,10 +10,12 @@ const statusList = ref([]);
 const canSave = ref(false);
 const collabData = ref({
   email: "",
+  accessRight: "READ",
   /* 'No Status', 'To Do', 'Doing', 'Done' */
 });
 const Errortext = ref({
   email: "",
+  accessRight: "",
 });
 
 watch(collabData.value, () => {
@@ -26,18 +28,9 @@ watch(collabData.value, () => {
   canSave.value = Errortext.value.email === "";
 });
 
-onMounted(async () => {
-  statusList.value = statusStore.getAllStatusWithLimit();
-});
-
-watch(statusStore.status, () => {
-  statusList.value = statusStore.getAllStatusWithLimit();
-});
-
 const loading = ref(false);
 
 async function fetchData() {
-  collabData.value.email = collabData.value.email.trim();
   loading.value = true;
   let res;
   try {
@@ -125,14 +118,14 @@ const showToast = (toastData, timeOut = 3000) => {
           <span class="label-text">Access Right</span>
         </div>
         <select
+          v-model="collabData.accessRight"
           class="itbkk-access-right select select-bordered bg-white dark:bg-base-300 dark:text-slate-400"
         >
-          <option>
-            <!-- {{ status.name }}
-            <span class="text-error">
-              {{ status.isLimit ? "(max)" : "" }}
-            </span> -->
-            Read
+          <option value="READ">
+            READ
+          </option>
+          <option value="WRITE">
+            WRITE
           </option>
         </select>
       </label>
