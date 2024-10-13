@@ -4,6 +4,7 @@ import { getAllTasks } from "@/lib/fetchUtils";
 export const useTaskStore = defineStore("tasks", {
   state: () => ({
     tasks: [],
+    taskListType : "Table"
   }),
   actions: {
     async getAllTasks() {
