@@ -36,35 +36,24 @@ async function fetchData() {
   try {
     res = await addCollaborator(collabData.value);
     if (res === 404) {
-      showToast({
-        status: "NotFound",
-        msg: "The user does not exists.",
-      });
-    }
-    if (res === 409) {
-      showToast({
-        status: "NotFound",
-        msg: "The user is already the collaborator of this board.",
-      });
+      console.log("we here in 404 if condition.");
+      Errortext.value.email = `The user does not exist.`;
+    } else if (res === 409) {
+      console.log("we here in 404 if condition.");
+      Errortext.value.email = `The user is already the collaborator of this board.`;
+    } else {
+      console.log("Okay to Add");
+      emit("closeModal", res);
     }
   } catch (error) {
     console.log(error);
   } finally {
     loading.value = false;
-    emit("closeModal", res);
   }
 }
 function sendCloseModal() {
   emit("closeModal", null);
 }
-
-// ! ================= Toast ======================
-const showToast = (toastData, timeOut = 3000) => {
-  toast.value = toastData;
-  setTimeout(() => {
-    toast.value = { ...{ status: "" } };
-  }, timeOut);
-};
 </script>
 
 <template>
@@ -121,12 +110,8 @@ const showToast = (toastData, timeOut = 3000) => {
           v-model="collabData.accessRight"
           class="itbkk-access-right select select-bordered bg-white dark:bg-base-300 dark:text-slate-400"
         >
-          <option value="READ">
-            READ
-          </option>
-          <option value="WRITE">
-            WRITE
-          </option>
+          <option value="READ">READ</option>
+          <option value="WRITE">WRITE</option>
         </select>
       </label>
     </div>
@@ -150,45 +135,6 @@ const showToast = (toastData, timeOut = 3000) => {
           v-if="loading"
         ></span>
       </button>
-    </div>
-  </div>
-  <!-- Toast -->
-  <div class="toast">
-    <div
-      role="alert"
-      class="alert"
-      :class="`alert-${toast.status}`"
-      v-if="toast.status !== ''"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        class="stroke-current shrink-0 h-6 w-6"
-        fill="none"
-        viewBox="0 0 24 24"
-        v-if="toast.status === 'success'"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
-      </svg>
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        class="stroke-current shrink-0 h-6 w-6"
-        fill="none"
-        viewBox="0 0 24 24"
-        v-if="toast.status === 'error'"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
-      </svg>
-      <span>{{ toast.msg }}</span>
     </div>
   </div>
 </template>

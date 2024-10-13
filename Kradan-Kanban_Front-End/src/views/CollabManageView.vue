@@ -155,18 +155,21 @@ const showToast = (toastData, timeOut = 3000) => {
                   </td>
                   <td class="itbkk-status itbkk-access-right">
                     <label class="form-control w-full max-w-xs">
-                    <!-- <div class="label">
-                      <span class="label-text"></span>
-                    </div> -->
-                    <select
-                      class="itbkk-access-right select select-bordered bg-white dark:bg-base-300 dark:text-slate-400"
-                      v-model="collab.accessRight"
-                    >
-                      <option>
-                        {{ collab.accessRight }}
-                      </option>
-                    </select>
-                  </label> 
+                      <div
+                        :class="isOwner ? '' : 'lg:tooltip'"
+                        data-tip="You don't have a permission to Change access right of Collaborator"
+                      >
+                        <select
+                          class="itbkk-access-right select select-bordered bg-white dark:bg-base-300 dark:text-slate-400"
+                          v-model="collab.accessRight"
+                          :disabled="!isOwner"
+                        >
+                          <option>
+                            {{ collab.accessRight }}
+                          </option>
+                        </select>
+                      </div>
+                    </label>
                   </td>
                   <td>
                     <div

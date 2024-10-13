@@ -759,7 +759,6 @@ export async function getAllCollabs() {
       router.push("/login");
       return null;
     } else if (res.status === 200) {
-      console.log(res)
       return await res.json();
     } else {
       return { status: res.status, error: true };
@@ -788,6 +787,7 @@ export async function addCollaborator(newCollaborator) {
         body: JSON.stringify({ ...newCollaborator }),
       }
     );
+    console.log(res.status)
     if (res.status === 201) {
       item = await res.json();
       return item;
@@ -799,10 +799,6 @@ export async function addCollaborator(newCollaborator) {
     }
     if (res.status === 403) {
       console.log("You do not have permission to add board collaborator.");
-      return res.status;
-    }
-    if (res.status === 404) {
-      console.log("The user does not exist.");
       return res.status;
     }
     if (res.status === 409) {
