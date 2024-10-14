@@ -89,7 +89,7 @@ router.beforeEach(async (to, from, next) => {
   console.log("to.name", to.name);
   console.log("to.path", to.path);
 
-  if (to.name.includes("task") || to.name.includes("status")) {
+  if (to.name.includes("task") || to.name.includes("status") || to.name.includes("collab") ) {
     if (boardStore.boards.length === 0 && accountStore.refreshToken !== "") {
       await getAllBoard();
     }

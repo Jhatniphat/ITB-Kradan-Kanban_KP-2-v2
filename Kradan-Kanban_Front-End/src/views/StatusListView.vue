@@ -44,12 +44,12 @@ onMounted(async () => {
 
     const currentBoards = boardStore.currentBoard;
     const userOid = accountStore.tokenDetail.oid;
-    if (currentBoards && currentBoards.owner?.oid) {
-      isOwner.value = currentBoards.owner.oid === userOid;
-      if (!isOwner.value && currentBoards.visibility === "PRIVATE") {
-        router.push({name: "AccessDenied"});
-      }
-    }
+    // if (currentBoards && currentBoards.owner?.oid) {
+    isOwner.value = currentBoards.owner.oid === userOid;
+    //   if (!isOwner.value && currentBoards.visibility === "PRIVATE") {
+    //     router.push({name: "AccessDenied"});
+    //   }
+    // }
     const currentUser = currentBoards.collaborators.find(
         (collaborator) => collaborator.oid === accountStore.tokenDetail.oid
       );
@@ -60,7 +60,7 @@ onMounted(async () => {
         canRead.value = false; // User is not a collaborator
       }
 
-      if (!isOwner.value && !canRead.value && currentBoard.visibility === "PRIVATE") {
+      if (!isOwner.value && !canRead.value && currentBoards.visibility === "PRIVATE") {
         router.push({ name: "AccessDenied" });
       }
 
