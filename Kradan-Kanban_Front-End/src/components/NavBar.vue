@@ -21,8 +21,12 @@ const route = useRoute();
 
 function routeChange(to) {
   const currentBoardId = useBoardStore().currentBoardId
+  console.log(to)
   if (to === "task") {
     router.push(`/board/${currentBoardId}`)
+  } 
+  else if ( to === "board") {
+    router.push(`/board`)
   } else {
     router.push(`/board/${currentBoardId}/status`)
   }
@@ -36,7 +40,7 @@ watch(() => route.name, (value) => {
 });
 let showNavBar = ref(false);
 function checkShowNavBar() {
-  return currentRoute.value.toString().includes("task") || currentRoute.value.toString().includes("status") || currentRoute.value.toString().includes("board") ;
+  return currentRoute.value.toString().includes("task") || currentRoute.value.toString().includes("status") || currentRoute.value.toString().includes("board") || currentRoute.value.toString().includes("collab");
 }
 
 </script>
@@ -115,6 +119,11 @@ function checkShowNavBar() {
 <!--              >Task</h5-->
 <!--              >-->
               <h5
+                  @click="routeChange('board')"
+                  class="itbkk-home rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white itbkk-manage-status"
+              >ITB-KK</h5
+              >
+              <h5
                   @click="routeChange('task')"
                   class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
                   aria-current="page"
@@ -124,7 +133,7 @@ function checkShowNavBar() {
                   @click="routeChange('status')"
                   class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white itbkk-manage-status"
               >Manage Status</h5
-              >
+              > 
             </div>
           </div>
         </div>
@@ -227,6 +236,12 @@ function checkShowNavBar() {
 <!--        >Task-->
 <!--        </router-link-->
 <!--        >-->
+        <router-link
+            to="/board"
+            class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+        >ITB-KK
+        </router-link
+        >
         <router-link
             to="/task"
             class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"

@@ -136,4 +136,10 @@ public class GlobalExceptionHandling {
     public ResponseEntity<ErrorResponse> handleForbiddenException(Exception exception, WebRequest request) {
         return buildErrorResponse(exception, exception.getMessage() , HttpStatus.FORBIDDEN, request);
     }
+
+    @ExceptionHandler(ConfilctException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ResponseEntity<ErrorResponse> handleConflictException(Exception exception, WebRequest request) {
+        return buildErrorResponse(exception, exception.getMessage() , HttpStatus.CONFLICT, request);
+    }
 }

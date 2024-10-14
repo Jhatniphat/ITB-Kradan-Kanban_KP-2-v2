@@ -293,7 +293,7 @@ const showToast = (toastData) => {
               </td>
               <td class="text-center font-normal">{{ board.visibility }}</td>
               <td class="text-center font-normal">{{ board?.owner?.name }}</td>
-              <td class="text-center font-normal">{{ board.collaborationList.find((collab) => collab.oid === useAccountStore().tokenDetail.oid )["access-right"] }}</td>
+              <td class="text-center font-normal">{{ board.collaborators.find((collab) => collab.oid === useAccountStore().tokenDetail.oid )["accessRight"] }}</td>
               <td class="text-center font-normal">
                 <button class="btn btn-outline btn-error">Leave</button>
               </td>
