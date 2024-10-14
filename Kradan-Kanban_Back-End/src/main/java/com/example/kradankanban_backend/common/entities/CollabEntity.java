@@ -20,6 +20,7 @@ public class CollabEntity {
     @Id
     private String userId;
 
+    @Column(name = "accessRight", nullable = false)
     @Enumerated(EnumType.STRING)
     private AccessRight accessRight = AccessRight.READ;
 

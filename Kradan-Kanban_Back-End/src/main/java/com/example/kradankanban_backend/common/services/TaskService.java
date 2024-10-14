@@ -5,13 +5,10 @@ import com.example.kradankanban_backend.common.dtos.SimpleTaskDTO;
 import com.example.kradankanban_backend.common.entities.BoardEntity;
 import com.example.kradankanban_backend.common.entities.TaskEntity;
 import com.example.kradankanban_backend.common.repositories.BoardRepository;
-import com.example.kradankanban_backend.exceptions.BadRequestException;
-import com.example.kradankanban_backend.exceptions.ItemNotFoundException;
-import com.example.kradankanban_backend.exceptions.TaskIdNotFound;
+import com.example.kradankanban_backend.exceptions.*;
 import com.example.kradankanban_backend.common.repositories.StatusRepository;
 import com.example.kradankanban_backend.common.repositories.TaskRepository;
 import com.example.kradankanban_backend.common.services.StatusService;
-import com.example.kradankanban_backend.exceptions.WrongBoardException;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -128,7 +125,7 @@ public class TaskService {
         BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
 
         if (!board.getUserId().equals(userId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this board.");
+            throw new ForbiddenException("You do not have access this board.");
         }
 
         TaskEntity task = repository.findByTkBoard_BoardIdAndId(boardId, taskId).orElseThrow(() -> new ItemNotFoundException("Task ID " + taskId + " not found in this board!!"));
