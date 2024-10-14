@@ -1,11 +1,14 @@
 package com.example.kradankanban_backend.common.entities;
 
 import com.example.kradankanban_backend.common.dtos.DetailBoardDTO;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -30,6 +33,10 @@ public class BoardEntity {
     @Size(max = 36)
     @Column(name = "userId", length = 36)
     private String userId;
+
+    @OneToMany(mappedBy = "board", fetch = FetchType.EAGER)
+    @JsonManagedReference
+    private List<CollabEntity> collaborators;
 
     @Column(name = "visibility", nullable = false)
     @Enumerated(EnumType.STRING)

@@ -9,6 +9,9 @@ export async function getAllTasks() {
     const accountStore = useAccountStore();
     const taskStore = useTaskStore();
     const boardId = useBoardStore().currentBoardId;
+    if (taskStore.tasks.length > 0) {
+        return taskStore.tasks;
+    }
     try {
         let res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks`, {
             method: "GET",
@@ -146,6 +149,9 @@ export async function deleteTask(id) {
 
 // ! ------------------------------- Status --------------------------------
 export async function getAllStatus() {
+    if (useStatusStore().status.length > 0) {
+        return useStatusStore().status;
+    }
     const boardId = useBoardStore().currentBoardId;
     try {
         const accountStore = useAccountStore();
@@ -342,6 +348,9 @@ export async function toggleLimitStatus() {
 }
 
 export async function getLimitStatus() {
+    if (useStatusStore().limitEnable !== null) {
+        return useStatusStore().limitEnable;
+    }
     const boardId = useBoardStore().currentBoardId;
     const statusStore = useStatusStore();
     let res, item;
@@ -373,6 +382,9 @@ export async function getLimitStatus() {
 
 // ? doesn't require param , func will get param from account store
 export async function getAllBoard() {
+    if (useBoardStore().boards.length > 0) {
+        return useBoardStore().boards;
+    }
     try {
         const accountStore = useAccountStore();
         const boardStore = useBoardStore();
@@ -382,8 +394,6 @@ export async function getAllBoard() {
                 Authorization: `Bearer ${accountStore.tokenRaw}`,
             },
         }); //GET Method
-
-
         if (!res) {
             console.log("Response is undefined");
         }
@@ -394,11 +404,6 @@ export async function getAllBoard() {
             return null;
         } else if (res.status === 200) {
             let item = await res.json();
-            // ? because now item is an object not an array
-            // boardStore.addBoard(item);
-            // if ( !(Object.keys(item).length === 0 && item.constructor === Object) ) {
-            //     boardStore.addBoard(item)
-            // }
             boardStore.boards = item;
             return {status: 200, payload: item};
         } else if (res.status === 400) {
@@ -411,6 +416,13 @@ export async function getAllBoard() {
 }
 
 export async function getBoardById(boardId) {
+    const boardStore = useBoardStore();
+    console.log(boardStore.isBoardExist(boardId))
+    if (boardStore.isBoardExist(boardId)) {
+
+        return useBoardStore().findBoardById(boardId);
+    }
+
     const accountStore = useAccountStore();
     try {
         const res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}`, {
@@ -454,7 +466,7 @@ export async function addBoard(newBoard) {
         if (res.status === 401) {
             accountStore.clearTokenDetail();
             router.push("/login");
-            return;
+            return {status: res.status, payload: "Unauthorized"};
         }
         if (res.status === 201 || res.status === 200) {
             item = await res.json();
@@ -463,12 +475,8 @@ export async function addBoard(newBoard) {
         } else {
             return {status: res.status, payload: "There is a problem. Please try again later"};
         }
+
     } catch (error) {
-        if (res.status === 401) {
-            accountStore.clearTokenDetail();
-            router.push("/login");
-            return;
-        }
         return error;
     }
 }
@@ -497,7 +505,7 @@ export async function changeVisibility(mode) {
         if (res.status === 401) {
             accountStore.clearTokenDetail();
             router.push("/login");
-            return;
+            return res.status
         } else {
             return res.status
         }
@@ -508,6 +516,11 @@ export async function changeVisibility(mode) {
 
 // ! -------------------------- GUEST USER -----------------------
 export async function getBoardByIdForGuest(boardId) {
+    console.log("FOR GUEST")
+    if (useBoardStore().isBoardExist(boardId)) {
+
+        return useBoardStore().findBoardById(boardId);
+    }
     const accountStore = useAccountStore();
     try {
         const res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}`, {
@@ -518,13 +531,16 @@ export async function getBoardByIdForGuest(boardId) {
         });
 
         if (res.status === 401) {
+            console.log("401")
             accountStore.clearTokenDetail();
             router.push("/login");
             return null;
         } else if (res.status === 200) {
+            console.log("200")
             let item = await res.json();
             return {status: 200, payload: item};
         } else if (res.status === 400) {
+            console.log("400")
             return {status: 400, payload: "No board found"};
         }
     } catch (error) {
@@ -533,6 +549,9 @@ export async function getBoardByIdForGuest(boardId) {
 }
 
 export async function getAllStatusForGuest() {
+    if (useStatusStore().status.length > 0) {
+        return useStatusStore().status;
+    }
     const boardId = useBoardStore().currentBoardId;
     try {
         const accountStore = useAccountStore();
@@ -583,6 +602,9 @@ export async function getAllTasksForGuest() {
     const accountStore = useAccountStore();
     const taskStore = useTaskStore();
     const boardId = useBoardStore().currentBoardId;
+    if (taskStore.tasks.length > 0) {
+        return taskStore.tasks;
+    }
     try {
         let res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks`, {
             method: "GET",
@@ -634,6 +656,9 @@ export async function getTaskByIdForGuest(id) {
 export async function getLimitStatusForGuest() {
     const boardId = useBoardStore().currentBoardId;
     const statusStore = useStatusStore();
+    if (useStatusStore().limitEnable !== null) {
+        return useStatusStore().limitEnable;
+    }
     let res, item;
     try {
         const accountStore = useAccountStore();
@@ -730,13 +755,14 @@ async function fetchWithTokenCheck(url, options) {
 
 export async function checkTokenExpired() {
     const accountStore = useAccountStore();
-
+    console.log("Checking token expiry");
     if (!accountStore.isAccessTokenExpired()) {
         return;
     }
 
     if (accountStore.isAccessTokenExpired() && accountStore.isRefreshTokenExpired()) {
         accountStore.clearTokenDetail();
+        console.log("Token expired");
         router.push("/login");
         return;
     }

@@ -12,40 +12,31 @@
 <style scoped>
 /* HTML: <div class="loader"></div> */
 .loader {
-  width: 22px;
+  width: 50px;
   aspect-ratio: 1;
-  border-radius: 50%;
-  background: #00FFBA;
-  animation: l10 1.5s infinite linear;
+  display: grid;
 }
-@keyframes l10 {
-  0%    {box-shadow:
-      0 -30px #00C6FF, calc(30px*0.707) calc(-30px*0.707) #FF94FB,30px 0 #00C6FF, 0 0 #FF94FB,
-      0 0 #00C6FF, 0 0 #FF94FB,0 0 #00C6FF, 0 0 #FF94FB}
-  12.5% {box-shadow:
-      0 0 #00C6FF, calc(30px*0.707) calc(-30px*0.707) #FF94FB,30px 0 #00C6FF, calc(30px*0.707) calc(30px*0.707) #FF94FB,
-      0 0 #00C6FF, 0 0 #FF94FB,0 0 #00C6FF, 0 0 #FF94FB}
-  25%   {box-shadow:
-      0 0 #00C6FF, 0 0 #FF94FB,30px 0 #00C6FF, calc(30px*0.707) calc(30px*0.707) #FF94FB,
-      0 30px #00C6FF, 0 0 #FF94FB,0 0 #00C6FF, 0 0 #FF94FB}
-  37.5% {box-shadow:
-      0 0 #00C6FF, 0 0 #FF94FB,0 0 #00C6FF, calc(30px*0.707) calc(30px*0.707) #FF94FB,
-      0 30px #00C6FF, calc(-30px*0.707) calc(30px*0.707) #FF94FB,0 0 #00C6FF, 0 0 #FF94FB}
-  50%   {box-shadow:
-      0 0 #00C6FF, 0 0 #FF94FB,0 0 #00C6FF, 0 0 #FF94FB,
-      0 30px #00C6FF, calc(-30px*0.707) calc(30px*0.707) #FF94FB,-30px 0 #00C6FF, 0 0 #FF94FB}
-  62.5% {box-shadow:
-      0 0 #00C6FF, 0 0 #FF94FB,0 0 #00C6FF, 0 0 #FF94FB,
-      0 0 #00C6FF, calc(-30px*0.707) calc(30px*0.707) #FF94FB,-30px 0 #00C6FF, calc(-30px*0.707) calc(-30px*0.707) #FF94FB}
-  75%   {box-shadow:
-      0 -30px #00C6FF, 0 0 #FF94FB,0 0 #00C6FF, 0 0 #FF94FB,
-      0 0 #00C6FF, 0 0 #FF94FB,-30px 0 #00C6FF, calc(-30px*0.707) calc(-30px*0.707) #FF94FB}
-  87.5% {box-shadow:
-      0 -30px #00C6FF, calc(30px*0.707) calc(-30px*0.707) #FF94FB,0 0 #00C6FF, 0 0 #FF94FB,
-      0 0 #00C6FF, 0 0 #FF94FB,0 0 #00C6FF, calc(-30px*0.707) calc(-30px*0.707) #FF94FB}
-  100%  {box-shadow:
-      0 -30px #00C6FF, calc(30px*0.707) calc(-30px*0.707) #FF94FB,30px 0 #00C6FF, 0 0 #FF94FB,
-      0 0 #00C6FF, 0 0 #FF94FB,0 0 #00C6FF, 0 0 #FF94FB}
+.loader::before,
+.loader::after {
+  content:"";
+  grid-area: 1/1;
+  --c:no-repeat radial-gradient(farthest-side,#25b09b 92%,#0000);
+  background:
+      var(--c) 50%  0,
+      var(--c) 50%  100%,
+      var(--c) 100% 50%,
+      var(--c) 0    50%;
+  background-size: 12px 12px;
+  animation: l12 1s infinite;
+}
+.loader::before {
+  margin: 4px;
+  filter: hue-rotate(45deg);
+  background-size: 8px 8px;
+  animation-timing-function: linear
+}
 
+@keyframes l12 {
+  100%{transform: rotate(.5turn)}
 }
 </style>

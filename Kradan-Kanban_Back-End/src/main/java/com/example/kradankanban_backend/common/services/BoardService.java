@@ -1,12 +1,12 @@
 package com.example.kradankanban_backend.common.services;
 
 
+import com.example.kradankanban_backend.common.dtos.CollabDTO;
 import com.example.kradankanban_backend.common.dtos.DetailBoardDTO;
 import com.example.kradankanban_backend.common.dtos.VisibilityDTO;
-import com.example.kradankanban_backend.common.entities.BoardEntity;
-import com.example.kradankanban_backend.common.entities.LimitSettings;
-import com.example.kradankanban_backend.common.entities.StatusEntity;
+import com.example.kradankanban_backend.common.entities.*;
 import com.example.kradankanban_backend.common.repositories.BoardRepository;
+import com.example.kradankanban_backend.common.repositories.CollabRepository;
 import com.example.kradankanban_backend.common.repositories.LimitRepository;
 import com.example.kradankanban_backend.common.repositories.StatusRepository;
 import com.example.kradankanban_backend.exceptions.BadRequestException;
@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 public class BoardService {
@@ -46,6 +47,10 @@ public class BoardService {
 
     @Autowired
     private ModelMapper modelMapper;
+    @Autowired
+    private BoardRepository boardRepository;
+    @Autowired
+    private CollabRepository collabRepository;
 
     private DetailBoardDTO convertToDetailBoardDTO(BoardEntity board) {
         DetailBoardDTO.OwnerDTO owner = new DetailBoardDTO.OwnerDTO();
@@ -58,8 +63,24 @@ public class BoardService {
         dto.setVisibility(board.getVisibility());
         dto.setOwner(owner);
 
+        List<CollabDTO> collaborators = collabRepository.findByBoardId(board.getBoardId()).stream()
+                .map(this::mapToCollabDTO)
+                .collect(Collectors.toList());
+        dto.setCollaborators(collaborators);
         return dto;
     }
+
+    private CollabDTO mapToCollabDTO(CollabEntity collabEntity) {
+        UserEntity user = userRepository.findById(collabEntity.getUserId()).orElseThrow(() -> new ItemNotFoundException("User not found"));
+        CollabDTO collabDTO = new CollabDTO();
+        collabDTO.setOid(user.getOid());
+        collabDTO.setName(user.getName());
+        collabDTO.setEmail(user.getEmail());
+        collabDTO.setAccessRight(collabEntity.getAccessRight());
+        collabDTO.setAddedOn(collabEntity.getAddedOn());
+        return collabDTO;
+    }
+
 
     public List<DetailBoardDTO> getBoardByUserId(String userId) {
 //        List<BoardEntity> privateBoards = repository.findAllByUserIdAndVisibility(userId, BoardEntity.Visibility.PRIVATE);
@@ -80,12 +101,13 @@ public class BoardService {
 //        return result;
 
         List<DetailBoardDTO> result = new ArrayList<>();
-        List<BoardEntity> boards = repository.findAllByUserId(userId);
 
-        for (BoardEntity board : boards) {
-            DetailBoardDTO dto = convertToDetailBoardDTO(board);
-            result.add(dto);
-        }
+        List<BoardEntity> ownerBoard = repository.findAllByUserId(userId);
+        result.addAll(ownerBoard.stream().map(this::convertToDetailBoardDTO).toList());
+
+        List<BoardEntity> collabBoard = boardRepository.findAllByCollaboratorUserId(userId);
+        result.addAll(collabBoard.stream().map(this::convertToDetailBoardDTO).toList());
+
         return result;
     }
 
@@ -199,5 +221,27 @@ public class BoardService {
         } else if (requestMethod.equals("GET") && board.getVisibility().equals(BoardEntity.Visibility.PRIVATE)) {
             throw new ForbiddenException("Not Owner and Private Board");
         }
+    }
+
+    public boolean isBoardPublic(String boardId) {
+        BoardEntity boardEntity = boardRepository.findById(boardId).orElseThrow(() -> new WrongBoardException(boardId + "does not exist'"));
+        return boardEntity.getVisibility().equals(BoardEntity.Visibility.PUBLIC);
+    }
+
+    public boolean isBoardOwner(String boardId, String oid) {
+        BoardEntity boardEntity = boardRepository.findById(boardId).orElseThrow(() -> new WrongBoardException(boardId + "does not exist'"));
+        return boardEntity.getUserId().equals(oid);
+    }
+
+    public boolean boardExists(String boardId) {
+        if (boardId == null) {
+            throw new BadRequestException("No Board Found");
+        }
+        System.out.println(repository.existsById(boardId));
+        return repository.existsById(boardId);
+    }
+
+    public boolean isCollaborator(String boardId, String oid) {
+        return collabRepository.existsById(new CollabId(boardId, oid));
     }
 }

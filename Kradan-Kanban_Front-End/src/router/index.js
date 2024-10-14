@@ -75,17 +75,19 @@ router.beforeEach(async (to, from, next) => {
     // if (to.name !== "login") {
     //     await checkTokenExpired()
     // }
+    console.log("to.name", to.name);
+    console.log("to.path" , to.path)
 
-    // if (to.name === "task" || to.name === "status") {
     if (to.name.includes("task") || to.name.includes("status")) {
-        if (boardStore.boards.length === 0 && accountStore.tokenRaw !== "") {
+        if (boardStore.boards.length === 0 && accountStore.refreshToken !== "") {
             await getAllBoard();
         }
 
         const boardId = to.params.boardId;
         await boardStore.setCurrentBoardId(boardId);
+
         let board
-        if (accountStore.tokenRaw === "") {
+        if (accountStore.refreshToken === "") {
             board = await getBoardByIdForGuest(boardId);
         } else {
             board = await getBoardById(boardId);
@@ -97,7 +99,10 @@ router.beforeEach(async (to, from, next) => {
             return;
         }
 
-        await checkTokenExpired()
+        if (accountStore.refreshToken !== "") {
+            await checkTokenExpired()
+        }
+        // await checkTokenExpired()
 
         const isOwner = board.ownerId === accountStore.userId;
         const isBoardPrivate = board.visibility === "PRIVATE";

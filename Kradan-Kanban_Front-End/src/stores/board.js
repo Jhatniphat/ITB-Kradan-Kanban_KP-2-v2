@@ -18,6 +18,9 @@ export const useBoardStore = defineStore("Board", {
         },
     },
     actions: {
+        isBoardExist(id) {
+            return this.boards.some((board) => board.id === id);
+        },
         addBoard(newBoard) {
             this.boards.push(newBoard);
         },

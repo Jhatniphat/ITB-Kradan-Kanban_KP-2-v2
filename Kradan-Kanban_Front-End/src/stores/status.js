@@ -5,7 +5,7 @@ export const useStatusStore = defineStore('status', {
     state: () => ({
         status: [],
         limit: 10,
-        limitEnable: true
+        limitEnable: null
     }),
     actions: {
         getAllStatus() {
@@ -22,9 +22,11 @@ export const useStatusStore = defineStore('status', {
         },
         editStoreStatus(updatedStatus) {
             const index = this.status.findIndex(status => status.id === updatedStatus.id)
+            useTaskStore().transferStatus(this.status[index].name , updatedStatus.name)
             if (index !== -1) {
                 this.status.splice(index, 1, updatedStatus)
             }
+
         },
         findById(id) {
             return this.status.find(status => status.id === id)
@@ -36,6 +38,7 @@ export const useStatusStore = defineStore('status', {
         // ? ไว้ใช้ตอนสร้าง task
         // ? ถ้า limitEnable : false > isLimit จะเป็น false ทั้งหมด
         getAllStatusWithLimit() {
+
             let limitStatus = []
             this.status.forEach(s => {
                 if (s.name === 'No Status' || s.name === 'Done') limitStatus.push({name: s.name, isLimit: false})
@@ -58,6 +61,8 @@ export const useStatusStore = defineStore('status', {
             const newStatus = this.findById(newId)
             if (newStatus.name === 'No Status' || newStatus.name === 'Done') return true
             const oldStatus = this.findById(oldId)
+            console.table(newStatus)
+            console.table(oldStatus)
             return (this.countStatus(newStatus.name) + this.countStatus(oldStatus.name)) <= this.getLimit()
         },
         getLimit() {

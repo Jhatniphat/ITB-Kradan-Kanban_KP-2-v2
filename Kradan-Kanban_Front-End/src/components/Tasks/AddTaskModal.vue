@@ -1,7 +1,8 @@
 <script setup>
-import { addTask } from "@/lib/fetchUtils";
-import { onMounted, ref, watch } from "vue";
-import { useStatusStore } from "@/stores/status.js";
+import {addTask} from "@/lib/fetchUtils";
+import {onMounted, ref, watch} from "vue";
+import {useStatusStore} from "@/stores/status.js";
+
 const emit = defineEmits(["closeModal"]);
 const statusStore = useStatusStore();
 
@@ -34,9 +35,9 @@ watch(taskData.value, () => {
   else Errortext.value.assignees = "";
   // ? disabled or enabled save btn
   canSave.value =
-    Errortext.value.title === "" &&
-    Errortext.value.description === "" &&
-    Errortext.value.assignees === "";
+      Errortext.value.title === "" &&
+      Errortext.value.description === "" &&
+      Errortext.value.assignees === "";
 });
 
 onMounted(async () => {
@@ -49,7 +50,12 @@ onMounted(async () => {
   statusList.value = statusStore.getAllStatusWithLimit();
 });
 
+watch(statusStore.status, () => {
+  statusList.value = statusStore.getAllStatusWithLimit();
+});
+
 const loading = ref(false);
+
 async function fetchData() {
   taskData.value.title = taskData.value.title.trim();
   taskData.value.description = taskData.value.description.trim();
@@ -65,6 +71,7 @@ async function fetchData() {
     emit("closeModal", res);
   }
 }
+
 function sendCloseModal() {
   emit("closeModal", null);
 }
@@ -75,7 +82,7 @@ function sendCloseModal() {
 
   </div> -->
   <div
-    class="itbkk-modal-task flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 rounded-lg w-full"
+      class="itbkk-modal-task itbkk-modal-new flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 rounded-lg w-full"
   >
     <!-- * title -->
     <label class="form-control w-full">
@@ -84,35 +91,35 @@ function sendCloseModal() {
         <span class="label-text">Title</span>
       </div>
       <input
-        v-model="taskData.title"
-        type="text"
-        placeholder="Type here"
-        class="itbkk-title input input-bordered w-full bg-white dark:bg-base-300 dark:text-slate-400"
+          v-model="taskData.title"
+          type="text"
+          placeholder="Type here"
+          class="itbkk-title input input-bordered w-full bg-white dark:bg-base-300 dark:text-slate-400"
       />
       <div class="label">
         <!-- ? Error Text -->
         <span v-if="Errortext.title !== ''" class="label-text-alt text-error">{{
-          Errortext.title
-        }}</span>
+            Errortext.title
+          }}</span>
         <!-- count input name -->
         <span
-          v-if="taskData.title.length <= 100 && taskData.title.length > 0"
-          class="justify-end text-gray-400 label-text-alt"
-          >{{ taskData.title.length }} / 100</span
+            v-if="taskData.title.length <= 100 && taskData.title.length > 0"
+            class="justify-end text-gray-400 label-text-alt"
+        >{{ taskData.title.length }} / 100</span
         >
         <span
-          v-if="taskData.title.length === 0 && Errortext.title !== ''"
-          class="flex justify-end text-red-400 label-text-alt"
-          >{{ taskData.title.length }} / 100</span
+            v-if="taskData.title.length === 0 && Errortext.title !== ''"
+            class="flex justify-end text-red-400 label-text-alt"
+        >{{ taskData.title.length }} / 100</span
         >
         <span
-          v-if="taskData.title.length > 100"
-          class="flex justify-end text-red-400 label-text-alt"
-          >{{ taskData.title.length }} / 100</span
+            v-if="taskData.title.length > 100"
+            class="flex justify-end text-red-400 label-text-alt"
+        >{{ taskData.title.length }} / 100</span
         >
       </div>
     </label>
-    <hr />
+    <hr/>
     <div class="flex flex-row gap-3">
       <!-- * description -->
       <label class="form-control basis-3/4">
@@ -121,27 +128,27 @@ function sendCloseModal() {
           <span class="label-text">Description</span>
         </div>
         <textarea
-          v-model="taskData.description"
-          class="itbkk-description textarea textarea-bordered h-72 bg-white dark:bg-base-300 dark:text-slate-400"
-          placeholder="Bio"
+            v-model="taskData.description"
+            class="itbkk-description textarea textarea-bordered h-72 bg-white dark:bg-base-300 dark:text-slate-400"
+            placeholder="Bio"
         ></textarea>
         <div class="label">
           <!-- ? Error Text -->
           <span
-            v-if="Errortext.description !== ''"
-            class="label-text-alt text-error"
+              v-if="Errortext.description !== ''"
+              class="label-text-alt text-error"
           >
             {{ Errortext.description }}</span
           >
           <span
-            v-if="taskData.description.length <= 500"
-            class="flex justify-end text-gray-400 label-text-alt"
-            >{{ taskData.description.length }} / 500</span
+              v-if="taskData.description.length <= 500"
+              class="flex justify-end text-gray-400 label-text-alt"
+          >{{ taskData.description.length }} / 500</span
           >
           <span
-            v-if="taskData.description.length > 500"
-            class="flex justify-end text-red-400 label-text-alt"
-            >{{ taskData.description.length }} / 500</span
+              v-if="taskData.description.length > 500"
+              class="flex justify-end text-red-400 label-text-alt"
+          >{{ taskData.description.length }} / 500</span
           >
         </div>
       </label>
@@ -154,27 +161,27 @@ function sendCloseModal() {
             <span class="label-text">Assignees</span>
           </div>
           <textarea
-            v-model="taskData.assignees"
-            class="itbkk-assignees textarea textarea-bordered h-24 bg-white dark:bg-base-300 dark:text-slate-400"
-            placeholder="Bio"
+              v-model="taskData.assignees"
+              class="itbkk-assignees textarea textarea-bordered h-24 bg-white dark:bg-base-300 dark:text-slate-400"
+              placeholder="Bio"
           ></textarea>
           <div class="label">
             <!-- ? Error Text -->
             <span
-              v-if="Errortext.assignees !== ''"
-              class="label-text-alt text-error"
+                v-if="Errortext.assignees !== ''"
+                class="label-text-alt text-error"
             >
               {{ Errortext.assignees }}</span
             >
             <span
-              v-if="taskData.assignees.length <= 30"
-              class="flex justify-end text-gray-400 label-text-alt"
-              >{{ taskData.assignees.length }} / 30</span
+                v-if="taskData.assignees.length <= 30"
+                class="flex justify-end text-gray-400 label-text-alt"
+            >{{ taskData.assignees.length }} / 30</span
             >
             <span
-              v-if="taskData.assignees.length > 30"
-              class="flex justify-end text-red-400 label-text-alt"
-              >{{ taskData.assignees.length }} / 30</span
+                v-if="taskData.assignees.length > 30"
+                class="flex justify-end text-red-400 label-text-alt"
+            >{{ taskData.assignees.length }} / 30</span
             >
           </div>
         </label>
@@ -184,13 +191,13 @@ function sendCloseModal() {
             <span class="label-text">Status</span>
           </div>
           <select
-            class="itbkk-status select select-bordered bg-white dark:bg-base-300 dark:text-slate-400 itbkk-status"
-            v-model="taskData.status"
+              class="itbkk-status select select-bordered bg-white dark:bg-base-300 dark:text-slate-400"
+              v-model="taskData.status"
           >
             <option
-              v-for="status in statusList"
-              :value="status.name"
-              :disabled="status.isLimit"
+                v-for="status in statusStore.getAllStatusWithLimit()"
+                :value="status.name"
+                :disabled="status.isLimit"
             >
               {{ status.name }}
               <span class="text-error">
@@ -201,24 +208,24 @@ function sendCloseModal() {
         </label>
       </div>
     </div>
-    <hr />
+    <hr/>
     <div class="flex flex-row-reverse gap-4 mt-5">
       <button
-        class="itbkk-button-cancel btn btn-outline btn-error basis-1/6"
-        @click="sendCloseModal()"
+          class="itbkk-button-cancel btn btn-outline btn-error basis-1/6"
+          @click="sendCloseModal()"
       >
         Cancel
       </button>
       <button
-        class="itbkk-button-confirm btn btn-outline btn-success basis-1/6"
-        :disabled="!canSave"
-        :class="!canSave ? 'disabled' : ''"
-        @click="fetchData()"
+          class="itbkk-button-confirm btn btn-outline btn-success basis-1/6"
+          :disabled="!canSave"
+          :class="!canSave ? 'disabled' : ''"
+          @click="fetchData()"
       >
         {{ loading ? "" : "Save" }}
         <span
-          class="loading loading-spinner text-success"
-          v-if="loading"
+            class="loading loading-spinner text-success"
+            v-if="loading"
         ></span>
       </button>
     </div>
