@@ -966,7 +966,6 @@ function makekanbanData() {
         opacity: 0;
         box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
         z-index: 1;
-        //transition: max-height 5s ease, opacity 5s ease;
       }
 
       .kanban-task-action-menu a {
@@ -1000,7 +999,6 @@ function makekanbanData() {
         //transition: opacity 1s ease;
         //display: block;*/
         max-height: 0; /* ตั้ง max-height มากพอให้ครอบคลุมความสูงทั้งหมดของเมนู */
-        //opacity: 0;
         transition: max-height 1.25s ease, opacity 1s ease;
       }
     }

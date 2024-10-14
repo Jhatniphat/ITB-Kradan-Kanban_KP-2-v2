@@ -161,6 +161,7 @@ describe(`TC-PBI20-BOARD-VISIBILITY-1-FE\n
 
         cy.get('.itbkk-message').contains('Do you want to delete the To Review status')
         cy.get('.itbkk-button-confirm').click()
+        cy.wait(1000) // ! 
 
         cy.url().should('contain','/status')
         cy.wait(100)
