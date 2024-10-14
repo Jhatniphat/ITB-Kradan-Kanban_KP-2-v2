@@ -81,7 +81,7 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const accountStore = useAccountStore();
   const boardStore = useBoardStore();
-  const isAuthenticated = accountStore.tokenDetail !== {};
+  // const isAuthenticated = accountStore.tokenDetail !== {};
 
   // if (to.name !== "login") {
   //     await checkTokenExpired()
