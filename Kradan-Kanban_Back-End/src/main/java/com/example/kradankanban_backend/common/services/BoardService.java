@@ -240,8 +240,4 @@ public class BoardService {
         System.out.println(repository.existsById(boardId));
         return repository.existsById(boardId);
     }
-
-    public boolean isCollaborator(String boardId, String oid) {
-        return collabRepository.existsById(new CollabId(boardId, oid));
-    }
 }
