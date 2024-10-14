@@ -50,6 +50,19 @@ onMounted(async () => {
         router.push({name: "AccessDenied"});
       }
     }
+    const currentUser = currentBoards.collaborators.find(
+        (collaborator) => collaborator.oid === accountStore.tokenDetail.oid
+      );
+
+      if (currentUser) {
+        canRead.value = currentUser.accessRight === "READ";
+      } else {
+        canRead.value = false; // User is not a collaborator
+      }
+
+      if (!isOwner.value && !canRead.value && currentBoard.visibility === "PRIVATE") {
+        router.push({ name: "AccessDenied" });
+      }
 
     if (route.params.statusId !== undefined) {
       selectedId.value = parseInt(route.params.statusId);

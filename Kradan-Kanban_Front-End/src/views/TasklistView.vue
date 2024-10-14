@@ -316,7 +316,6 @@ onBeforeMount(async () => {
       await setCurrentBoard(route.params.boardId);
 
       const currentBoard = boardStore.currentBoard;
-      console.log(currentBoard);
       isOwner.value = currentBoard.owner.oid === accountStore.tokenDetail.oid;
 
       const currentUser = currentBoard.collaborators.find(
