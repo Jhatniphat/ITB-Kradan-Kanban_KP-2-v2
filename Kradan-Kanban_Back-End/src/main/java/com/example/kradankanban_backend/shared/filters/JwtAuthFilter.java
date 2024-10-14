@@ -1,5 +1,6 @@
 package com.example.kradankanban_backend.shared.filters;
 
+import com.example.kradankanban_backend.common.entities.CollabEntity;
 import com.example.kradankanban_backend.common.services.BoardService;
 import com.example.kradankanban_backend.common.services.CollabService;
 import com.example.kradankanban_backend.exceptions.*;
@@ -101,9 +102,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         boolean isPublic = boardService.isBoardPublic(boardId);
         if (currentUser != null) {
             boolean isOwner = boardService.isBoardOwner(boardId,currentUser.getOid());
-            if (!isOwner && (!isPublic || !requestMethod.equals("GET"))) {
-                System.out.println(boardId);
+            boolean isCollaborator = collabService.isCollaborator(boardId, currentUser.getOid());
+            System.out.println(isCollaborator);
+            if ((!isOwner && !isCollaborator) && (!isPublic || !requestMethod.equals("GET"))) {
                 throw new ForbiddenException("FORBIDDEN");
+            }
+            if (isCollaborator) {
+                CollabEntity collab =  collabService.getCollaborators(boardId, currentUser.getOid());
+                if (collab.getAccessRight().equals(CollabEntity.AccessRight.READ) && !requestMethod.equals("GET") && !requestMethod.equals("DELETE") ) {
+                    throw new ForbiddenException("FORBIDDEN");
+                }
             }
         } else {
             if (!isPublic) {

@@ -8,6 +8,7 @@ import com.example.kradankanban_backend.common.repositories.BoardRepository;
 import com.example.kradankanban_backend.common.repositories.CollabRepository;
 import com.example.kradankanban_backend.exceptions.AuthenticationFailedException;
 import com.example.kradankanban_backend.exceptions.BadRequestException;
+import com.example.kradankanban_backend.exceptions.ConfilctException;
 import com.example.kradankanban_backend.exceptions.ItemNotFoundException;
 import com.example.kradankanban_backend.shared.Entities.UserEntity;
 import com.example.kradankanban_backend.shared.UserRepository;
@@ -16,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class CollabService {
@@ -38,8 +40,11 @@ public class CollabService {
     public CollabEntity addCollaborator(String boardId, CollabRequestDTO collabRequestDTO) {
         BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("No Board found"));
         UserEntity user = userRepository.findByEmail(collabRequestDTO.getEmail()).orElseThrow(() -> new ItemNotFoundException("No Collaborator found"));
-        if (board.getUserId().equals(user.getOid())) {
-            throw new BadRequestException("Board owner cannot be added as a collaborator");
+        if (user.getOid().equals(JwtUserDetailsService.getCurrentUser().getOid())) {
+            throw new ConfilctException("Board owner cannot be added as a collaborator");
+        }
+        if (collabRepository.findByBoardIdAndUserId(boardId, user.getOid()).isPresent()) {
+            throw new ConfilctException("Collaborator already exists");
         }
         CollabEntity collabEntity = new CollabEntity();
         collabEntity.setBoardId(boardId);
@@ -61,10 +66,12 @@ public class CollabService {
         BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("No Board found"));
         CollabEntity collab = collabRepository.findByBoardIdAndUserId(boardId, userId).orElseThrow(() -> new ItemNotFoundException("No Collaborator found"));
         UserEntity user = userRepository.findByUsername(JwtUserDetailsService.getCurrentUser().getUsername());
-        if (user.getOid().equals(userId)) {
-            throw new BadRequestException("No Permission");
-        }
         collabRepository.delete(collab);
         return collab;
+    }
+
+    public boolean isCollaborator(String boardId, String userId) {
+        Optional<CollabEntity> collab = collabRepository.findByBoardIdAndUserId(boardId, userId);
+        return collab.isPresent();
     }
 }
