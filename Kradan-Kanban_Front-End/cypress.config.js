@@ -7,7 +7,8 @@ export default defineConfig({
     baseUrl: 'http://localhost:5173',
     // baseUrl: 'https://intproj23.sit.kmutt.ac.th/ft'
     viewportHeight: 1080,
-    viewportWidth: 1920
+    viewportWidth: 1920,
+    
   },
   component: {
     specPattern: 'src/**/__tests__/*.{cy,spec}.{js,ts,jsx,tsx}',
