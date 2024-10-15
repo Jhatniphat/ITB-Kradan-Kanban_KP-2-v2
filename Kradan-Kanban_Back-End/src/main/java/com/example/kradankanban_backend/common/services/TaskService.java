@@ -123,7 +123,7 @@ public class TaskService {
 
     @Transactional
     public SimpleTaskDTO deleteTaskByBoardIdAndTaskId(String userId, String boardId, int taskId) {
-        checkAccessRight(boardId);
+        //        checkAccessRight(boardId);
         if (!repository.existsByIdAndTkBoard(taskId, boardRepository.findByBoardId(boardId).orElseThrow(() -> new WrongBoardException("Board not found")))) {
             throw new WrongBoardException("Board not found");
         }
@@ -131,8 +131,8 @@ public class TaskService {
         if (!board.getUserId().equals(userId)) {
             throw new ForbiddenException("You do not have access this board.");
         }
-
         TaskEntity task = repository.findByTkBoard_BoardIdAndId(boardId, taskId).orElseThrow(() -> new ItemNotFoundException("Task ID " + taskId + " not found in this board!!"));
+
         SimpleTaskDTO simpleTaskDTO = modelMapper.map(task, SimpleTaskDTO.class);
         repository.delete(task);
         return simpleTaskDTO;

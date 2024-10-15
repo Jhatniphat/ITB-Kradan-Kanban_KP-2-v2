@@ -112,7 +112,7 @@ public class StatusService {
 
     // * deleteStatus
     public StatusEntity deleteStatus(String userId, String boardId ,int id) {
-        checkAccessRight(boardId);
+//        checkAccessRight(boardId);
         if (!boardRepository.existsById(boardId) || !repository.existsByIdAndStBoard(id, boardId)) {
             throw new WrongBoardException("No board found with id: " + boardId);
         }
