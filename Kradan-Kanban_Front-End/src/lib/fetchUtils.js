@@ -812,6 +812,66 @@ export async function addCollaborator(newCollaborator) {
   }
 }
 
+export async function changeAccessRight(boardId, collabId, collabData) {
+  const accountStore = useAccountStore();
+  let res;
+  try {
+    res = await fetchWithTokenCheck(
+      `${import.meta.env.VITE_API_ROOT}/boards/${boardId}/collabs/${collabId}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accountStore.tokenRaw}`,
+        },
+        body: JSON.stringify(collabData),
+      }
+    );
+
+    if (res.ok) {
+      const resData = await res.json();
+      return resData;
+    }
+    if (res.status === 401) {
+      accountStore.clearTokenDetail();
+      router.push("/login");
+      return res.status;
+    } else {
+      return res.status;
+    }
+  } catch (error) {
+    console.log(error.toString());
+  }
+}
+export async function deleteCollaborator(boardId, collabId) {
+  const accountStore = useAccountStore();
+  try {
+    let res = await fetchWithTokenCheck(
+      `${import.meta.env.VITE_API_ROOT}/boards/${boardId}/collabs/${collabId}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${accountStore.tokenRaw}`,
+        },
+      }
+    );
+    if (res.status === 401) {
+      accountStore.clearTokenDetail();
+      router.push("/login");
+      return;
+    }
+    if (res.ok) {
+      let item = await res.json();
+      return item;
+    } else {
+      return res.status;
+    }
+  } catch (error) {
+    console.log(error.toString());
+    return error;
+  }
+}
+
 // ! -------------------------- LOGIN ----------------------------
 
 export async function login(username, password) {
