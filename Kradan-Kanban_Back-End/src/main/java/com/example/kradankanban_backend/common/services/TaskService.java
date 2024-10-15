@@ -3,12 +3,15 @@ package com.example.kradankanban_backend.common.services;
 import com.example.kradankanban_backend.common.dtos.DetailBoardDTO;
 import com.example.kradankanban_backend.common.dtos.SimpleTaskDTO;
 import com.example.kradankanban_backend.common.entities.BoardEntity;
+import com.example.kradankanban_backend.common.entities.CollabEntity;
 import com.example.kradankanban_backend.common.entities.TaskEntity;
 import com.example.kradankanban_backend.common.repositories.BoardRepository;
+import com.example.kradankanban_backend.common.repositories.CollabRepository;
 import com.example.kradankanban_backend.exceptions.*;
 import com.example.kradankanban_backend.common.repositories.StatusRepository;
 import com.example.kradankanban_backend.common.repositories.TaskRepository;
 import com.example.kradankanban_backend.common.services.StatusService;
+import com.example.kradankanban_backend.shared.services.JwtUserDetailsService;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +36,8 @@ public class TaskService {
     private ModelMapper modelMapper;
     @Autowired
     private StatusService statusService;
+    @Autowired
+    private CollabRepository collabRepository;
 
     //New TaskService With Personal Board
     public List<TaskEntity> findAllTasksByBoardId(String userId, String boardId) {
@@ -118,12 +123,11 @@ public class TaskService {
 
     @Transactional
     public SimpleTaskDTO deleteTaskByBoardIdAndTaskId(String userId, String boardId, int taskId) {
+        checkAccessRight(boardId);
         if (!repository.existsByIdAndTkBoard(taskId, boardRepository.findByBoardId(boardId).orElseThrow(() -> new WrongBoardException("Board not found")))) {
             throw new WrongBoardException("Board not found");
         }
-
         BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
-
         if (!board.getUserId().equals(userId)) {
             throw new ForbiddenException("You do not have access this board.");
         }
@@ -237,5 +241,12 @@ public class TaskService {
             return false;
         }
         return true;
+    }
+
+    public void checkAccessRight (String boardId) {
+        CollabEntity collab = collabRepository.findByBoardIdAndUserId(boardId, JwtUserDetailsService.getCurrentUser().getOid()).orElseThrow(() -> new ForbiddenException("You do not have access this board."));
+        if (collab.getAccessRight().equals(CollabEntity.AccessRight.READ)) {
+            throw new ForbiddenException("You do not have permission to perform this action.");
+        }
     }
 }
