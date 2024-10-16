@@ -453,7 +453,7 @@ function makekanbanData() {
           </div>
           <div>
             <button
-              class="itbkk-button-add btn btn-outline w-28 float-left mr-2"
+              class="btn btn-outline w-28 float-left mr-2"
               @click="router.push(`/board/${boardStore.currentBoardId}/collab`)"
             >
               Manage Collaborator

@@ -11,6 +11,7 @@ describe(`TC-PBI19-PERSIONAL-BOARD-3-FE-1\n
         cy.get('.itbkk-username').type('itbkk.somchai')
         cy.get('.itbkk-password').type('ip23/SOM')
         cy.get('.itbkk-button-signin').click()
+        cy.wait(1000) // ! wait for the page to load
     }) ;
     
 
