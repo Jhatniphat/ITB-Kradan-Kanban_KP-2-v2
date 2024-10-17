@@ -1,14 +1,17 @@
 package com.example.kradankanban_backend.common.services;
 
 import com.example.kradankanban_backend.common.entities.BoardEntity;
+import com.example.kradankanban_backend.common.entities.CollabEntity;
 import com.example.kradankanban_backend.common.entities.StatusEntity;
 import com.example.kradankanban_backend.common.repositories.BoardRepository;
+import com.example.kradankanban_backend.common.repositories.CollabRepository;
 import com.example.kradankanban_backend.common.repositories.StatusRepository;
 import com.example.kradankanban_backend.common.repositories.TaskRepository;
 import com.example.kradankanban_backend.exceptions.BadRequestException;
 import com.example.kradankanban_backend.exceptions.ForbiddenException;
 import com.example.kradankanban_backend.exceptions.ItemNotFoundException;
 import com.example.kradankanban_backend.exceptions.WrongBoardException;
+import com.example.kradankanban_backend.shared.services.JwtUserDetailsService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,6 +28,9 @@ public class StatusService {
 
     @Autowired
     BoardRepository boardRepository;
+
+    @Autowired
+    CollabRepository collabRepository;
 
     public List<StatusEntity> getAll(String boardId) {
         if (!boardRepository.existsById(boardId)) {
@@ -106,6 +112,7 @@ public class StatusService {
 
     // * deleteStatus
     public StatusEntity deleteStatus(String userId, String boardId ,int id) {
+//        checkAccessRight(boardId);
         if (!boardRepository.existsById(boardId) || !repository.existsByIdAndStBoard(id, boardId)) {
             throw new WrongBoardException("No board found with id: " + boardId);
         }
@@ -117,7 +124,6 @@ public class StatusService {
             throw new BadRequestException("Have Task On This Status");
         }
         BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
-
         if (!board.getUserId().equals(userId)) {
             throw new ForbiddenException("You do not have access this board.");
         }
@@ -187,4 +193,12 @@ public class StatusService {
             }
         }
     }
+
+    public void checkAccessRight (String boardId) {
+        CollabEntity collab = collabRepository.findByBoardIdAndUserId(boardId, JwtUserDetailsService.getCurrentUser().getOid()).orElseThrow(() -> new ForbiddenException("You do not have access this board."));
+        if (collab.getAccessRight().equals(CollabEntity.AccessRight.READ)) {
+            throw new ForbiddenException("You do not have permission to perform this action.");
+        }
+    }
+
 }

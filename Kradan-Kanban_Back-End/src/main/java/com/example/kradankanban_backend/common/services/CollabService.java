@@ -40,6 +40,9 @@ public class CollabService {
     public CollabEntity addCollaborator(String boardId, CollabRequestDTO collabRequestDTO) {
         BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("No Board found"));
         UserEntity user = userRepository.findByEmail(collabRequestDTO.getEmail()).orElseThrow(() -> new ItemNotFoundException("No Collaborator found"));
+        if (collabRequestDTO.getAccessRight() == null) {
+            throw new BadRequestException("Access right is required");
+        }
         if (user.getOid().equals(JwtUserDetailsService.getCurrentUser().getOid())) {
             throw new ConfilctException("Board owner cannot be added as a collaborator");
         }

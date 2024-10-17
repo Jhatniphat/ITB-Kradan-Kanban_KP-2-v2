@@ -1,21 +1,13 @@
 <script setup>
 // ? import lib
-import {onBeforeMount, onMounted, ref, watch} from "vue";
-import {useRoute} from "vue-router";
-import {
-  addBoard,
-  deleteTask,
-  getAllBoard,
-
-} from "../lib/fetchUtils.js";
+import { onBeforeMount, onMounted, ref, watch } from "vue";
+import { useRoute } from "vue-router";
+import { addBoard, deleteTask, getAllBoard,deleteCollaborator } from "../lib/fetchUtils.js";
 import router from "@/router";
 // ? import component
 import Modal from "../components/Modal.vue";
-import Taskdetail from "../components/Tasks/Taskdetail.vue";
-import AddTaskModal from "@/components/Tasks/AddTaskModal.vue";
-import EditLimitStatus from "@/components/EditLimitStatus.vue";
-import {useBoardStore} from "@/stores/board.js";
-import {useAccountStore} from "@/stores/account.js";
+import { useBoardStore } from "@/stores/board.js";
+import { useAccountStore } from "@/stores/account.js";
 
 // ! ================= Variable ======================
 // ? ----------------- Store and Route ---------------
@@ -23,13 +15,13 @@ const boardStore = useBoardStore();
 const route = useRoute();
 const loading = ref(false);
 // ? ----------------- Modal ---------------
-const toast = ref({status: "", msg: ""});
+const toast = ref({ status: "", msg: "" });
 const showAddModal = ref(false);
 // ? ----------------- Common and Local ---------------
 const allBoard = ref(boardStore.boards);
 // const allBoard = computed(() => boardStore.boards);
-const newBoard = ref({name: `${useAccountStore().userName} personal board`});
-const errorText = ref({name: ""});
+const newBoard = ref({ name: `${useAccountStore().userName} personal board` });
+const errorText = ref({ name: "" });
 // ? ----------------- LIST --------------------------
 const personalBoard = ref([]);
 const collabBoard = ref([]);
@@ -78,19 +70,28 @@ async function prepareData([filterBy]) {
     await fetchBoardData();
   }
   if (filterBy !== "") {
-    allBoard.value = boardStore.boards.filter((board) => board.visibility.includes(filterBy) || board.name.includes(filterBy) || board.owner.name.includes(filterBy));
+    allBoard.value = boardStore.boards.filter(
+      (board) =>
+        board.visibility.includes(filterBy) ||
+        board.name.includes(filterBy) ||
+        board.owner.name.includes(filterBy)
+    );
   } else {
     allBoard.value = boardStore.boards;
   }
-  personalBoard.value = allBoard.value.filter((board) => board.owner.oid === useAccountStore().tokenDetail.oid);
-  collabBoard.value = allBoard.value.filter((board) => board.owner.oid !== useAccountStore().tokenDetail.oid);
+  personalBoard.value = allBoard.value.filter(
+    (board) => board.owner.oid === useAccountStore().tokenDetail.oid
+  );
+  collabBoard.value = allBoard.value.filter(
+    (board) => board.owner.oid !== useAccountStore().tokenDetail.oid
+  );
 }
 
 watch([filterBy, boardStore.boards], (newValue) => {
   prepareData(newValue);
 });
 
-prepareData([""])
+prepareData([""]);
 
 // todo : Move this add Modal component
 function openAdd() {
@@ -121,10 +122,10 @@ async function saveAddBoard() {
   } finally {
     showAddModal.value = false;
     if (result.status === 200 || result.status === 201) {
-      showToast({status: "success", msg: "Add board successfully"});
+      showToast({ status: "success", msg: "Add board successfully" });
       allBoard.value = result.payload;
       router.push(`/board/${result.payload.id}`);
-    } else showToast({status: "error", msg: "Add board Failed"});
+    } else showToast({ status: "error", msg: "Add board Failed" });
   }
 }
 
@@ -132,8 +133,40 @@ async function saveAddBoard() {
 const showToast = (toastData) => {
   toast.value = toastData;
   setTimeout(() => {
-    toast.value = {...{status: ""}};
+    toast.value = { ...{ status: "" } };
   }, 5000);
+};
+
+const showLeaveModal = ref(false);
+const collabBoardName = ref("");
+const selectedBoardId = ref(0);
+
+const openLeaveModal = (boardId, boardName) => {
+  collabBoardName.value = boardName;
+  selectedBoardId.value = boardId;
+  showLeaveModal.value = true;
+};
+
+const leaveBoard = async () => {
+  let res;
+ const oid = useAccountStore().tokenDetail.oid
+  try {
+    res = await deleteCollaborator(selectedBoardId.value,oid);
+    if (typeof res === "object") {
+      showToast({ status: "success", msg: "Leave Board successfully" });
+    } else if (res === 403 || 404) {
+      router.push(`/board`);
+    } else {
+      showToast({
+        status: "error",
+        msg: "There is a problem. Please try again later.",
+      });
+    }
+  } catch (error) {
+    console.log(error);
+  } finally {
+    showLeaveModal.value = false;
+  }
 };
 
 // const closeAddModal = (res) => {
@@ -170,7 +203,7 @@ const showToast = (toastData) => {
   <!--  todo : Move this add Modal component -->
   <Modal :show-modal="showAddModal">
     <div
-        class="flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 rounded-lg w-full h-fit itbkk-modal-new"
+      class="flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 rounded-lg w-full h-fit itbkk-modal-new"
     >
       <!-- * title -->
       <label class="form-control w-full">
@@ -179,51 +212,51 @@ const showToast = (toastData) => {
           <span class="label-text">Title</span>
         </div>
         <input
-            v-model="newBoard.name"
-            type="text"
-            placeholder="Type here"
-            class="itbkk-board-name input input-bordered w-full bg-white dark:bg-base-300 dark:text-slate-400"
-            maxlength="120"
+          v-model="newBoard.name"
+          type="text"
+          placeholder="Type here"
+          class="itbkk-board-name input input-bordered w-full bg-white dark:bg-base-300 dark:text-slate-400"
+          maxlength="120"
         />
         <div class="label">
           <!-- ? Error Text -->
           <span
-              v-if="errorText.name !== ''"
-              class="label-text-alt text-error"
-          >{{ errorText.name }}</span
+            v-if="errorText.name !== ''"
+            class="label-text-alt text-error"
+            >{{ errorText.name }}</span
           >
           <!-- count input name -->
           <span
-              v-if="newBoard.name.length <= 120 && newBoard.name.length > 0"
-              class="justify-end text-gray-400 label-text-alt"
-          >{{ newBoard.name.length }} / 120</span
+            v-if="newBoard.name.length <= 120 && newBoard.name.length > 0"
+            class="justify-end text-gray-400 label-text-alt"
+            >{{ newBoard.name.length }} / 120</span
           >
           <span
-              v-if="newBoard.name.length === 0 && errorText.name !== ''"
-              class="flex justify-end text-red-400 label-text-alt"
-          >{{ newBoard.name.length }} / 120</span
+            v-if="newBoard.name.length === 0 && errorText.name !== ''"
+            class="flex justify-end text-red-400 label-text-alt"
+            >{{ newBoard.name.length }} / 120</span
           >
           <span
-              v-if="newBoard.name.length > 120"
-              class="flex justify-end text-red-400 label-text-alt"
-          >{{ newBoard.name.length }} / 120</span
+            v-if="newBoard.name.length > 120"
+            class="flex justify-end text-red-400 label-text-alt"
+            >{{ newBoard.name.length }} / 120</span
           >
         </div>
       </label>
-      <hr/>
+      <hr />
       <div class="flex flex-row-reverse gap-4 mt-5">
         <button
-            @click="showAddModal = false"
-            class="itbkk-button-cancel btn btn-outline btn-error basis-1/6"
+          @click="showAddModal = false"
+          class="itbkk-button-cancel btn btn-outline btn-error basis-1/6"
         >
           Cancel
         </button>
         <button
-            type="button"
-            @click="saveAddBoard()"
-            :disabled="errorText.name !== ''"
-            :class="{ disabled: errorText.name !== '' }"
-            class="itbkk-button-ok btn btn-outline btn-success basis-1/6"
+          type="button"
+          @click="saveAddBoard()"
+          :disabled="errorText.name !== ''"
+          :class="{ disabled: errorText.name !== '' }"
+          class="itbkk-button-ok btn btn-outline btn-success basis-1/6"
         >
           Save
         </button>
@@ -237,11 +270,24 @@ const showToast = (toastData) => {
         <div class="flex-1">filter</div>
         <h1 class="text-center text-2xl font-bold flex-1">Personal Board</h1>
         <div class="flex-1">
-          <button class="btn btn-primary itbkk-button-create float-right" @click="openAdd()">
+          <button
+            class="btn btn-primary itbkk-button-create float-right"
+            @click="openAdd()"
+          >
             Create Personal Board
-            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4 12H20M12 4V20" stroke="#ffffff" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round"/>
+            <svg
+              class="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M4 12H20M12 4V20"
+                stroke="#ffffff"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
             </svg>
           </button>
         </div>
@@ -249,55 +295,97 @@ const showToast = (toastData) => {
       <div class="flex flex-wrap p-10 gap-5 place-items-center">
         <table class="table table-lg w-full">
           <thead>
-          <tr>
-            <th class="font-bold text-black text-base text-center w-[40%]">Board Name</th>
-            <th class="font-bold text-black text-base text-center w-[20%]">Visibility</th>
-            <th class="font-bold text-black text-base text-center w-[20%]">Owner</th>
-            <th class="font-bold text-black text-base text-center w-[10%]">id</th>
-            <th class="font-bold text-black text-base text-center w-[10%]">More Action</th>
-          </tr>
+            <tr>
+              <th class="font-bold text-black text-base text-center w-[40%]">
+                Board Name
+              </th>
+              <th class="font-bold text-black text-base text-center w-[20%]">
+                Visibility
+              </th>
+              <th class="font-bold text-black text-base text-center w-[20%]">
+                Owner
+              </th>
+              <th class="font-bold text-black text-base text-center w-[10%]">
+                id
+              </th>
+              <th class="font-bold text-black text-base text-center w-[10%]">
+                More Action
+              </th>
+            </tr>
           </thead>
           <tbody>
-          <tr v-for="board in personalBoard">
-            <td class="text-center font-normal link link-primary" @click="router.push(`/board/${board.id}`)">
-              {{ board.name }}
-            </td>
-            <td class="text-center font-normal">{{ board.visibility }}</td>
-            <td class="text-center font-normal">{{ board?.owner?.name }}</td>
-            <td class="text-center font-normal">{{ board.id }}</td>
-            <td class="text-center font-normal"></td>
-          </tr>
+            <tr v-for="board in personalBoard">
+              <td
+                class="text-center font-normal link link-primary"
+                @click="router.push(`/board/${board.id}`)"
+              >
+                {{ board.name }}
+              </td>
+              <td class="text-center font-normal">{{ board.visibility }}</td>
+              <td class="text-center font-normal">{{ board?.owner?.name }}</td>
+              <td class="text-center font-normal">{{ board.id }}</td>
+              <td class="text-center font-normal"></td>
+            </tr>
           </tbody>
         </table>
       </div>
 
       <div class="flex flex-col" v-if="collabBoard.length !== 0">
         <div class="flex">
-          <h1 class="text-center text-2xl font-bold flex-1">Collaboration Board</h1>
+          <h1 class="text-center text-2xl font-bold flex-1">
+            Collaboration Board
+          </h1>
         </div>
         <div class="flex flex-wrap p-10 gap-5 place-items-center">
           <table class="table table-lg w-full">
             <thead>
-            <tr>
-              <th class="font-bold text-black text-base text-center w-[40%]">Board Name</th>
-              <th class="font-bold text-black text-base text-center w-[20%]">Visibility</th>
-              <th class="font-bold text-black text-base text-center w-[20%]">Owner</th>
-              <th class="font-bold text-black text-base text-center w-[10%]">Access</th>
-              <th class="font-bold text-black text-base text-center w-[10%]">More Action</th>
-            </tr>
+              <tr>
+                <th class="font-bold text-black text-base text-center w-[40%]">
+                  Board Name
+                </th>
+                <th class="font-bold text-black text-base text-center w-[20%]">
+                  Visibility
+                </th>
+                <th class="font-bold text-black text-base text-center w-[20%]">
+                  Owner
+                </th>
+                <th class="font-bold text-black text-base text-center w-[10%]">
+                  Access
+                </th>
+                <th class="font-bold text-black text-base text-center w-[10%]">
+                  More Action
+                </th>
+              </tr>
             </thead>
             <tbody>
-            <tr v-for="board in collabBoard">
-              <td class="text-center font-normal link link-primary" @click="router.push(`/board/${board.id}`)">
-                {{ board.name }}
-              </td>
-              <td class="text-center font-normal">{{ board.visibility }}</td>
-              <td class="text-center font-normal">{{ board?.owner?.name }}</td>
-              <td class="text-center font-normal">{{ board.collaborators.find((collab) => collab.oid === useAccountStore().tokenDetail.oid )["accessRight"] }}</td>
-              <td class="text-center font-normal">
-                <button class="btn btn-outline btn-error">Leave</button>
-              </td>
-            </tr>
+              <tr v-for="board in collabBoard">
+                <td
+                  class="text-center font-normal link link-primary"
+                  @click="router.push(`/board/${board.id}`)"
+                >
+                  {{ board.name }}
+                </td>
+                <td class="text-center font-normal">{{ board.visibility }}</td>
+                <td class="text-center font-normal">
+                  {{ board?.owner?.name }}
+                </td>
+                <td class="text-center font-normal">
+                  {{
+                    board.collaborators.find(
+                      (collab) =>
+                        collab.oid === useAccountStore().tokenDetail.oid
+                    )["accessRight"]
+                  }}
+                </td>
+                <td class="text-center font-normal">
+                  <button
+                    class="btn btn-outline btn-error"
+                    @click="openLeaveModal(board.id, board.name)"
+                  >
+                    Leave
+                  </button>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -318,40 +406,72 @@ const showToast = (toastData) => {
       <!--      </table>-->
     </div>
     <!--    <div v-if="loading" class="loader"></div>-->
+    <!-- DeleteModal -->
+    <Modal :showModal="showLeaveModal">
+      <div
+        class="flex flex-col p-5 bg-slate-50 dark:bg-base-100 rounded-lg w-full"
+      >
+        <h1 class="m-2 pb-4 text-2xl font-bold">Leave Board</h1>
+        <hr />
+        <h1 class="itbkk-message font-semibold text-xl p-8">
+          <!-- Do you want to delete the task "{{ deleteTaskTitle }}" -->
+          Do you want to leave this "{{ collabBoardName }}" board?
+        </h1>
+        <hr />
+        <div class="flex flex-row-reverse gap-4 mt-5">
+          <button
+            @click="showLeaveModal = false"
+            class="itbkk-button-cancel btn btn-outline btn-error basis-1/6"
+          >
+            Close
+          </button>
+          <button
+            @click="leaveBoard()"
+            class="itbkk-button-confirm btn btn-outline btn-success basis-1/6"
+          >
+            {{ loading ? "" : "Confirm" }}
+            <span
+              class="loading loading-spinner text-success"
+              v-if="loading"
+            ></span>
+          </button>
+        </div>
+      </div>
+    </Modal>
     <!-- Toast -->
     <div class="toast">
       <div
-          role="alert"
-          class="alert"
-          :class="`alert-${toast.status}`"
-          v-if="toast.status !== ''"
+        role="alert"
+        class="alert"
+        :class="`alert-${toast.status}`"
+        v-if="toast.status !== ''"
       >
         <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="stroke-current shrink-0 h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            v-if="toast.status === 'success'"
+          xmlns="http://www.w3.org/2000/svg"
+          class="stroke-current shrink-0 h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          v-if="toast.status === 'success'"
         >
           <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
           />
         </svg>
         <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="stroke-current shrink-0 h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            v-if="toast.status === 'error'"
+          xmlns="http://www.w3.org/2000/svg"
+          class="stroke-current shrink-0 h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          v-if="toast.status === 'error'"
         >
           <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
           />
         </svg>
         <span>{{ toast.msg }}</span>
@@ -363,11 +483,11 @@ const showToast = (toastData) => {
 <style scoped>
 ::backdrop {
   background-image: linear-gradient(
-      45deg,
-      magenta,
-      rebeccapurple,
-      dodgerblue,
-      green
+    45deg,
+    magenta,
+    rebeccapurple,
+    dodgerblue,
+    green
   );
   opacity: 0.75;
 }
@@ -384,48 +504,48 @@ const showToast = (toastData) => {
 @keyframes l10 {
   0% {
     box-shadow: 0 -30px #f4dd51, calc(30px * 0.707) calc(-30px * 0.707) #e3aad6,
-    30px 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51,
-    0 0 #e3aad6;
+      30px 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51,
+      0 0 #e3aad6;
   }
   12.5% {
     box-shadow: 0 0 #f4dd51, calc(30px * 0.707) calc(-30px * 0.707) #e3aad6,
-    30px 0 #f4dd51, calc(30px * 0.707) calc(30px * 0.707) #e3aad6, 0 0 #f4dd51,
-    0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6;
+      30px 0 #f4dd51, calc(30px * 0.707) calc(30px * 0.707) #e3aad6, 0 0 #f4dd51,
+      0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6;
   }
   25% {
     box-shadow: 0 0 #f4dd51, 0 0 #e3aad6, 30px 0 #f4dd51,
-    calc(30px * 0.707) calc(30px * 0.707) #e3aad6, 0 30px #f4dd51, 0 0 #e3aad6,
-    0 0 #f4dd51, 0 0 #e3aad6;
+      calc(30px * 0.707) calc(30px * 0.707) #e3aad6, 0 30px #f4dd51, 0 0 #e3aad6,
+      0 0 #f4dd51, 0 0 #e3aad6;
   }
   37.5% {
     box-shadow: 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51,
-    calc(30px * 0.707) calc(30px * 0.707) #e3aad6, 0 30px #f4dd51,
-    calc(-30px * 0.707) calc(30px * 0.707) #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6;
+      calc(30px * 0.707) calc(30px * 0.707) #e3aad6, 0 30px #f4dd51,
+      calc(-30px * 0.707) calc(30px * 0.707) #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6;
   }
   50% {
     box-shadow: 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6,
-    0 30px #f4dd51, calc(-30px * 0.707) calc(30px * 0.707) #e3aad6,
-    -30px 0 #f4dd51, 0 0 #e3aad6;
+      0 30px #f4dd51, calc(-30px * 0.707) calc(30px * 0.707) #e3aad6,
+      -30px 0 #f4dd51, 0 0 #e3aad6;
   }
   62.5% {
     box-shadow: 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51,
-    calc(-30px * 0.707) calc(30px * 0.707) #e3aad6, -30px 0 #f4dd51,
-    calc(-30px * 0.707) calc(-30px * 0.707) #e3aad6;
+      calc(-30px * 0.707) calc(30px * 0.707) #e3aad6, -30px 0 #f4dd51,
+      calc(-30px * 0.707) calc(-30px * 0.707) #e3aad6;
   }
   75% {
     box-shadow: 0 -30px #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6,
-    0 0 #f4dd51, 0 0 #e3aad6, -30px 0 #f4dd51,
-    calc(-30px * 0.707) calc(-30px * 0.707) #e3aad6;
+      0 0 #f4dd51, 0 0 #e3aad6, -30px 0 #f4dd51,
+      calc(-30px * 0.707) calc(-30px * 0.707) #e3aad6;
   }
   87.5% {
     box-shadow: 0 -30px #f4dd51, calc(30px * 0.707) calc(-30px * 0.707) #e3aad6,
-    0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51,
-    calc(-30px * 0.707) calc(-30px * 0.707) #e3aad6;
+      0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51,
+      calc(-30px * 0.707) calc(-30px * 0.707) #e3aad6;
   }
   100% {
     box-shadow: 0 -30px #f4dd51, calc(30px * 0.707) calc(-30px * 0.707) #e3aad6,
-    30px 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51,
-    0 0 #e3aad6;
+      30px 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51,
+      0 0 #e3aad6;
   }
 }
 

@@ -11,7 +11,7 @@ describe(`TC-PBI20-BOARD-VISIBILITY-1-FE\n
         cy.get('.itbkk-button-signin').click()
 
         cy.wait(100)
-        cy.visit('/board/c6WH5oTPtq')  // <------ add your board id here
+        cy.visit('/board/Lt40iQUdNd')  // <------ add your board id here
         cy.wait(1000)
     }) ;
 
@@ -129,7 +129,7 @@ describe(`TC-PBI20-BOARD-VISIBILITY-1-FE\n
     it(`[Step 2.5] Should no open /board/:id/task/:task-id/edit page and 
                 show message "Access denied, you do not have permission to view this page.`,()=>{
 
-        cy.visit('/board/c6WH5oTPtq/task/84/edit') // <------ add your board id and task id here
+        cy.visit('/board/Lt40iQUdNd/task/84/edit') // <------ add your board id and task id here
 
         cy.on('window:alert',(str)=>{
             expect(str).to.include('Access denied, you do not have permission to view this page.')
@@ -141,7 +141,7 @@ describe(`TC-PBI20-BOARD-VISIBILITY-1-FE\n
     it(`[Step 2.6] Should no open /board/:id/status/add page and 
                 show message "Access denied, you do not have permission to view this page.`,()=>{
 
-        cy.visit('/board/c6WH5oTPtq/status/add') // <------ add your board id here
+        cy.visit('/board/Lt40iQUdNd/status/add') // <------ add your board id here
 
         cy.on('window:alert',(str)=>{
             expect(str).to.include('Access denied, you do not have permission to view this page.')
@@ -153,7 +153,7 @@ describe(`TC-PBI20-BOARD-VISIBILITY-1-FE\n
     it(`[Step 2.7] Should no open /board/:id/status/:status-id/edit page and 
                 show message "Access denied, you do not have permission to view this page.`,()=>{
 
-        cy.visit('/board/c6WH5oTPtq/status/192/edit') // <------ add your board id and status id here
+        cy.visit('/board/Lt40iQUdNd/status/192/edit') // <------ add your board id and status id here
 
         cy.on('window:alert',(str)=>{
             expect(str).to.include('Access denied, you do not have permission to view this page.')

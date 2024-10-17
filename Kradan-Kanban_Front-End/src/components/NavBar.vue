@@ -120,7 +120,7 @@ function checkShowNavBar() {
 <!--              >-->
               <h5
                   @click="routeChange('board')"
-                  class="itbkk-home rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white itbkk-manage-status"
+                  class="itbkk-home rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
               >ITB-KK</h5
               >
               <h5

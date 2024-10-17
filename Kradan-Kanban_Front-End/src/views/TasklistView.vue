@@ -119,11 +119,12 @@ const deleteThisTask = async () => {
     if (typeof res === "object") {
       taskStore.deleteStoreTask(res);
       showToast({ status: "success", msg: "Delete task successfully" });
-    } else
+    } else {
       showToast({
         status: "error",
         msg: "Delete task Failed , Please Refresh Page",
       });
+    }
   } catch (error) {
     console.log(error);
   } finally {
@@ -328,7 +329,11 @@ onBeforeMount(async () => {
         canRead.value = false; // User is not a collaborator
       }
 
-      if (!isOwner.value && !canRead.value && currentBoard.visibility === "PRIVATE") {
+      if (
+        !isOwner.value &&
+        !canRead.value &&
+        currentBoard.visibility === "PRIVATE"
+      ) {
         router.push({ name: "AccessDenied" });
       }
 
@@ -448,7 +453,7 @@ function makekanbanData() {
           </div>
           <div>
             <button
-              class="itbkk-button-add btn btn-outline w-28 float-left mr-2"
+              class="btn btn-outline w-28 float-left mr-2"
               @click="router.push(`/board/${boardStore.currentBoardId}/collab`)"
             >
               Manage Collaborator
@@ -601,55 +606,60 @@ function makekanbanData() {
                 <td class="itbkk-status itbkk-status-name">
                   {{ task.status }}
                 </td>
-                <td class="">
+                <td>
                   <div
                     class="dropdown dropdown-bottom dropdown-end itbkk-button-action"
                   >
-                    <div tabindex="0" role="button" class="btn m-1">
-                      <svg
-                        class="swap-off fill-current"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="32"
-                        height="32"
-                        viewBox="0 0 512 512"
-                      >
-                        <path
-                          d="M64,384H448V341.33H64Zm0-106.67H448V234.67H64ZM64,128v42.67H448V128Z"
-                        />
-                      </svg>
-                    </div>
-                    <ul
-                      tabindex="0"
-                      class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
+                    <div
+                      :class="isOwner ? '' : 'lg:tooltip'"
+                      data-tip="You don't have a permission to Edit or Delete Task"
                     >
-                      <li>
-                        <button
-                          class="itbkk-button-edit button"
-                          :disabled="!isOwner"
-                          :class="{ disabled: !isOwner }"
-                          @click="openEditMode(task.id)"
+                      <div tabindex="0" role="button" class="btn m-1">
+                        <svg
+                          class="swap-off fill-current"
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="32"
+                          height="32"
+                          viewBox="0 0 512 512"
                         >
-                          Edit
-                        </button>
-                      </li>
-                      <li>
-                        <button
-                          class="itbkk-button-delete button"
-                          :disabled="!isOwner"
-                          :class="{ disabled: !isOwner }"
-                          @click="openDeleteModal(task.title, task.id)"
-                        >
-                          Delete
-                        </button>
-                      </li>
-                      <!--                    <div v-if="!isOwner">-->
-                      <!--                      <li>-->
-                      <!--                        <h1>-->
-                      <!--                          You don't have a permission to Edit or Delete a Task-->
-                      <!--                        </h1>-->
-                      <!--                      </li>-->
-                      <!--                    </div>-->
-                    </ul>
+                          <path
+                            d="M64,384H448V341.33H64Zm0-106.67H448V234.67H64ZM64,128v42.67H448V128Z"
+                          />
+                        </svg>
+                      </div>
+                      <ul
+                        tabindex="0"
+                        class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
+                      >
+                        <li>
+                          <button
+                            class="itbkk-button-edit button"
+                            :disabled="!isOwner"
+                            :class="{ disabled: !isOwner }"
+                            @click="openEditMode(task.id)"
+                          >
+                            Edit
+                          </button>
+                        </li>
+                        <li>
+                          <button
+                            class="itbkk-button-delete button"
+                            :disabled="!isOwner"
+                            :class="{ disabled: !isOwner }"
+                            @click="openDeleteModal(task.title, task.id)"
+                          >
+                            Delete
+                          </button>
+                        </li>
+                        <!--                    <div v-if="!isOwner">-->
+                        <!--                      <li>-->
+                        <!--                        <h1>-->
+                        <!--                          You don't have a permission to Edit or Delete a Task-->
+                        <!--                        </h1>-->
+                        <!--                      </li>-->
+                        <!--                    </div>-->
+                      </ul>
+                    </div>
                   </div>
                 </td>
               </tr>
@@ -675,66 +685,73 @@ function makekanbanData() {
                   <div>
                     <p class="kanban-task-title">{{ task.title }}</p>
                     <div class="kanban-task-action">
-                      <input
-                        type="checkbox"
-                        :id="`kanban-task-action-${task.id}`"
-                      />
-                      <label :for="`kanban-task-action-${task.id}`">
-                        <svg
-                          width="1rem"
-                          height="1rem"
-                          viewBox="0 0 24 24"
-                          version="1.1"
-                          xmlns="http://www.w3.org/2000/svg"
-                          xmlns:xlink="http://www.w3.org/1999/xlink"
-                        >
-                          <title>Kebab-Menu</title>
-                          <g
-                            id="Kebab-Menu"
-                            stroke="none"
-                            stroke-width="1"
-                            fill="none"
-                            fill-rule="evenodd"
+                      <div
+                        :class="isOwner ? '' : 'lg:tooltip'"
+                        data-tip="You don't have a permission to Edit or Delete Task"
+                      >
+                        <input
+                          :disabled="!isOwner"
+                          type="checkbox"
+                          :id="`kanban-task-action-${task.id}`"
+                        />
+
+                        <label :for="`kanban-task-action-${task.id}`">
+                          <svg
+                            width="1rem"
+                            height="1rem"
+                            viewBox="0 0 24 24"
+                            version="1.1"
+                            xmlns="http://www.w3.org/2000/svg"
+                            xmlns:xlink="http://www.w3.org/1999/xlink"
                           >
-                            <rect
-                              id="Container"
-                              x="0"
-                              y="0"
-                              width="24"
-                              height="24"
-                            ></rect>
-                            <path
-                              d="M12,6 C12.5522847,6 13,5.55228475 13,5 C13,4.44771525 12.5522847,4 12,4 C11.4477153,4 11,4.44771525 11,5 C11,5.55228475 11.4477153,6 12,6 Z"
-                              id="shape-03"
-                              stroke="#030819"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-dasharray="0,0"
-                            ></path>
-                            <path
-                              d="M12,13 C12.5522847,13 13,12.5522847 13,12 C13,11.4477153 12.5522847,11 12,11 C11.4477153,11 11,11.4477153 11,12 C11,12.5522847 11.4477153,13 12,13 Z"
-                              id="shape-03"
-                              stroke="#030819"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-dasharray="0,0"
-                            ></path>
-                            <path
-                              d="M12,20 C12.5522847,20 13,19.5522847 13,19 C13,18.4477153 12.5522847,18 12,18 C11.4477153,18 11,18.4477153 11,19 C11,19.5522847 11.4477153,20 12,20 Z"
-                              id="shape-03"
-                              stroke="#030819"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-dasharray="0,0"
-                            ></path>
-                          </g>
-                        </svg>
-                      </label>
-                      <div class="kanban-task-action-menu">
-                        <a @click="openEditMode(task.id)">Edit</a>
-                        <a @click="openDeleteModal(task.title, task.id)"
-                          >Delete</a
-                        >
+                            <title>Kebab-Menu</title>
+                            <g
+                              id="Kebab-Menu"
+                              stroke="none"
+                              stroke-width="1"
+                              fill="none"
+                              fill-rule="evenodd"
+                            >
+                              <rect
+                                id="Container"
+                                x="0"
+                                y="0"
+                                width="24"
+                                height="24"
+                              ></rect>
+                              <path
+                                d="M12,6 C12.5522847,6 13,5.55228475 13,5 C13,4.44771525 12.5522847,4 12,4 C11.4477153,4 11,4.44771525 11,5 C11,5.55228475 11.4477153,6 12,6 Z"
+                                id="shape-03"
+                                stroke="#030819"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-dasharray="0,0"
+                              ></path>
+                              <path
+                                d="M12,13 C12.5522847,13 13,12.5522847 13,12 C13,11.4477153 12.5522847,11 12,11 C11.4477153,11 11,11.4477153 11,12 C11,12.5522847 11.4477153,13 12,13 Z"
+                                id="shape-03"
+                                stroke="#030819"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-dasharray="0,0"
+                              ></path>
+                              <path
+                                d="M12,20 C12.5522847,20 13,19.5522847 13,19 C13,18.4477153 12.5522847,18 12,18 C11.4477153,18 11,18.4477153 11,19 C11,19.5522847 11.4477153,20 12,20 Z"
+                                id="shape-03"
+                                stroke="#030819"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-dasharray="0,0"
+                              ></path>
+                            </g>
+                          </svg>
+                        </label>
+                        <div class="kanban-task-action-menu">
+                          <a @click="openEditMode(task.id)">Edit</a>
+                          <a @click="openDeleteModal(task.title, task.id)"
+                            >Delete</a
+                          >
+                        </div>
                       </div>
                     </div>
                   </div>

@@ -3,7 +3,7 @@ describe(`TC-PBI20-BOARD-VISIBILITY-1-FE\n
                     - un-authenticated user can view public board only`, () => {
 
     beforeEach(()=> {
-        cy.visit('/board/c6WH5oTPtq') // <------ add your board id here
+        cy.visit('/board/Lt40iQUdNd') // <------ add your board id here
         cy.wait(100) ;
         cy.wait(1000)
     }) ;
