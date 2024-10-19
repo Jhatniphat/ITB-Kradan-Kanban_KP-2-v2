@@ -5,6 +5,15 @@ import { useTaskStore } from "@/stores/task.js";
 import { useStatusStore } from "@/stores/status.js";
 
 // ! -------------------------------- Task ------------------------------------------
+/** 
+ * ? Retrieves All Task By specified UserId and Current BoardId
+ * * If tasks already exist in TaskStore, this function will not make a network request.
+ * * The retrieved tasks will be automatically added to TaskStore.tasks
+ * * Automatically redirect to login when get 401
+ * @function getAllTasks
+ * @returns {Promise<Array>} A promise that resolves to an array of tasks.
+ * @throws {Error} Throws an error if the fetch operation fails.
+ */
 export async function getAllTasks() {
   const accountStore = useAccountStore();
   const taskStore = useTaskStore();
@@ -35,6 +44,14 @@ export async function getAllTasks() {
   } catch (error) {}
 }
 
+/** 
+ * ? Retrieves Task Detail By specified UserId , TaskId and Current BoardId
+ * * Automatically redirect to login when get 401
+ * @param {Number} id 
+ * @function getTaskById
+ * @returns {Promise<Object>} A promise that resolves to Task Detail
+ * @throws {Error} Throws an error if the fetch operation fails.
+ */
 export async function getTaskById(id) {
   const boardId = useBoardStore().currentBoardId;
   const accountStore = useAccountStore();
@@ -56,10 +73,8 @@ export async function getTaskById(id) {
     }
     if (res.status === 200) {
       item = await res.json();
-      console.table(item);
       item.createdOn = timeFormater(item.createdOn);
       item.updatedOn = timeFormater(item.updatedOn);
-      console.table(item);
       return item;
     } else {
       return res.status;
@@ -69,6 +84,14 @@ export async function getTaskById(id) {
   }
 }
 
+/** 
+ * ? This function will send a request to add the specified task and Current BoardId then return the details of the newly created task upon success.
+ * * Automatically redirect to login when get 401
+ * @param {Task} newTask 
+ * @function addTask
+ * @returns {Promise<Object>} A promise that resolves to New Task Detail
+ * @throws {Error} Throws an error if the fetch operation fails.
+ */
 export async function addTask(newTask) {
   let res, item;
   const boardId = useBoardStore().currentBoardId;
@@ -101,6 +124,15 @@ export async function addTask(newTask) {
   }
 }
 
+/** 
+ * ? This function will send a request to update the specified task By TaskId , Current BoardId , UserId Then return the details of the updated task upon success.
+ * * Automatically redirect to login when get 401
+ * @param {number} taskId - task id for update task
+ * @param {Task} Task - not have Task.CreatedOn , Task.UpdatedOn
+ * @function editTask
+ * @returns {Promise<Object>} A promise that resolves to Updated Task Detail
+ * @throws {Error} Throws an error if the fetch operation fails.
+ */
 export async function editTask(taskId, Task) {
   const boardId = useBoardStore().currentBoardId;
   try {
@@ -131,6 +163,14 @@ export async function editTask(taskId, Task) {
   }
 }
 
+/** 
+ * ? This function will send a request to delete the specified task By TaskId , Current BoardId , UserId Then return the details of the deleted task upon success.
+ * * Automatically redirect to login when get 401
+ * @param {number} taskId 
+ * @function deleteTask
+ * @returns {Promise<Object>} A promise that resolves to Deleted Task Detail
+ * @throws {Error} Throws an error if the fetch operation fails.
+ */
 export async function deleteTask(id) {
   const boardId = useBoardStore().currentBoardId;
   try {
@@ -162,6 +202,15 @@ export async function deleteTask(id) {
 }
 
 // ! ------------------------------- Status --------------------------------
+/** 
+ * ? Retrieves All Status By specified UserId and Current BoardId
+ * * If statuses already exist in StatusStore, this function will not make a network request.
+ * * The retrieved statuses will be automatically added to StatusStore.status
+ * * Automatically redirect to login when get 401
+ * @function getAllStatus
+ * @returns {Promise<Array>} A promise that resolves to an array of statuses.
+ * @throws {Error} Throws an error if the fetch operation fails.
+ */
 export async function getAllStatus() {
   if (useStatusStore().status.length > 0) {
     return useStatusStore().status;
@@ -189,6 +238,14 @@ export async function getAllStatus() {
   } catch (error) {}
 }
 
+/** 
+ * ? Retrieves Status Detail By specified UserId , StatusId and Current BoardId
+ * * Automatically redirect to login when get 401
+ * @param {Number} id 
+ * @function getStatusById
+ * @returns {Promise<Object>} A promise that resolves to Status Detail
+ * @throws {Error} Throws an error if the fetch operation fails.
+ */
 export async function getStatusById(id) {
   const boardId = useBoardStore().currentBoardId;
   let res, item;
@@ -221,6 +278,14 @@ export async function getStatusById(id) {
   }
 }
 
+/** 
+ * ? This function will send a request to add the specified status and Current BoardId then return the details of the newly created status upon success.
+ * * Automatically redirect to login when get 401
+ * @param {Status} newStatus 
+ * @function addStatus
+ * @returns {Promise<Object>} A promise that resolves to New Status Detail
+ * @throws {Error} Throws an error if the fetch operation fails.
+ */
 export async function addStatus(newStatus) {
   const boardId = useBoardStore().currentBoardId;
   let res, item;
@@ -253,6 +318,15 @@ export async function addStatus(newStatus) {
   }
 }
 
+/** 
+ * ? This function will send a request to update the specified status By StatusId , Current BoardId , UserId Then return the details of the updated status upon success.
+ * * Automatically redirect to login when get 401
+ * @param {number} id - status id for update status
+ * @param {Status} Status - not have Status.CreatedOn , Status.UpdatedOn
+ * @function editStatus
+ * @returns {Promise<Object>} A promise that resolves to Updated Status Detail
+ * @throws {Error} Throws an error if the fetch operation fails.
+ */
 export async function editStatus(id, Status) {
   const boardId = useBoardStore().currentBoardId;
   let res;
@@ -285,6 +359,14 @@ export async function editStatus(id, Status) {
   }
 }
 
+/** 
+ * ? This function will send a request to delete the specified status By StatusId , Current BoardId , UserId Then return the details of the deleted status upon success.
+ * * Automatically redirect to login when get 401
+ * @param {number} id - Status id that want to delete
+ * @function deleteStatus
+ * @returns {Promise<Object>} A promise that resolves to Deleted Status Detail
+ * @throws {Error} Throws an error if the fetch operation fails.
+ */
 export async function deleteStatus(id) {
   const boardId = useBoardStore().currentBoardId;
   let res, item;
@@ -317,6 +399,15 @@ export async function deleteStatus(id) {
   }
 }
 
+/** 
+ * ? This function will send a request to transfer task in old Status to new Status and delet old Status Then return the details of the deleted old status upon success.
+ * * Automatically redirect to login when get 401
+ * @param {number} oldId - Status id that want to delete
+ * @param {number} newId - Status id that want to transfer to
+ * @function transferStatus
+ * @returns {Promise<Object>} A promise that resolves to Deleted Status Detail
+ * @throws {Error} Throws an error if the fetch operation fails.
+ */
 export async function transferStatus(oldId, newId) {
   const boardId = useBoardStore().currentBoardId;
   let res, item;
@@ -351,6 +442,13 @@ export async function transferStatus(oldId, newId) {
   }
 }
 
+/** 
+ * ? This function will send a request to change limitStatus to opposite Then return status code of response
+ * * Automatically redirect to login when get 401
+ * @function toggleLimitStatus
+ * @returns {Promise<Number>} A promise that resolves to response.status code
+ * @throws {Error} Throws an error if the fetch operation fails.
+ */
 export async function toggleLimitStatus() {
   const boardId = useBoardStore().currentBoardId;
   let res, item;
@@ -378,6 +476,14 @@ export async function toggleLimitStatus() {
   }
 }
 
+/** 
+ * ? This function will send a request to Retrieves limitStatus to opposite Then return boolean of limitStatus
+ * * The retrieved limitStatus will be automatically added to StatusStore.limitEnable
+ * * Automatically redirect to login when get 401
+ * @function getLimitStatus
+ * @returns {Promise<Number>} A promise that resolves to response.status code
+ * @throws {Error} Throws an error if the fetch operation fails.
+ */
 export async function getLimitStatus() {
   if (useStatusStore().limitEnable !== null) {
     return useStatusStore().limitEnable;
@@ -414,7 +520,15 @@ export async function getLimitStatus() {
 
 // ! -------------------------- BOARD ----------------------------
 
-// ? doesn't require param , func will get param from account store
+/** 
+ * ? Retrieves All Board By specified UserId 
+ * * If boards already exist in BoardStore, this function will not make a network request.
+ * * The retrieved boards will be automatically added to BoardStore.boards
+ * * Automatically redirect to login when get 401
+ * @function getAllBoard
+ * @returns {Promise<Array>} A promise that resolves to an array of boards.
+ * @throws {Error} Throws an error if the fetch operation fails.
+ */
 export async function getAllBoard() {
   if (useBoardStore().boards.length > 0) {
     return useBoardStore().boards;
@@ -452,6 +566,15 @@ export async function getAllBoard() {
   }
 }
 
+/** 
+ * ? Retrieves Board Detail By specified UserId and BoardId
+ * * If specified boards already exist in BoardStore, this function will not make a network request.
+ * * Automatically redirect to login when get 401
+ * @param {String} boardId
+ * @function getBoardById
+ * @returns {Promise<Object>} A promise that resolves to Board Detail
+ * @throws {Error} Throws an error if the fetch operation fails.
+ */
 export async function getBoardById(boardId) {
   const boardStore = useBoardStore();
   console.log(boardStore.isBoardExist(boardId));
@@ -487,7 +610,14 @@ export async function getBoardById(boardId) {
   }
 }
 
-// ? @param newBoard : object
+/** 
+ * ? This function will send a request to add the specified board and Current BoardId then return the details of the newly created board upon success.
+ * * Automatically redirect to login when get 401
+ * @param {Board} newBoard
+ * @function addBoard
+ * @returns {Promise<Object>} A promise that resolves to New Board Detail
+ * @throws {Error} Throws an error if the fetch operation fails.
+ */
 export async function addBoard(newBoard) {
   const accountStore = useAccountStore();
   const boardStore = useBoardStore();
@@ -521,6 +651,14 @@ export async function addBoard(newBoard) {
   }
 }
 
+/** 
+ * ? This function will send a request to change visibility of board Then return new visibility of board
+ * * Automatically redirect to login when get 401
+ * @param {String} mode - only allow PUBLIC or PRIVATE
+ * @function changeVisibility
+ * @returns {Promise<Object>} A promise that resolves to response.status code
+ * @throws {Error} Throws an error if the fetch operation fails.
+ */
 export async function changeVisibility(mode) {
   const accountStore = useAccountStore();
   const boardStore = useBoardStore();
@@ -556,6 +694,9 @@ export async function changeVisibility(mode) {
 }
 
 // ! -------------------------- GUEST USER -----------------------
+/** 
+ * ? This function is same at getBoardById But don't require login
+ */
 export async function getBoardByIdForGuest(boardId) {
   console.log("FOR GUEST");
   if (useBoardStore().isBoardExist(boardId)) {
@@ -591,6 +732,9 @@ export async function getBoardByIdForGuest(boardId) {
   }
 }
 
+/** 
+ * ? This function is same at getAllStatus But don't require login
+ */
 export async function getAllStatusForGuest() {
   if (useStatusStore().status.length > 0) {
     return useStatusStore().status;
@@ -616,6 +760,9 @@ export async function getAllStatusForGuest() {
   } catch (error) {}
 }
 
+/** 
+ * ? This function is same at getStatusById But don't require login
+ */
 export async function getStatusByIdForGuest(id) {
   const boardId = useBoardStore().currentBoardId;
   let res, item;
@@ -646,6 +793,9 @@ export async function getStatusByIdForGuest(id) {
   }
 }
 
+/** 
+ * ? This function is same at getAllTasks But don't require login
+ */
 export async function getAllTasksForGuest() {
   const accountStore = useAccountStore();
   const taskStore = useTaskStore();
@@ -674,6 +824,9 @@ export async function getAllTasksForGuest() {
   } catch (error) {}
 }
 
+/** 
+ * ? This function is same at getTaskById But don't require login
+ */
 export async function getTaskByIdForGuest(id) {
   const boardId = useBoardStore().currentBoardId;
   const accountStore = useAccountStore();
@@ -706,6 +859,9 @@ export async function getTaskByIdForGuest(id) {
   }
 }
 
+/** 
+ * ? This function is same at getLimitStatus But don't require login
+ */
 export async function getLimitStatusForGuest() {
   const boardId = useBoardStore().currentBoardId;
   const statusStore = useStatusStore();
@@ -768,8 +924,6 @@ export async function getAllCollabs() {
     return null;
   }
 };
-
-
 
 export async function addCollaborator(newCollaborator) {
   let res, item;
@@ -873,7 +1027,15 @@ export async function deleteCollaborator(boardId, collabId) {
 }
 
 // ! -------------------------- LOGIN ----------------------------
-
+/** 
+ * ? This function will send a request to login Then return access token and refresh token
+ * * The retrieved access token and refresh token will be automatically added to AccountStore
+ * @function login
+ * @param {String} username 
+ * @param {String} password 
+ * @returns {Promise<Object>} A promise that resolves to access token and refresh token
+ * @throws {Error} Throws an error if the fetch operation fails.
+ */
 export async function login(username, password) {
   let res, item;
   try {
@@ -932,6 +1094,15 @@ export async function validateToken() {
 }
 
 // ! -------------------------- Private function ----------------------------
+/** 
+ * ? This function will check acesstoken exiped if expired this function will request to get new acesstoken before fetch 
+ * * The retrieved access token will be automatically added to AccountStore
+ * @function fetchWithTokenCheck
+ * @param {String} url - url parameter of fetch 
+ * @param {Object} options - options parameter of fetch
+ * @returns {fetch}
+ * @throws {Error} Throws an error if the fetch operation fails.
+ */
 async function fetchWithTokenCheck(url, options) {
   const accountStore = useAccountStore();
   await checkTokenExpired(); // Wait for checkTokenExpired to complete
