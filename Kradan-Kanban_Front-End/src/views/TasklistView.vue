@@ -24,6 +24,7 @@ import EditLimitStatus from "@/components/EditLimitStatus.vue";
 import { useBoardStore } from "@/stores/board.js";
 import LoadingComponent from "@/components/loadingComponent.vue";
 import { useAccountStore } from "@/stores/account.js";
+import { useToastStore } from "@/stores/toast.js";
 
 // ! ================= Variable ======================
 // ? ----------------- Store and Route ---------------
@@ -33,6 +34,7 @@ const statusStore = useStatusStore();
 const boardStore = useBoardStore();
 const route = useRoute();
 const currentRoute = route.params?.boardId;
+const toastStore = useToastStore()
 
 // ? ----------------- Modal -------------------------
 const showDetailModal = ref(false);
@@ -67,32 +69,39 @@ const closeAddModal = (res) => {
   showAddModal.value = false;
   if (res === null) return 0;
   if (typeof res === "object") {
-    showToast({ status: "success", msg: "Add task successfully" });
+    // showToast({ status: "success", msg: "Add task successfully" });
+    toastStore.createToast("Add task successfully")
     taskStore.addStoreTask(res);
     // const
-  } else showToast({ status: "error", msg: "Add task Failed" });
+  } else { 
+    // showToast({ status: "error", msg: "Add task Failed" }) 
+    toastStore.createToast("Add task Failed" , "danger")
+  };
 };
 
 const closeEditModal = (res) => {
   showDetailModal.value = false;
   if (res === null) return 0;
   if (typeof res === "object") {
-    showToast({ status: "success", msg: "Edit task successfully" });
+    // showToast({ status: "success", msg: "Edit task successfully" });
+    toastStore.createToast("Edit task successfully")
     taskStore.editStoreTask(res);
   } else {
-    showToast({
-      status: "error",
-      msg: "The error occurred, the status does not exist",
-    });
+    // showToast({
+    //   status: "error",
+    //   msg: "The error occurred, the status does not exist",
+    // });
+    toastStore.createToast("The error occurred, the status does not exist", "danger")
   }
 };
 
 function closeEditLimit(overStatus) {
   showEditLimit.value = false;
-  showToast({
-    status: "success",
-    msg: `The Kanban now limit ${statusStore.getLimit()} tasks in each status`,
-  });
+  // showToast({
+  //   status: "success",
+  //   msg: `The Kanban now limit ${statusStore.getLimit()} tasks in each status`,
+  // });
+  toastStore.createToast(`The Kanban now limit ${statusStore.getLimit()} tasks in each status`)
   if (overStatus === null || overStatus === undefined) return 0;
   if (typeof overStatus === "object") {
     showErrorModal.value = true;
@@ -394,20 +403,10 @@ function makekanbanData() {
           </summary>
           <!-- FilterStatus -->
           <ul class="absolute dropdown-menu z-[1000] rounded-box">
-            <li
-              v-for="status in statusStore.status"
-              :key="status"
-              class="menu p-2 shadow bg-base-100 w-52 itbkk-status-choice"
-              tabindex="0"
-            >
+            <li v-for="status in statusStore.status" :key="status"
+              class="menu p-2 shadow bg-base-100 w-52 itbkk-status-choice" tabindex="0">
               <div>
-                <input
-                  type="checkbox"
-                  class="checkbox"
-                  :id="status.id"
-                  :value="status.name"
-                  v-model="filterBy"
-                />
+                <input type="checkbox" class="checkbox" :id="status.id" :value="status.name" v-model="filterBy" />
                 <label :for="status.id">{{ status.name }}</label>
               </div>
             </li>
@@ -418,14 +417,11 @@ function makekanbanData() {
         <button class="itbkk-filter-clear btn" @click="filterBy = []">
           Reset
         </button>
-        <button
-          class="btn ml-1"
-          @click="
-            taskStore.taskListType === 'Table'
-              ? (taskStore.taskListType = 'Kanban')
-              : (taskStore.taskListType = 'Table')
-          "
-        >
+        <button class="btn ml-1" @click="
+          taskStore.taskListType === 'Table'
+            ? (taskStore.taskListType = 'Kanban')
+            : (taskStore.taskListType = 'Table')
+          ">
           Change View To
           {{ taskStore.taskListType === "Table" ? "Kanban" : "Table" }}
         </button>
@@ -433,18 +429,10 @@ function makekanbanData() {
         <!-- show edit limit modal -->
         <div class="float-right flex flex-row">
           <div class="form-control w-fit m-2">
-            <div
-              :class="isOwner ? '' : 'lg:tooltip'"
-              data-tip="You don't have a permission to Change Visibility"
-            >
+            <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You don't have a permission to Change Visibility">
               <label class="cursor-pointer label">
-                <input
-                  type="checkbox"
-                  class="toggle toggle-primary itbkk-board-visibility"
-                  v-model="isPublic"
-                  @change="confirmChangeVisibility()"
-                  :disabled="!isOwner"
-                />
+                <input type="checkbox" class="toggle toggle-primary itbkk-board-visibility" v-model="isPublic"
+                  @change="confirmChangeVisibility()" :disabled="!isOwner" />
                 <span class="label-text pl-1">{{
                   isPublic ? "Public" : "Private"
                 }}</span>
@@ -452,29 +440,18 @@ function makekanbanData() {
             </div>
           </div>
           <div>
-            <button
-              class="btn btn-outline w-28 float-left mr-2"
-              @click="router.push(`/board/${boardStore.currentBoardId}/collab`)"
-            >
+            <button class="btn btn-outline w-28 float-left mr-2"
+              @click="router.push(`/board/${boardStore.currentBoardId}/collab`)">
               Manage Collaborator
             </button>
           </div>
-          <div
-            :class="isOwner ? '' : 'lg:tooltip'"
-            data-tip="You don't have a permission to Add a Task"
-          >
-            <button
-              class="itbkk-button-add btn btn-square btn-outline w-16 float-left mr-2"
-              @click="showAddModal = true"
-              :disabled="!isOwner"
-            >
+          <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You don't have a permission to Add a Task">
+            <button class="itbkk-button-add btn btn-square btn-outline w-16 float-left mr-2"
+              @click="showAddModal = true" :disabled="!isOwner">
               + Add
             </button>
           </div>
-          <button
-            class="btn btn-square btn-outline w-16 float-right"
-            @click="showEditLimit = true"
-          >
+          <button class="btn btn-square btn-outline w-16 float-right" @click="showEditLimit = true">
             Limit Status
           </button>
         </div>
@@ -484,16 +461,10 @@ function makekanbanData() {
       <div class="w-3/4 mx-auto relative">
         <div class="border rounded-md w-auto p-2" v-if="filterBy.length > 0">
           Filtered Status:
-          <div
-            class="itbkk-filter-item badge font-semibold w-auto m-1"
-            v-for="(status, index) in filterBy"
-            :key="index"
-          >
+          <div class="itbkk-filter-item badge font-semibold w-auto m-1" v-for="(status, index) in filterBy"
+            :key="index">
             {{ status }}
-            <button
-              @click="filterBy.splice(index, 1)"
-              class="itbkk-filter-item-clear ml-1 text-red-600"
-            >
+            <button @click="filterBy.splice(index, 1)" class="itbkk-filter-item-clear ml-1 text-red-600">
               X
             </button>
           </div>
@@ -505,10 +476,8 @@ function makekanbanData() {
         <div class="flex flex-col">
           <!--           Table-->
 
-          <table
-            v-if="taskStore.taskListType === 'Table'"
-            class="table table-lg table-pin-rows table-pin-cols w-3/4 font-semibold mx-auto my-5 text-center text-base rounded-lg border-2 border-slate-500 border-separate border-spacing-1"
-          >
+          <table v-if="taskStore.taskListType === 'Table'"
+            class="table table-lg table-pin-rows table-pin-cols w-3/4 font-semibold mx-auto my-5 text-center text-base rounded-lg border-2 border-slate-500 border-separate border-spacing-1">
             <!-- head -->
             <thead>
               <tr>
@@ -520,45 +489,22 @@ function makekanbanData() {
                   <th class="flex justify-center">
                     Status
                     <!-- default sort button -->
-                    <svg
-                      v-if="sortBy === ''"
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        fill="currentColor"
-                        d="M11 9h9v2h-9zm0 4h7v2h-7zm0-8h11v2H11zm0 12h5v2h-5zm-6 3h2V8h3L6 4L2 8h3z"
-                      />
+                    <svg v-if="sortBy === ''" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                      viewBox="0 0 24 24">
+                      <path fill="currentColor"
+                        d="M11 9h9v2h-9zm0 4h7v2h-7zm0-8h11v2H11zm0 12h5v2h-5zm-6 3h2V8h3L6 4L2 8h3z" />
                     </svg>
                     <!-- ASC Button -->
-                    <svg
-                      v-if="sortBy === 'ASC'"
-                      class="text-pink-400"
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        fill="#323ffb"
-                        d="M11 9h9v2h-9zm0 4h7v2h-7zm0-8h11v2H11zm0 12h5v2h-5zm-6 3h2V8h3L6 4L2 8h3z"
-                      />
+                    <svg v-if="sortBy === 'ASC'" class="text-pink-400" xmlns="http://www.w3.org/2000/svg" width="18"
+                      height="18" viewBox="0 0 24 24">
+                      <path fill="#323ffb"
+                        d="M11 9h9v2h-9zm0 4h7v2h-7zm0-8h11v2H11zm0 12h5v2h-5zm-6 3h2V8h3L6 4L2 8h3z" />
                     </svg>
                     <!-- DESC Button -->
-                    <svg
-                      v-if="sortBy === 'DESC'"
-                      class="text-pink-400"
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        fill="#323ffb"
-                        d="m6 20l4-4H7V4H5v12H2zm5-12h9v2h-9zm0 4h7v2h-7zm0-8h11v2H11zm0 12h5v2h-5z"
-                      />
+                    <svg v-if="sortBy === 'DESC'" class="text-pink-400" xmlns="http://www.w3.org/2000/svg" width="18"
+                      height="18" viewBox="0 0 24 24">
+                      <path fill="#323ffb"
+                        d="m6 20l4-4H7V4H5v12H2zm5-12h9v2h-9zm0 4h7v2h-7zm0-8h11v2H11zm0 12h5v2h-5z" />
                     </svg>
                   </th>
                 </button>
@@ -570,33 +516,24 @@ function makekanbanData() {
               <tr v-if="allTasks === null">
                 <td colspan="4">Waiting For Data</td>
               </tr>
-              <tr
-                v-if="allTasks !== null"
-                v-for="(task, index) in filteredTasks"
-                :key="task.id"
-                class="itbkk-item hover"
-              >
+              <tr v-if="allTasks !== null" v-for="(task, index) in filteredTasks" :key="task.id"
+                class="itbkk-item hover">
                 <th>{{ index + 1 }}</th>
                 <td class="itbkk-title">
                   <!-- <RouterLink :to="`/task/${task.id}`"> -->
-                  <button
-                    @click="
-                      router.push(
-                        `/board/${boardStore.currentBoardId}/task/${task.id}/edit`
-                      )
-                    "
-                  >
+                  <button @click="
+                    router.push(
+                      `/board/${boardStore.currentBoardId}/task/${task.id}/edit`
+                    )
+                    ">
                     {{ task.title }}
                   </button>
                   <!-- </RouterLink> -->
                 </td>
-                <td
-                  class="itbkk-assignees"
-                  :style="{
-                    fontStyle: task.assignees ? 'normal' : 'italic',
-                    color: task.assignees ? '' : 'gray',
-                  }"
-                >
+                <td class="itbkk-assignees" :style="{
+                  fontStyle: task.assignees ? 'normal' : 'italic',
+                  color: task.assignees ? '' : 'gray',
+                }">
                   {{
                     task.assignees === null || task.assignees == ""
                       ? "Unassigned"
@@ -607,47 +544,25 @@ function makekanbanData() {
                   {{ task.status }}
                 </td>
                 <td>
-                  <div
-                    class="dropdown dropdown-bottom dropdown-end itbkk-button-action"
-                  >
-                    <div
-                      :class="isOwner ? '' : 'lg:tooltip'"
-                      data-tip="You don't have a permission to Edit or Delete Task"
-                    >
+                  <div class="dropdown dropdown-bottom dropdown-end itbkk-button-action">
+                    <div :class="isOwner ? '' : 'lg:tooltip'"
+                      data-tip="You don't have a permission to Edit or Delete Task">
                       <div tabindex="0" role="button" class="btn m-1">
-                        <svg
-                          class="swap-off fill-current"
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="32"
-                          height="32"
-                          viewBox="0 0 512 512"
-                        >
-                          <path
-                            d="M64,384H448V341.33H64Zm0-106.67H448V234.67H64ZM64,128v42.67H448V128Z"
-                          />
+                        <svg class="swap-off fill-current" xmlns="http://www.w3.org/2000/svg" width="32" height="32"
+                          viewBox="0 0 512 512">
+                          <path d="M64,384H448V341.33H64Zm0-106.67H448V234.67H64ZM64,128v42.67H448V128Z" />
                         </svg>
                       </div>
-                      <ul
-                        tabindex="0"
-                        class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
-                      >
+                      <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
                         <li>
-                          <button
-                            class="itbkk-button-edit button"
-                            :disabled="!isOwner"
-                            :class="{ disabled: !isOwner }"
-                            @click="openEditMode(task.id)"
-                          >
+                          <button class="itbkk-button-edit button" :disabled="!isOwner" :class="{ disabled: !isOwner }"
+                            @click="openEditMode(task.id)">
                             Edit
                           </button>
                         </li>
                         <li>
-                          <button
-                            class="itbkk-button-delete button"
-                            :disabled="!isOwner"
-                            :class="{ disabled: !isOwner }"
-                            @click="openDeleteModal(task.title, task.id)"
-                          >
+                          <button class="itbkk-button-delete button" :disabled="!isOwner"
+                            :class="{ disabled: !isOwner }" @click="openDeleteModal(task.title, task.id)">
                             Delete
                           </button>
                         </li>
@@ -666,101 +581,54 @@ function makekanbanData() {
             </tbody>
           </table>
 
-          <div
-            v-if="taskStore.taskListType === 'Kanban'"
-            class="flex flex-row flex-nowrap gap-5 w-3/4 mx-auto overflow-x-scroll mt-3"
-          >
-            <div
-              v-for="status in kanbanData"
-              class="kanban-status-card"
-              :style="{
-                'border-top': status.isLimit
-                  ? 'red 0.5rem solid'
-                  : 'green 0.5rem solid',
-              }"
-            >
+          <div v-if="taskStore.taskListType === 'Kanban'"
+            class="flex flex-row flex-nowrap gap-5 w-3/4 mx-auto overflow-x-scroll mt-3">
+            <div v-for="status in kanbanData" class="kanban-status-card" :style="{
+              'border-top': status.isLimit
+                ? 'red 0.5rem solid'
+                : 'green 0.5rem solid',
+            }">
               <h5 class="kanban-status-name">{{ status.name }}</h5>
               <div class="kanban-task-list">
                 <div v-for="task in status.tasks" class="kanban-task-card">
                   <div>
                     <p class="kanban-task-title">{{ task.title }}</p>
                     <div class="kanban-task-action">
-                      <div
-                        :class="isOwner ? '' : 'lg:tooltip'"
-                        data-tip="You don't have a permission to Edit or Delete Task"
-                      >
-                        <input
-                          :disabled="!isOwner"
-                          type="checkbox"
-                          :id="`kanban-task-action-${task.id}`"
-                        />
+                      <div :class="isOwner ? '' : 'lg:tooltip'"
+                        data-tip="You don't have a permission to Edit or Delete Task">
+                        <input :disabled="!isOwner" type="checkbox" :id="`kanban-task-action-${task.id}`" />
 
                         <label :for="`kanban-task-action-${task.id}`">
-                          <svg
-                            width="1rem"
-                            height="1rem"
-                            viewBox="0 0 24 24"
-                            version="1.1"
-                            xmlns="http://www.w3.org/2000/svg"
-                            xmlns:xlink="http://www.w3.org/1999/xlink"
-                          >
+                          <svg width="1rem" height="1rem" viewBox="0 0 24 24" version="1.1"
+                            xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
                             <title>Kebab-Menu</title>
-                            <g
-                              id="Kebab-Menu"
-                              stroke="none"
-                              stroke-width="1"
-                              fill="none"
-                              fill-rule="evenodd"
-                            >
-                              <rect
-                                id="Container"
-                                x="0"
-                                y="0"
-                                width="24"
-                                height="24"
-                              ></rect>
+                            <g id="Kebab-Menu" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                              <rect id="Container" x="0" y="0" width="24" height="24"></rect>
                               <path
                                 d="M12,6 C12.5522847,6 13,5.55228475 13,5 C13,4.44771525 12.5522847,4 12,4 C11.4477153,4 11,4.44771525 11,5 C11,5.55228475 11.4477153,6 12,6 Z"
-                                id="shape-03"
-                                stroke="#030819"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-dasharray="0,0"
-                              ></path>
+                                id="shape-03" stroke="#030819" stroke-width="2" stroke-linecap="round"
+                                stroke-dasharray="0,0"></path>
                               <path
                                 d="M12,13 C12.5522847,13 13,12.5522847 13,12 C13,11.4477153 12.5522847,11 12,11 C11.4477153,11 11,11.4477153 11,12 C11,12.5522847 11.4477153,13 12,13 Z"
-                                id="shape-03"
-                                stroke="#030819"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-dasharray="0,0"
-                              ></path>
+                                id="shape-03" stroke="#030819" stroke-width="2" stroke-linecap="round"
+                                stroke-dasharray="0,0"></path>
                               <path
                                 d="M12,20 C12.5522847,20 13,19.5522847 13,19 C13,18.4477153 12.5522847,18 12,18 C11.4477153,18 11,18.4477153 11,19 C11,19.5522847 11.4477153,20 12,20 Z"
-                                id="shape-03"
-                                stroke="#030819"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-dasharray="0,0"
-                              ></path>
+                                id="shape-03" stroke="#030819" stroke-width="2" stroke-linecap="round"
+                                stroke-dasharray="0,0"></path>
                             </g>
                           </svg>
                         </label>
                         <div class="kanban-task-action-menu">
                           <a @click="openEditMode(task.id)">Edit</a>
-                          <a @click="openDeleteModal(task.title, task.id)"
-                            >Delete</a
-                          >
+                          <a @click="openDeleteModal(task.title, task.id)">Delete</a>
                         </div>
                       </div>
                     </div>
                   </div>
                   <div class="kanban-task-assignee">
                     <img src="../assets/people.png" height="32" width="32" />
-                    <p
-                      v-if="task.assignees === null || task.assignees === ''"
-                      class="italic text-gray-500"
-                    >
+                    <p v-if="task.assignees === null || task.assignees === ''" class="italic text-gray-500">
                       Unassigned
                     </p>
                     <p v-else>{{ task.assignees }}</p>
@@ -776,11 +644,7 @@ function makekanbanData() {
         <!-- DetailsModal -->
         <!-- EditModal -->
         <Modal :show-modal="showDetailModal">
-          <Taskdetail
-            :isOwnerOrNot="isOwner"
-            :taskId="parseInt(selectedId)"
-            @closeModal="closeEditModal"
-          />
+          <Taskdetail :isOwnerOrNot="isOwner" :taskId="parseInt(selectedId)" @closeModal="closeEditModal" />
         </Modal>
         <!-- Add Modal -->
         <Modal :show-modal="showAddModal">
@@ -789,9 +653,7 @@ function makekanbanData() {
 
         <!-- DeleteModal -->
         <Modal :showModal="showDeleteModal">
-          <div
-            class="flex flex-col p-5 bg-slate-50 dark:bg-base-100 rounded-lg w-full"
-          >
+          <div class="flex flex-col p-5 bg-slate-50 dark:bg-base-100 rounded-lg w-full">
             <h1 class="m-2 pb-4 text-2xl font-bold">
               DELETE: {{ deleteTaskTitle }}
             </h1>
@@ -803,21 +665,12 @@ function makekanbanData() {
             </h1>
             <hr />
             <div class="flex flex-row-reverse gap-4 mt-5">
-              <button
-                @click="showDeleteModal = false"
-                class="itbkk-button-cancel btn btn-outline btn-error basis-1/6"
-              >
+              <button @click="showDeleteModal = false" class="itbkk-button-cancel btn btn-outline btn-error basis-1/6">
                 Close
               </button>
-              <button
-                @click="deleteThisTask()"
-                class="itbkk-button-confirm btn btn-outline btn-success basis-1/6"
-              >
+              <button @click="deleteThisTask()" class="itbkk-button-confirm btn btn-outline btn-success basis-1/6">
                 {{ loading ? "" : "Confirm" }}
-                <span
-                  class="loading loading-spinner text-success"
-                  v-if="loading"
-                ></span>
+                <span class="loading loading-spinner text-success" v-if="loading"></span>
               </button>
             </div>
           </div>
@@ -825,16 +678,11 @@ function makekanbanData() {
 
         <!-- edit limit modal-->
         <Modal :show-modal="showEditLimit">
-          <EditLimitStatus
-            :isOwnerOrNot="isOwner"
-            @close-modal="closeEditLimit"
-          />
+          <EditLimitStatus :isOwnerOrNot="isOwner" @close-modal="closeEditLimit" />
         </Modal>
 
         <Modal :show-modal="showChangeVisibilityModal">
-          <div
-            class="flex flex-col p-5 bg-slate-50 dark:bg-base-100 rounded-lg w-full itbkk-modal-alert"
-          >
+          <div class="flex flex-col p-5 bg-slate-50 dark:bg-base-100 rounded-lg w-full itbkk-modal-alert">
             <h1 class="m-2 pb-4 text-2xl font-bold">
               Board visibility changed!
             </h1>
@@ -842,27 +690,18 @@ function makekanbanData() {
             <h1 class="itbkk-message font-semibold text-xl p-8">
               {{
                 isPublic
-                  ? "In public, anyone can view the board,task list and task detail of tasks in the board. Do you want to change board visibility to public?"
-                  : "In private, only board owner can access/control board. Do you want to change board visibility to private?"
+                  ? "In public, anyone can view the board,task list and task detail of tasks in the board. Do you want to change board visibility to public ? "
+                : "In private, only board owner can access/control board. Do you want to change board visibility to private ? "
               }}
             </h1>
             <hr />
             <div class="flex flex-row-reverse gap-4 mt-5">
-              <button
-                @click="cancelUpdateVisibility()"
-                class="itbkk-button-cancel btn btn-outline btn-error basis-1/6"
-              >
+              <button @click="cancelUpdateVisibility()" class="itbkk-button-cancel btn btn-outline btn-error basis-1/6">
                 Close
               </button>
-              <button
-                @click="updateVisibility()"
-                class="itbkk-button-confirm btn btn-outline btn-success basis-1/6"
-              >
+              <button @click="updateVisibility()" class="itbkk-button-confirm btn btn-outline btn-success basis-1/6">
                 {{ loading ? "" : "Confirm" }}
-                <span
-                  class="loading loading-spinner text-success"
-                  v-if="loading"
-                ></span>
+                <span class="loading loading-spinner text-success" v-if="loading"></span>
               </button>
             </div>
           </div>
@@ -870,9 +709,7 @@ function makekanbanData() {
 
         <!-- Error Modal -->
         <Modal :show-modal="showErrorModal">
-          <div
-            class="itbkk-modal-task flex flex-col gap-3 p-5 text-black bg-slate-50 rounded-lg w-full m-auto"
-          >
+          <div class="itbkk-modal-task flex flex-col gap-3 p-5 text-black bg-slate-50 rounded-lg w-full m-auto">
             <h2>Have Task Over Limit!!!</h2>
             <hr />
             <p>
@@ -893,10 +730,7 @@ function makekanbanData() {
                 </tr>
               </tbody>
             </table>
-            <button
-              class="btn btn-outline btn-primary w-fit self-end"
-              @click="showErrorModal = false"
-            >
+            <button class="btn btn-outline btn-primary w-fit self-end" @click="showErrorModal = false">
               OKAY
             </button>
           </div>
@@ -904,39 +738,16 @@ function makekanbanData() {
 
         <!-- Toast -->
         <div class="toast">
-          <div
-            role="alert"
-            class="alert"
-            :class="`alert-${toast.status}`"
-            v-if="toast.status !== ''"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="stroke-current shrink-0 h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              v-if="toast.status === 'success'"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
+          <div role="alert" class="alert" :class="`alert-${toast.status}`" v-if="toast.status !== ''">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none"
+              viewBox="0 0 24 24" v-if="toast.status === 'success'">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="stroke-current shrink-0 h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              v-if="toast.status === 'error'"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none"
+              viewBox="0 0 24 24" v-if="toast.status === 'error'">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span>{{ toast.msg }}</span>
           </div>
@@ -945,22 +756,17 @@ function makekanbanData() {
     </div>
   </transition>
   <transition>
-    <loading-component
-      v-if="loading"
-      class="absolute top-1/2"
-    ></loading-component>
+    <loading-component v-if="loading" class="absolute top-1/2"></loading-component>
   </transition>
 </template>
 
 <style scoped>
 ::backdrop {
-  background-image: linear-gradient(
-    45deg,
-    magenta,
-    rebeccapurple,
-    dodgerblue,
-    green
-  );
+  background-image: linear-gradient(45deg,
+      magenta,
+      rebeccapurple,
+      dodgerblue,
+      green);
   opacity: 0.75;
 }
 
@@ -1089,22 +895,22 @@ function makekanbanData() {
         opacity: 1;
       }
 
-      .kanban-task-action
-        input[type="checkbox"]:checked
-        ~ .kanban-task-action-menu {
+      .kanban-task-action input[type="checkbox"]:checked~.kanban-task-action-menu {
         /*opacity: 100%;
         //transition: opacity 1s ease;
         //display: block;*/
-        max-height: 500px; /* ตั้ง max-height มากพอให้ครอบคลุมความสูงทั้งหมดของเมนู */
+        max-height: 500px;
+        /* ตั้ง max-height มากพอให้ครอบคลุมความสูงทั้งหมดของเมนู */
         opacity: 1;
         transition: max-height 1.5s ease;
       }
 
-      .kanban-task-action input[type="checkbox"] ~ .kanban-task-action-menu {
+      .kanban-task-action input[type="checkbox"]~.kanban-task-action-menu {
         /*opacity: 100%;
         //transition: opacity 1s ease;
         //display: block;*/
-        max-height: 0; /* ตั้ง max-height มากพอให้ครอบคลุมความสูงทั้งหมดของเมนู */
+        max-height: 0;
+        /* ตั้ง max-height มากพอให้ครอบคลุมความสูงทั้งหมดของเมนู */
         transition: max-height 1.25s ease, opacity 1s ease;
       }
     }
