@@ -242,8 +242,8 @@ public class BoardController {
     }
 
     @PatchMapping("{boardId}/collabs/{collabId}")
-    public ResponseEntity<CollabEntity> updateAccessCollaborator(@PathVariable String boardId, @PathVariable String collabId, @RequestBody CollabDTO CollabDTO) {
-        CollabEntity collabEntity = modelMapper.map(CollabDTO, CollabEntity.class);
+    public ResponseEntity<CollabEntity> updateAccessCollaborator(@PathVariable String boardId, @PathVariable String collabId, @RequestBody CollabEntity newCollabEntity) {
+        CollabEntity collabEntity = collabService.updateAccessCollaborator(boardId, collabId, newCollabEntity);
         return ResponseEntity.ok(collabEntity);
     }
 

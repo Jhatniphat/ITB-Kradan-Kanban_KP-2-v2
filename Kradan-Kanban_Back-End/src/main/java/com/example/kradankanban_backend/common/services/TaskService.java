@@ -123,7 +123,7 @@ public class TaskService {
 
     @Transactional
     public SimpleTaskDTO deleteTaskByBoardIdAndTaskId(String userId, String boardId, int taskId) {
-        //        checkAccessRight(boardId);
+        checkAccessRight(boardId);
         if (!repository.existsByIdAndTkBoard(taskId, boardRepository.findByBoardId(boardId).orElseThrow(() -> new WrongBoardException("Board not found")))) {
             throw new WrongBoardException("Board not found");
         }
