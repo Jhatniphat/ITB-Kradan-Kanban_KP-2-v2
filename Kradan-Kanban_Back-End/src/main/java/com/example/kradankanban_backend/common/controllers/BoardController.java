@@ -97,6 +97,12 @@ public class BoardController {
         return ResponseEntity.ok(editVisibility);
     }
 
+    @DeleteMapping("/{boardId}")
+    public ResponseEntity<BoardEntity> deleteBoard(@PathVariable String boardId) {
+        BoardEntity deletedBoard = service.deleteBoard(boardId);
+        return ResponseEntity.ok(deletedBoard);
+    }
+
     //  ! ============================================== TASK ==============================================
 
     // "/boards/tasks"

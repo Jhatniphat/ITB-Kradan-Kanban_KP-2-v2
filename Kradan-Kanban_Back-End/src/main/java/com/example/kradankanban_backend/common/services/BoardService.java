@@ -19,15 +19,11 @@ import io.viascom.nanoid.NanoId;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -206,6 +202,15 @@ public class BoardService {
         board.setVisibility(visibility.getVisibility());
         repository.save(board);
         return visibility;
+    }
+
+    @Transactional
+    public BoardEntity deleteBoard(String boardId) {
+        BoardEntity board = repository.findById(boardId).orElseThrow(() -> new WrongBoardException(boardId + "does not exist'"));
+        collabRepository.deleteAllByBoardId(boardId);
+
+        repository.delete(board);
+        return board;
     }
 
     public void CheckOwnerAndVisibility(String boardId, String userId, String requestMethod) {
