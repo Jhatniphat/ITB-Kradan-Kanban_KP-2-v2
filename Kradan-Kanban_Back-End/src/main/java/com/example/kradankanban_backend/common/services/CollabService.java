@@ -60,6 +60,9 @@ public class CollabService {
 
     public CollabEntity updateAccessCollaborator(String boardId, String userId, CollabEntity newCollabEntity) {
         CollabEntity collab = collabRepository.findByBoardIdAndUserId(boardId, userId).orElseThrow(() -> new ItemNotFoundException("No Collaborator found"));
+        if (newCollabEntity.getAccessRight() == null) {
+            throw new BadRequestException("Access right is required");
+        }
         collab.setAccessRight(newCollabEntity.getAccessRight());
         collabRepository.save(collab);
         return collab;

@@ -109,7 +109,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
             if (isCollaborator) {
                 CollabEntity collab =  collabService.getCollaborators(boardId, currentUser.getOid());
-                if (collab.getAccessRight().equals(CollabEntity.AccessRight.READ) && !requestMethod.equals("GET") && !requestMethod.equals("DELETE") ) {
+                if (collab.getAccessRight().equals(CollabEntity.AccessRight.READ) && !(requestMethod.equals("GET") || requestMethod.equals("DELETE")) ) {
                     throw new ForbiddenException("FORBIDDEN");
                 }
             }

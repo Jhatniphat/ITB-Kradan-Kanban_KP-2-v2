@@ -97,6 +97,12 @@ public class BoardController {
         return ResponseEntity.ok(editVisibility);
     }
 
+    @DeleteMapping("/{boardId}")
+    public ResponseEntity<BoardEntity> deleteBoard(@PathVariable String boardId) {
+        BoardEntity deletedBoard = service.deleteBoard(boardId);
+        return ResponseEntity.ok(deletedBoard);
+    }
+
     //  ! ============================================== TASK ==============================================
 
     // "/boards/tasks"
@@ -242,8 +248,8 @@ public class BoardController {
     }
 
     @PatchMapping("{boardId}/collabs/{collabId}")
-    public ResponseEntity<CollabEntity> updateAccessCollaborator(@PathVariable String boardId, @PathVariable String collabId, @RequestBody CollabDTO CollabDTO) {
-        CollabEntity collabEntity = modelMapper.map(CollabDTO, CollabEntity.class);
+    public ResponseEntity<CollabEntity> updateAccessCollaborator(@PathVariable String boardId, @PathVariable String collabId, @RequestBody CollabEntity newCollabEntity) {
+        CollabEntity collabEntity = collabService.updateAccessCollaborator(boardId, collabId, newCollabEntity);
         return ResponseEntity.ok(collabEntity);
     }
 
