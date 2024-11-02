@@ -53,6 +53,7 @@ public class CollabService {
         collabEntity.setBoardId(boardId);
         collabEntity.setUserId(user.getOid());
         collabEntity.setAccessRight(collabRequestDTO.getAccessRight());
+        collabEntity.setStatus(CollabEntity.Status.PENDING);
         collabRepository.save(collabEntity);
 
         return collabEntity;
@@ -79,5 +80,14 @@ public class CollabService {
     public boolean isCollaborator(String boardId, String userId) {
         Optional<CollabEntity> collab = collabRepository.findByBoardIdAndUserId(boardId, userId);
         return collab.isPresent();
+    }
+
+    public boolean isWriteAccess(String boardId, String userId) {
+        return collabRepository.existsByBoardIdAndUserIdAndAccessRight(boardId, userId, CollabEntity.AccessRight.WRITE);
+    }
+
+    public boolean isStatusPending(String boardId, String userId) {
+        CollabEntity collab = collabRepository.findByBoardIdAndUserId(boardId, userId).orElseThrow(() -> new ItemNotFoundException("No Collaborator found"));
+        return collab.getStatus().equals(CollabEntity.Status.PENDING);
     }
 }

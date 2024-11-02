@@ -77,10 +77,10 @@ public class StatusService {
     // * editStatus
     @Transactional
     public StatusEntity editStatus(String boardId ,int id, StatusEntity status) {
+        StatusEntity oldStatus = repository.findById(id).orElseThrow( () -> new ItemNotFoundException("No status found with id: " + id) );
         if (!boardRepository.existsById(boardId) || !repository.existsByIdAndStBoard(id, boardId)) {
             throw new WrongBoardException("No board found with id: " + boardId);
         }
-        StatusEntity oldStatus = repository.findById(id).orElseThrow( () -> new ItemNotFoundException("No status found with id: " + id) );
         if (oldStatus.getName().equals("No Status") || oldStatus.getName().equals("Done")){
             throw new BadRequestException( "'" + oldStatus.getName() +"'"+ " cannot be edited !!!");
         }
@@ -112,7 +112,7 @@ public class StatusService {
 
     // * deleteStatus
     public StatusEntity deleteStatus(String userId, String boardId ,int id) {
-        checkAccessRight(boardId);
+//        checkAccessRight(boardId);
         if (!boardRepository.existsById(boardId) || !repository.existsByIdAndStBoard(id, boardId)) {
             throw new WrongBoardException("No board found with id: " + boardId);
         }

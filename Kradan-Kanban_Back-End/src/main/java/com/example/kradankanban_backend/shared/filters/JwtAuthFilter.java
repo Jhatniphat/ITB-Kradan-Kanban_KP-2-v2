@@ -103,20 +103,39 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (currentUser != null) {
             boolean isOwner = boardService.isBoardOwner(boardId,currentUser.getOid());
             boolean isCollaborator = collabService.isCollaborator(boardId, currentUser.getOid());
-            System.out.println(isCollaborator);
+            boolean isWriteAccess = collabService.isWriteAccess(boardId, currentUser.getOid());
             if ((!isOwner && !isCollaborator) && (!isPublic || !requestMethod.equals("GET"))) {
                 throw new ForbiddenException("FORBIDDEN");
             }
             if (isCollaborator) {
-                CollabEntity collab =  collabService.getCollaborators(boardId, currentUser.getOid());
-                if (collab.getAccessRight().equals(CollabEntity.AccessRight.READ) && !(requestMethod.equals("GET") || requestMethod.equals("DELETE")) ) {
-                    throw new ForbiddenException("FORBIDDEN");
+                if (isWriteAccess) {
+                    if ((requestMethod.equals("POST") || requestMethod.equals("PATCH")) && !(request.getRequestURI().endsWith("/tasks") || request.getRequestURI().endsWith("/statuses"))) {
+                        throw new ForbiddenException("Write access not allowed for this request");
+                    }
+                    if (requestMethod.equals("DELETE") && request.getRequestURI().contains("/collabs/")) {
+                        String[] uri = request.getRequestURI().split("/");
+                        String collabId = uri[uri.length - 1];
+                        if (!collabId.equals(currentUser.getOid())) {
+                            throw new ForbiddenException("collaborator cannot delete other collaborators");
+                        }
+                    }
+                } else {
+                    if (requestMethod.equals("DELETE") && request.getRequestURI().contains("/collabs/")) {
+                        String[] uri = request.getRequestURI().split("/");
+                        String collabId = uri[uri.length - 1];
+                        if (!collabId.equals(currentUser.getOid())) {
+                            throw new ForbiddenException("collaborator cannot delete other collaborators");
+                        }
+                    }
+                    else if (!requestMethod.equals("GET")) {
+                        throw new ForbiddenException("Read access not allowed for this request");
+                    }
                 }
             }
         } else {
             if (!isPublic) {
                 if ( requestMethod.equals("GET")) {
-                    throw new ForbiddenException("FORBIDDEN");
+                    throw new ForbiddenException("Board is private, Only Collaborator and Owner can access");
                 } else {
                     throw new AuthenticationFailedException(tokenError);
                 }
