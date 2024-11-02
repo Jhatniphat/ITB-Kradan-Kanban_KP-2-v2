@@ -946,7 +946,6 @@ async function fetchWithTokenCheck(url, options) {
 
 export async function checkTokenExpired() {
   const accountStore = useAccountStore();
-  console.log("Checking token expiry");
   if (!accountStore.isAccessTokenExpired()) {
     return;
   }
