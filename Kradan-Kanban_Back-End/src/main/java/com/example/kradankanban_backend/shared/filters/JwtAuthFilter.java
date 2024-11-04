@@ -77,7 +77,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
                 handleRequest(request, isTokenValid, tokenError);
             } else if (!isTokenValid && !request.getRequestURI().equals("/v3/boards")) {
-                System.out.println(isTokenValid);
                 throw new AuthenticationFailedException("Invalid token");
             }
             chain.doFilter(request, response);
@@ -91,7 +90,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String requestMethod = request.getMethod();
         AuthUser currentUser = JwtUserDetailsService.getCurrentUser();
         boolean isBoardExist = boardService.boardExists(boardId);
-        System.out.println(isBoardExist);
         if (!isBoardExist) {
             if (!isTokenValid && !requestMethod.equals("GET")) {
                 throw new AuthenticationFailedException("Unauthorized");
@@ -134,7 +132,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
         } else {
             if (!isPublic) {
-                if ( requestMethod.equals("GET")) {
+                if (requestMethod.equals("GET")) {
                     throw new ForbiddenException("Board is private, Only Collaborator and Owner can access");
                 } else {
                     throw new AuthenticationFailedException(tokenError);

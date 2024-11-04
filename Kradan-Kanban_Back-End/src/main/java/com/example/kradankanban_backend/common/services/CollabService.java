@@ -37,6 +37,10 @@ public class CollabService {
         return collabRepository.findByBoardIdAndUserId(boardId, userId).orElseThrow(() -> new ItemNotFoundException("No Collaborator found"));
     }
 
+    public List<CollabEntity> getAllInvitations(String boardId) {
+        return collabRepository.findPendingCollaboratorsByBoardId(boardId);
+    }
+
     public CollabEntity addCollaborator(String boardId, CollabRequestDTO collabRequestDTO) {
         BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("No Board found"));
         UserEntity user = userRepository.findByEmail(collabRequestDTO.getEmail()).orElseThrow(() -> new ItemNotFoundException("No Collaborator found"));
@@ -69,6 +73,14 @@ public class CollabService {
         return collab;
     }
 
+    public CollabEntity updateStatusCollaborator(String boardId, String userId) {
+        BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("No Board found"));
+        CollabEntity collab = collabRepository.findByBoardIdAndUserId(boardId, userId).orElseThrow(() -> new ItemNotFoundException("No Collaborator found"));
+        collab.setStatus(CollabEntity.Status.ACCEPTED);
+        collabRepository.save(collab);
+        return collab;
+    }
+
     public CollabEntity deleteCollaborator(String boardId, String userId) {
         BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("No Board found"));
         CollabEntity collab = collabRepository.findByBoardIdAndUserId(boardId, userId).orElseThrow(() -> new ItemNotFoundException("No Collaborator found"));
@@ -78,6 +90,9 @@ public class CollabService {
     }
 
     public boolean isCollaborator(String boardId, String userId) {
+        if (!collabRepository.existsByBoardIdAndUserIdAndStatus(boardId, userId, CollabEntity.Status.ACCEPTED)) {
+            return false;
+        }
         Optional<CollabEntity> collab = collabRepository.findByBoardIdAndUserId(boardId, userId);
         return collab.isPresent();
     }
@@ -85,6 +100,10 @@ public class CollabService {
     public boolean isWriteAccess(String boardId, String userId) {
         return collabRepository.existsByBoardIdAndUserIdAndAccessRight(boardId, userId, CollabEntity.AccessRight.WRITE);
     }
+
+//    public boolean isStatusAccepted(String boardId, String userId) {
+//        return collabRepository.existsByBoardIdAndUserIdAndStatus(boardId, userId, CollabEntity.Status.ACCEPTED);
+//    }
 
     public boolean isStatusPending(String boardId, String userId) {
         CollabEntity collab = collabRepository.findByBoardIdAndUserId(boardId, userId).orElseThrow(() -> new ItemNotFoundException("No Collaborator found"));
