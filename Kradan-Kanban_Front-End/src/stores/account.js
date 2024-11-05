@@ -59,6 +59,7 @@ export const useAccountStore = defineStore("account", {
                 localStorage.removeItem("tokenDetail");
                 useTaskStore().clearTask()
                 useStatusStore().clearStatus()
+                useBoardStore().clearBoard()
             }
         },
     })

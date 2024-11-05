@@ -16,6 +16,7 @@ import LoadingComponent from "@/components/loadingComponent.vue";
 import { useAccountStore } from "@/stores/account.js";
 import AddCollab from "@/components/Collab/AddCollabModal.vue";
 import router from "@/router/index.js";
+import { useToastStore } from "@/stores/toast.js";
 
 // ! ================= Variable ======================
 // ? ----------------- Store and Route ---------------
@@ -23,6 +24,7 @@ const accountStore = useAccountStore();
 const boardStore = useBoardStore();
 const route = useRoute();
 const currentRoute = route.params?.boardId;
+const toastStore = useToastStore();
 
 // ? ----------------- Modal -------------------------
 const showAddModal = ref(false);
@@ -45,6 +47,7 @@ const fetchCollaborators = async () => {
   if (response.error) {
     error.value = response.message;
     showToast({ status: "error", msg: response.message });
+    toastStore.createToast(response.message , 'danger')
   } else {
     allCollabs.value = response; // Set the collaborator data
   }
@@ -62,18 +65,18 @@ onBeforeMount(async () => {
 const closeAddModal = (res) => {
   showAddModal.value = false;
   if (res === null) return 0;
-  if (typeof res === "object") {
-    showToast({ status: "success", msg: "Add Collaborator successfully" });
-  } else if (res === 403) {
-    showToast({
-      status: "AccessDenied",
-      msg: "You do not have permission to add board collaborator.",
-    });
-  } else
-    showToast({
-      status: "error",
-      msg: "There is a problem. Please try again later.",
-    });
+  // if (typeof res === "object") {
+  //   showToast({ status: "success", msg: "Add Collaborator successfully" });
+  // } else if (res === 403) {
+  //   showToast({
+  //     status: "AccessDenied",
+  //     msg: "You do not have permission to add board collaborator.",
+  //   });
+  // } else
+  //   showToast({
+  //     status: "error",
+  //     msg: "There is a problem. Please try again later.",
+  //   });
 };
 
 // ! ================= Toast ======================

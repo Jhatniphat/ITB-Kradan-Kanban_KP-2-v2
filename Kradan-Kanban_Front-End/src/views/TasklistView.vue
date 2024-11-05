@@ -283,12 +283,16 @@ onBeforeMount(async () => {
       const currentBoard = boardStore.currentBoard;
       isOwner.value = currentBoard.owner.oid === accountStore.tokenDetail.oid;
 
-      const currentUser = currentBoard.collaborators.find((collaborator) => collaborator.oid === accountStore.tokenDetail.oid);
+      if (!isOwner.value) {
+        const currentUser = currentBoard.collaborators.find((collaborator) => collaborator.oid === accountStore.tokenDetail.oid);
 
-      if (currentUser) {
-        canRead.value = currentUser.accessRight === 'READ';
-      } else {
-        canRead.value = false; // User is not a collaborator
+        if (currentUser) {
+          canRead.value = currentUser.accessRight === 'READ';
+        } else {
+          canRead.value = false; // User is not a collaborator
+        }
+      }else{
+        canRead.value = true;
       }
 
       if (!isOwner.value && !canRead.value && currentBoard.visibility === 'PRIVATE') {
