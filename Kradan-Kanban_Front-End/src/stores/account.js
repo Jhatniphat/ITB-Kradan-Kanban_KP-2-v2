@@ -1,7 +1,10 @@
 import {defineStore} from "pinia";
 import VueJwtDecode from 'vue-jwt-decode'
 import {useBoardStore} from "@/stores/board.js";
-
+import { useToastStore } from "./toast";
+import { useTaskStore } from "./task";
+import Taskdetail from "@/components/Tasks/Taskdetail.vue";
+import { useStatusStore } from "./status";
 export const useAccountStore = defineStore("account", {
         state: () => ({
             tokenDetail: JSON.parse(localStorage.getItem("tokenDetail")) || {},
@@ -24,6 +27,7 @@ export const useAccountStore = defineStore("account", {
                     this.refreshToken = token.refresh_token;
                     localStorage.setItem("refresh_token", token.refresh_token);
                 }
+                useToastStore().createToast(`Welcome back, ${this.tokenDetail?.name}`, "success"); 
             },
             setTokenDetail(tokenDetail) {
                 this.tokenDetail = tokenDetail;
@@ -46,12 +50,15 @@ export const useAccountStore = defineStore("account", {
                 return decodedToken.exp < currentTime;
             },
             clearToken() {
+                useToastStore().createToast(`See you later, ${this.tokenDetail?.name}`, "success"); 
                 this.tokenRaw = "";
                 this.refreshToken = "";
                 this.tokenDetail = {};
                 localStorage.removeItem("token");
                 localStorage.removeItem("refresh_token");
                 localStorage.removeItem("tokenDetail");
+                useTaskStore().clearTask()
+                useStatusStore().clearStatus()
             }
         },
     })

@@ -77,6 +77,10 @@ export const useStatusStore = defineStore('status', {
         setLimitEnable(limitEnable) {
             this.limitEnable = limitEnable
         },
-
+        clearStatus() {
+            this.status = []
+            this.limit = 10
+            this.limitEnable = null
+        }
     }
 })

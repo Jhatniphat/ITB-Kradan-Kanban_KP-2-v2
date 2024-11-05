@@ -3,7 +3,7 @@ import { useAccountStore } from "@/stores/account";
 import { useBoardStore } from "@/stores/board.js";
 import { useTaskStore } from "@/stores/task.js";
 import { useStatusStore } from "@/stores/status.js";
-
+import { useToastStore } from "@/stores/toast";
 // ! -------------------------------- Task ------------------------------------------
 export async function getAllTasks() {
   const accountStore = useAccountStore();
@@ -739,7 +739,6 @@ export async function getLimitStatusForGuest() {
 }
 
 // ! -------------------------- COLLABORATOR ----------------------------
-
 export async function getAllCollabs() {
   const boardId = useBoardStore().currentBoardId;
   try {
@@ -769,11 +768,11 @@ export async function getAllCollabs() {
   }
 };
 
-
-
 export async function addCollaborator(newCollaborator) {
   let res, item;
   const boardId = useBoardStore().currentBoardId;
+  const toastStore = useToastStore();
+  toastStore.createToast("Adding collaborator..." , "waiting");
   try {
     const accountStore = useAccountStore();
     res = await fetchWithTokenCheck(
@@ -788,7 +787,8 @@ export async function addCollaborator(newCollaborator) {
       }
     );
     console.log(res.status)
-    if (res.status === 201) {
+    if (res.status === 201 || res.status === 200) {
+      toastStore.createToast("Collaborator added successfully");
       item = await res.json();
       return item;
     }
@@ -797,17 +797,22 @@ export async function addCollaborator(newCollaborator) {
       router.push("/login");
       return;
     }
-    if (res.status === 403) {
-      console.log("You do not have permission to add board collaborator.");
+    if (res.status === 409) {
+      toastStore.createToast("The user is already a collaborator of this board." , "danger");
       return res.status;
     }
-    if (res.status === 409) {
-      console.log("The user is already a collaborator of this board.");
+    if (res.status === 403) {
+      toastStore.createToast("You do not have permission to add board collaborator." , "danger");
+      return res.status;
+    }
+    if (res.status === 404) {
+      toastStore.createToast("User not found" , 'danger');
+      console.log("User not found");
       return res.status;
     }
     return res.status;
   } catch (error) {
-    console.error("Error adding collaborator:", error);
+    toastStore.createToast("adding collaborator failed", "danger");
     return error;
   }
 }

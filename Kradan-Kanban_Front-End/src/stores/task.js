@@ -46,6 +46,9 @@ export const useTaskStore = defineStore("tasks", {
         }
       })
     },
+    clearTask() {
+      this.tasks = [];
+    }
   },
 
   // return { count, doubleCount, increment }
