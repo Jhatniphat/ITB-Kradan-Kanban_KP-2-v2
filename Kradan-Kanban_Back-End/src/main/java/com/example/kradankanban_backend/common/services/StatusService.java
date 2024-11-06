@@ -99,8 +99,6 @@ public class StatusService {
 //        if (status.getDescription() != null && status.getDescription().trim().length() > 200) {
 //            throw new BadRequestException("Status Description length should be less than 200 !!!");
 //        }
-
-
         try {
             status.setStBoard(boardId);
             status.setId(id);
@@ -124,9 +122,9 @@ public class StatusService {
             throw new BadRequestException("Have Task On This Status");
         }
         BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
-        if (!board.getUserId().equals(userId)) {
-            throw new ForbiddenException("You do not have access this board.");
-        }
+//        if (!board.getUserId().equals(userId)) {
+//            throw new ForbiddenException("You do not have access this board.");
+//        }
         if (status.getName().equals("No Status")) {
             throw new BadRequestException("Cannot delete 'No Status'!!!");
         }
