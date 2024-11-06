@@ -253,26 +253,18 @@ public class BoardController {
         return ResponseEntity.ok(collabEntity);
     }
 
+    @PatchMapping("{boardId}/collabs/invitations")
+    public ResponseEntity<CollabEntity> updateStatusCollaborator(@PathVariable String boardId, @RequestBody CollabEntity newCollabEntity) {
+        CollabEntity collabEntity = collabService.updateStatusCollaborator(boardId, newCollabEntity);
+        return ResponseEntity.ok(collabEntity);
+    }
+
     @DeleteMapping("{boardId}/collabs/{collabId}")
     public ResponseEntity<CollabEntity> deleteCollaborator(@PathVariable String boardId, @PathVariable String collabId) {
         CollabEntity collabEntity = collabService.deleteCollaborator(boardId, collabId);
         return ResponseEntity.ok(collabEntity);
     }
 
-    //  ! ============================================== INVITE ==============================================
-
-    //See all invitations
-//    @GetMapping("{boardId}/collabs/invitations")
-//    public ResponseEntity<List<CollabDTO>> getAllInvitations(@PathVariable String boardId) {
-//        List<CollabEntity> collabEntities = collabService.getAllInvitations(boardId);
-//        List<CollabDTO> collabDTOs = collabEntities.stream().map(collabEntity -> {
-//            UserEntity user = jwtUserDetailsService.getUserById(collabEntity.getUserId());
-//            CollabDTO collabDTO = modelMapper.map(collabEntity, CollabDTO.class);
-//            modelMapper.map(user, collabDTO);
-//            return collabDTO;
-//        }).collect(Collectors.toList());
-//        return ResponseEntity.ok(collabDTOs);
-//    }
 
 
     //  ! ============================================== PRIVATE METHOD ==============================================

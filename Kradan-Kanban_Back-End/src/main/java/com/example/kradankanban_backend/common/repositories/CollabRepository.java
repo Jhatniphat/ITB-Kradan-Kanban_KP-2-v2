@@ -15,8 +15,5 @@ public interface CollabRepository extends JpaRepository<CollabEntity, CollabId> 
     boolean existsByBoardIdAndUserIdAndAccessRight(String boardId, String userId, CollabEntity.AccessRight accessRight);
     boolean existsByBoardIdAndUserIdAndStatus(String boardId, String userId, CollabEntity.Status status);
 
-    @Query("SELECT c FROM CollabEntity c JOIN BoardEntity b WHERE b.boardId = :boardId AND c.status = 'PENDING'")
-    List<CollabEntity> findPendingCollaboratorsByBoardId(@Param("boardId") String boardId);
-
     void deleteAllByBoardId(String boardId);
 }
