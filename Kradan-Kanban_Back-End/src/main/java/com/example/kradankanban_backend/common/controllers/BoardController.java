@@ -259,6 +259,21 @@ public class BoardController {
         return ResponseEntity.ok(collabEntity);
     }
 
+    //  ! ============================================== INVITE ==============================================
+
+    //See all invitations
+//    @GetMapping("{boardId}/collabs/invitations")
+//    public ResponseEntity<List<CollabDTO>> getAllInvitations(@PathVariable String boardId) {
+//        List<CollabEntity> collabEntities = collabService.getAllInvitations(boardId);
+//        List<CollabDTO> collabDTOs = collabEntities.stream().map(collabEntity -> {
+//            UserEntity user = jwtUserDetailsService.getUserById(collabEntity.getUserId());
+//            CollabDTO collabDTO = modelMapper.map(collabEntity, CollabDTO.class);
+//            modelMapper.map(user, collabDTO);
+//            return collabDTO;
+//        }).collect(Collectors.toList());
+//        return ResponseEntity.ok(collabDTOs);
+//    }
+
 
     //  ! ============================================== PRIVATE METHOD ==============================================
 

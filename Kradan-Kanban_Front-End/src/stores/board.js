@@ -2,6 +2,8 @@ import {defineStore} from "pinia";
 import router from "@/router/index.js";
 import {getBoardById, getBoardByIdForGuest} from "@/lib/fetchUtils";
 import {useAccountStore} from "@/stores/account.js";
+import { useTaskStore } from "./task";
+import { useStatusStore } from "./status";
 
 export const useBoardStore = defineStore("Board", {
     state: () => ({
@@ -39,14 +41,20 @@ export const useBoardStore = defineStore("Board", {
             return this.boards.find((board) => board.id === id);
         },
         async setCurrentBoardId(boardId) {
+            if (this.currentBoardId !== boardId) {
+                useTaskStore().clearTask();
+                useStatusStore().clearStatus();
+            }
             if (this.findBoardById(boardId) !== null && this.findBoardById(boardId) !== undefined) {
                 this.currentBoardId = boardId;
                 this.currentBoard = this.findBoardById(boardId);
+                this.currentBoardCollab = this.currentBoard.collaborators;
+                // useToastStore().createToast(`Now you are in "${this.currentBoard.name}"`);
                 return this.currentBoard;
             } else {
                 try {
                     let board
-                    if (useAccountStore().tokenRaw === "") {
+                    if (useAccountStore().refreshToken === "") {
                         board = await getBoardByIdForGuest(boardId);
                     } else {
                         board = await getBoardById(boardId);
@@ -56,14 +64,34 @@ export const useBoardStore = defineStore("Board", {
                     } else {
                         this.currentBoardId = boardId;
                         this.currentBoard = board.payload;
+                        this.currentBoardCollab = this.currentBoard.collaborators;
+                        // useToastStore().createToast(`Now you are in "${this.currentBoard.name}"`);
                     }
                 } catch (error) {
                     console.error("Failed to fetch board:", error);
                     router.push("/login");
                 }
             }
-
+        },
+        addCollaborator(collab) {
+            this.currentBoard.collaborators.push(collab);
+        },
+        removeCollaborator(collab) {
+            const index = this.currentBoard.collaborators.findIndex((c) => c.email === collab.email);
+            if (index !== -1) {
+                this.currentBoard.collaborators.splice(index, 1);
+            }
+        },
+        clearBoard() {
+            this.boards = [];
+            this.currentBoardId = "";
+            this.currentBoard = {};
+        },
+        editCollaborator(collab) {
+            const index = this.currentBoard.collaborators.findIndex((c) => c.email === collab.email);
+            if (index !== -1) {
+                this.currentBoard.collaborators.splice(index, 1, collab);
+            }
         }
     }
-    // return { count, doubleCount, increment }
 });

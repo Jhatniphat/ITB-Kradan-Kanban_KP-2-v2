@@ -1,13 +1,13 @@
 <script setup>
-import { computed, onMounted, ref } from "vue";
-import { useStatusStore } from "@/stores/status.js";
+import { computed, onMounted, ref } from 'vue';
+import { useStatusStore } from '@/stores/status.js';
 
-import { toggleLimitStatus } from "@/lib/fetchUtils.js";
+import { toggleLimitStatus } from '@/lib/fetchUtils.js';
 
 const statusStore = useStatusStore();
 const limitStatusValue = ref({});
 let oldLimitStatusValue = { isEnable: true, limit: 10 };
-const emit = defineEmits(["closeModal"]);
+const emit = defineEmits(['closeModal']);
 const props = defineProps({
   isOwnerOrNot: {
     type: Boolean,
@@ -48,54 +48,39 @@ async function confirmEdit() {
         task: statusStore.countStatus(status),
       })
     );
-    emit("closeModal", overStatusObj);
-  } else emit("closeModal", null);
+    emit('closeModal', overStatusObj);
+  } else emit('closeModal', null);
 }
 
 const limitStatusValueError = computed(() => {
-  return limitStatusValue.value.limit > 30 || limitStatusValue.value.limit < 0
-    ? `Limit Be only between 0 and 30!!`
-    : "";
+  return limitStatusValue.value.limit > 30 || limitStatusValue.value.limit < 0 ? `Limit Be only between 0 and 30!!` : '';
 });
 
 function closeEdit() {
   statusStore.setLimitEnable(oldLimitStatusValue.isEnable);
   statusStore.setLimit(oldLimitStatusValue.limit);
   limitStatusValue.value = { ...oldLimitStatusValue };
-  emit("closeModal", null);
+  emit('closeModal', null);
 }
 </script>
 
 <template>
-  <div
-    class="itbkk-modal-task flex flex-col gap-3 p-5 text-black bg-slate-50 dark:bg-base-100 dark:text-slate-400 rounded-lg w-full m-auto"
-  >
+  <div class="itbkk-modal-task flex flex-col gap-3 p-5 text-black bg-slate-50 dark:bg-base-100 dark:text-slate-400 rounded-lg w-full m-auto">
     <h1>Limit Status</h1>
     <hr />
     <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You need to be board owner or has write access to perform this action.">
+
       <div class="form-control w-fit">
         <label class="cursor-pointer label">
-          <input
-            type="checkbox"
-            class="toggle toggle-primary"
-            v-model="limitStatusValue.isEnable"
-            :disabled="!isOwner"
-          />
+          <input type="checkbox" class="toggle toggle-primary" v-model="limitStatusValue.isEnable" :disabled="!isOwner" />
           <span class="label-text pl-1">Enable Limit</span>
         </label>
       </div>
     </div>
     <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You need to be board owner or has write access to perform this action.">
       <div class="form-control">
-        <label class="label text-error"
-          >Limit {{ limitStatusValueError }}</label
-        >
-        <input
-          type="number"
-          class="input text-base dark:bg-base-300"
-          v-model="limitStatusValue.limit"
-          :disabled="!isOwner"
-        />
+        <label class="label text-error">Limit {{ limitStatusValueError }}</label>
+        <input type="number" class="input text-base dark:bg-base-300" v-model="limitStatusValue.limit" :disabled="!isOwner" />
       </div>
     </div>
     <div class="flex flex-row-reverse gap-4 mt-5">
@@ -107,7 +92,7 @@ function closeEdit() {
         </button>
       </div>
     </div>
-    </div>
+  </div>
 </template>
 
 <style scoped></style>

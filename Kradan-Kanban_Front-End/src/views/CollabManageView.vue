@@ -18,6 +18,7 @@ const accountStore = useAccountStore();
 const boardStore = useBoardStore();
 const route = useRoute();
 const currentRoute = route.params?.boardId;
+const toastStore = useToastStore();
 
 // ? ----------------- Modal -------------------------
 const showAddModal = ref(false);
@@ -154,6 +155,7 @@ const showToast = (toastData, timeOut = 3000) => {
                   <th>Name</th>
                   <th>Email</th>
                   <th>Access Right</th>
+                  <th>Status</th>
                   <th>Action</th>
                 </tr>
               </thead>
