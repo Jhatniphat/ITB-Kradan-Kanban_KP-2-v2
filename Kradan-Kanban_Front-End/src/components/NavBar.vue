@@ -120,18 +120,18 @@ function checkShowNavBar() {
 <!--              >-->
               <h5
                   @click="routeChange('board')"
-                  class="itbkk-home rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                  class="itbkk-home rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white cursor-pointer"
               >ITB-KK</h5
               >
               <h5
                   @click="routeChange('task')"
-                  class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                  class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white cursor-pointer"
                   aria-current="page"
               >Task</h5
               >
               <h5
                   @click="routeChange('status')"
-                  class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white itbkk-manage-status"
+                  class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white itbkk-manage-status cursor-pointer"
               >Manage Status</h5
               > 
             </div>
