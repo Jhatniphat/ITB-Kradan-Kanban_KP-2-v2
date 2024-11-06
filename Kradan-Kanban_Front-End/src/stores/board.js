@@ -82,11 +82,16 @@ export const useBoardStore = defineStore("Board", {
                 this.currentBoard.collaborators.splice(index, 1);
             }
         },
-
         clearBoard() {
             this.boards = [];
             this.currentBoardId = "";
             this.currentBoard = {};
+        },
+        editCollaborator(collab) {
+            const index = this.currentBoard.collaborators.findIndex((c) => c.email === collab.email);
+            if (index !== -1) {
+                this.currentBoard.collaborators.splice(index, 1, collab);
+            }
         }
     }
 });

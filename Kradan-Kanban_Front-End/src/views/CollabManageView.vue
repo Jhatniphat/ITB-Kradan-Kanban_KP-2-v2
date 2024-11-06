@@ -135,6 +135,7 @@ const showToast = (toastData, timeOut = 3000) => {
                   <th>Name</th>
                   <th>Email</th>
                   <th>Access Right</th>
+                  <th>Status</th>
                   <th>Action</th>
                 </tr>
               </thead>
@@ -145,7 +146,7 @@ const showToast = (toastData, timeOut = 3000) => {
                 </tr>
                 <tr
                   v-if="allCollabs !== null"
-                  v-for="(collab, index) in allCollabs"
+                  v-for="(collab, index) in boardStore.currentBoard.collaborators"
                   :key="collab.oid"
                   class="itbkk-item hover"
                 >
@@ -173,6 +174,9 @@ const showToast = (toastData, timeOut = 3000) => {
                         </select>
                       </div>
                     </label>
+                  </td>
+                  <td>
+                    {{ collab.status }}
                   </td>
                   <td>
                     <div

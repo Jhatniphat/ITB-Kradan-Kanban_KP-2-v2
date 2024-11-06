@@ -4,6 +4,7 @@ import { useBoardStore } from "@/stores/board.js";
 import { useTaskStore } from "@/stores/task.js";
 import { useStatusStore } from "@/stores/status.js";
 import { useToastStore } from "@/stores/toast";
+
 // ! -------------------------------- Task ------------------------------------------
 export async function getAllTasks() {
   const accountStore = useAccountStore();
@@ -773,6 +774,7 @@ export async function addCollaborator(newCollaborator) {
   const boardId = useBoardStore().currentBoardId;
   const toastStore = useToastStore();
   toastStore.createToast("Adding collaborator..." , "waiting");
+  useBoardStore().addCollaborator( { ...newCollaborator , name : "waiting for data" } );
   try {
     const accountStore = useAccountStore();
     res = await fetchWithTokenCheck(
@@ -790,29 +792,35 @@ export async function addCollaborator(newCollaborator) {
     if (res.status === 201 || res.status === 200) {
       toastStore.createToast("Collaborator added successfully");
       item = await res.json();
+      useBoardStore().editCollaborator(item);
       return item;
     }
     if (res.status === 401) {
       accountStore.clearTokenDetail();
       router.push("/login");
+      useBoardStore().removeCollaborator(newCollaborator);
       return;
     }
     if (res.status === 409) {
       toastStore.createToast("The user is already a collaborator of this board." , "danger");
+      useBoardStore().removeCollaborator(newCollaborator);
       return res.status;
     }
     if (res.status === 403) {
       toastStore.createToast("You do not have permission to add board collaborator." , "danger");
+      useBoardStore().removeCollaborator(newCollaborator);
       return res.status;
     }
     if (res.status === 404) {
       toastStore.createToast("User not found" , 'danger');
+      useBoardStore().removeCollaborator(newCollaborator);
       console.log("User not found");
       return res.status;
     }
     return res.status;
   } catch (error) {
     toastStore.createToast("adding collaborator failed", "danger");
+    useBoardStore().removeCollaborator(newCollaborator);
     return error;
   }
 }
