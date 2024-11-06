@@ -253,12 +253,6 @@ public class BoardController {
         return ResponseEntity.ok(collabEntity);
     }
 
-//    @PatchMapping("{boardId}/collabs/invite")
-//    public ResponseEntity<CollabEntity> updateStatusCollaborator(@PathVariable String boardId, @PathVariable String collabId) {
-//        CollabEntity collabEntity = collabService.updateStatusCollaborator(boardId, collabId);
-//        return ResponseEntity.ok(collabEntity);
-//    }
-
     @DeleteMapping("{boardId}/collabs/{collabId}")
     public ResponseEntity<CollabEntity> deleteCollaborator(@PathVariable String boardId, @PathVariable String collabId) {
         CollabEntity collabEntity = collabService.deleteCollaborator(boardId, collabId);
@@ -267,6 +261,7 @@ public class BoardController {
 
     //  ! ============================================== INVITE ==============================================
 
+    //See all invitations
 //    @GetMapping("{boardId}/collabs/invitations")
 //    public ResponseEntity<List<CollabDTO>> getAllInvitations(@PathVariable String boardId) {
 //        List<CollabEntity> collabEntities = collabService.getAllInvitations(boardId);

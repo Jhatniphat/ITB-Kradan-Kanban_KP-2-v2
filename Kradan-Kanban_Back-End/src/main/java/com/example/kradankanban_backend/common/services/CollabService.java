@@ -3,10 +3,8 @@ package com.example.kradankanban_backend.common.services;
 import com.example.kradankanban_backend.common.dtos.CollabRequestDTO;
 import com.example.kradankanban_backend.common.entities.BoardEntity;
 import com.example.kradankanban_backend.common.entities.CollabEntity;
-import com.example.kradankanban_backend.common.entities.CollabId;
 import com.example.kradankanban_backend.common.repositories.BoardRepository;
 import com.example.kradankanban_backend.common.repositories.CollabRepository;
-import com.example.kradankanban_backend.exceptions.AuthenticationFailedException;
 import com.example.kradankanban_backend.exceptions.BadRequestException;
 import com.example.kradankanban_backend.exceptions.ConfilctException;
 import com.example.kradankanban_backend.exceptions.ItemNotFoundException;
@@ -73,13 +71,7 @@ public class CollabService {
         return collab;
     }
 
-    public CollabEntity updateStatusCollaborator(String boardId, String userId) {
-        BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("No Board found"));
-        CollabEntity collab = collabRepository.findByBoardIdAndUserId(boardId, userId).orElseThrow(() -> new ItemNotFoundException("No Collaborator found"));
-        collab.setStatus(CollabEntity.Status.ACCEPTED);
-        collabRepository.save(collab);
-        return collab;
-    }
+    // New Service to Change Status of Collaborator
 
     public CollabEntity deleteCollaborator(String boardId, String userId) {
         BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("No Board found"));
