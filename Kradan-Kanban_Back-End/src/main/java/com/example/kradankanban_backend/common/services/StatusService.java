@@ -124,9 +124,6 @@ public class StatusService {
             throw new BadRequestException("Have Task On This Status");
         }
         BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
-        if (!board.getUserId().equals(userId)) {
-            throw new ForbiddenException("You do not have access this board.");
-        }
         if (status.getName().equals("No Status")) {
             throw new BadRequestException("Cannot delete 'No Status'!!!");
         }
