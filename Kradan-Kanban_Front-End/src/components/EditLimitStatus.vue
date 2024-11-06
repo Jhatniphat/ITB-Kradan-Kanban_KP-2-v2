@@ -72,10 +72,7 @@ function closeEdit() {
   >
     <h1>Limit Status</h1>
     <hr />
-    <div
-      :class="isOwner ? '' : 'lg:tooltip'"
-      data-tip="You don't have a permission to Enable a Limit status"
-    >
+    <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You need to be board owner or has write access to perform this action.">
       <div class="form-control w-fit">
         <label class="cursor-pointer label">
           <input
@@ -88,10 +85,7 @@ function closeEdit() {
         </label>
       </div>
     </div>
-    <div
-      :class="isOwner ? '' : 'lg:tooltip'"
-      data-tip="You don't have a permission to Change a Limit status"
-    >
+    <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You need to be board owner or has write access to perform this action.">
       <div class="form-control">
         <label class="label text-error"
           >Limit {{ limitStatusValueError }}</label
@@ -105,23 +99,11 @@ function closeEdit() {
       </div>
     </div>
     <div class="flex flex-row-reverse gap-4 mt-5">
-      <button class="btn btn-outline btn-error" @click="closeEdit">
-        Close
-      </button>
-      <div
-        :class="isOwner ? '' : 'lg:tooltip'"
-        data-tip="You don't have a permission to Change a Limit status"
-      >
-        <button
-          class="btn btn-outline btn-success"
-          @click="confirmEdit"
-          :disabled="limitStatusValueError !== '' || !canConfirmBtn || !isOwner"
-        >
-          {{ loading ? "" : "Confirm" }}
-          <span
-            class="loading loading-spinner text-success"
-            v-if="loading"
-          ></span>
+      <button class="btn btn-outline btn-error" @click="closeEdit">Close</button>
+      <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You need to be board owner or has write access to perform this action.">
+        <button class="btn btn-outline btn-success" @click="confirmEdit" :disabled="limitStatusValueError !== '' || !canConfirmBtn || !isOwner">
+          {{ loading ? '' : 'Confirm' }}
+          <span class="loading loading-spinner text-success" v-if="loading"></span>
         </button>
       </div>
     </div>

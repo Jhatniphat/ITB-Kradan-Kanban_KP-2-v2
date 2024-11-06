@@ -1,5 +1,5 @@
 <script setup>
-import { addCollaborator, addTask } from "@/lib/fetchUtils";
+import { addCollaborator } from "@/lib/fetchUtils";
 import { onMounted, ref, watch } from "vue";
 import { useStatusStore } from "@/stores/status.js";
 
