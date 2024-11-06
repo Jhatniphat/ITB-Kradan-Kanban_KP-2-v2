@@ -47,6 +47,7 @@ const currentBoardId = useBoardStore().currentBoardId;
 const kanbanData = ref([]);
 const isOwner = ref(false);
 const canRead = ref(false);
+const canWrite = ref(false);
 const taskListType = ref(taskStore.taskListType);
 // ! ================= Modal ======================
 
@@ -185,7 +186,7 @@ watch(() => [filterBy.value, sortBy.value, taskStore.tasks], filterData, {
   deep: true,
 });
 
-async function filterData([filter, sort]) {
+function filterData([filter, sort]) {
   let allTasks = [];
   allTasks = taskStore.tasks;
   if (filter.length > 0) {
@@ -282,20 +283,26 @@ onBeforeMount(async () => {
 
       const currentBoard = boardStore.currentBoard;
       isOwner.value = currentBoard.owner.oid === accountStore.tokenDetail.oid;
+      
+      if (isOwner.value) {
+        canWrite.value = true
+      }
 
       if (!isOwner.value) {
         const currentUser = currentBoard.collaborators.find((collaborator) => collaborator.oid === accountStore.tokenDetail.oid);
-
         if (currentUser) {
           canRead.value = currentUser.accessRight === 'READ';
+          canWrite.value = currentUser.accessRight === 'WRITE';
         } else {
-          canRead.value = false; // User is not a collaborator
+          canRead.value = false;
+          canWrite.value = false;
+          // User is not a collaborator
         }
-      }else{
+      } else {
         canRead.value = true;
       }
 
-      if (!isOwner.value && !canRead.value && currentBoard.visibility === 'PRIVATE') {
+      if (!isOwner.value && !canRead.value && !canWrite.value && currentBoard.visibility === 'PRIVATE') {
         router.push({ name: 'AccessDenied' });
       }
 
@@ -369,7 +376,7 @@ function makekanbanData() {
         <!-- show edit limit modal -->
         <div class="float-right flex flex-row">
           <div class="form-control w-fit m-2">
-            <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You don't have a permission to Change Visibility">
+            <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You need to be board owner to perform this action.">
               <label class="cursor-pointer label">
                 <input type="checkbox" class="toggle toggle-primary itbkk-board-visibility" v-model="isPublic" @change="confirmChangeVisibility()" :disabled="!isOwner" />
                 <span class="label-text pl-1">{{ isPublic ? 'Public' : 'Private' }}</span>
@@ -379,8 +386,8 @@ function makekanbanData() {
           <div>
             <button class="btn btn-outline w-28 float-left mr-2" @click="router.push(`/board/${boardStore.currentBoardId}/collab`)">Manage Collaborator</button>
           </div>
-          <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You don't have a permission to Add a Task">
-            <button class="itbkk-button-add btn btn-square btn-outline w-16 float-left mr-2" @click="showAddModal = true" :disabled="!isOwner">+ Add</button>
+          <div :class="canWrite ? '' : 'lg:tooltip'" data-tip="You need to be board owner or has write access to perform this action.">
+            <button class="itbkk-button-add btn btn-square btn-outline w-16 float-left mr-2" @click="showAddModal = true" :disabled="!canWrite">+ Add</button>
           </div>
           <button class="btn btn-square btn-outline w-16 float-right" @click="showEditLimit = true">Limit Status</button>
         </div>
@@ -461,7 +468,7 @@ function makekanbanData() {
                 </td>
                 <td>
                   <div class="dropdown dropdown-bottom dropdown-end itbkk-button-action">
-                    <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You don't have a permission to Edit or Delete Task">
+                    <div :class="canWrite ? '' : 'lg:tooltip'" data-tip="You need to be board owner or has write access to perform this action.">
                       <div tabindex="0" role="button" class="btn m-1">
                         <svg class="swap-off fill-current" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 512 512">
                           <path d="M64,384H448V341.33H64Zm0-106.67H448V234.67H64ZM64,128v42.67H448V128Z" />
@@ -469,10 +476,10 @@ function makekanbanData() {
                       </div>
                       <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
                         <li>
-                          <button class="itbkk-button-edit button" :disabled="!isOwner" :class="{ disabled: !isOwner }" @click="openEditMode(task.id)">Edit</button>
+                          <button class="itbkk-button-edit button" :disabled="!canWrite" :class="{ disabled: !canWrite }" @click="openEditMode(task.id)">Edit</button>
                         </li>
                         <li>
-                          <button class="itbkk-button-delete button" :disabled="!isOwner" :class="{ disabled: !isOwner }" @click="openDeleteModal(task.title, task.id)">Delete</button>
+                          <button class="itbkk-button-delete button" :disabled="!canWrite" :class="{ disabled: !canWrite }" @click="openDeleteModal(task.title, task.id)">Delete</button>
                         </li>
                         <!--                    <div v-if="!isOwner">-->
                         <!--                      <li>-->
@@ -503,8 +510,8 @@ function makekanbanData() {
                   <div>
                     <p class="kanban-task-title">{{ task.title }}</p>
                     <div class="kanban-task-action">
-                      <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You don't have a permission to Edit or Delete Task">
-                        <input :disabled="!isOwner" type="checkbox" :id="`kanban-task-action-${task.id}`" />
+                      <div :class="canWrite ? '' : 'lg:tooltip'" data-tip="You need to be board owner or has write access to perform this action.">
+                        <input :disabled="!canWrite" type="checkbox" :id="`kanban-task-action-${task.id}`" />
 
                         <label :for="`kanban-task-action-${task.id}`">
                           <svg width="1rem" height="1rem" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -561,7 +568,7 @@ function makekanbanData() {
         <!-- DetailsModal -->
         <!-- EditModal -->
         <Modal :show-modal="showDetailModal">
-          <Taskdetail :isOwnerOrNot="isOwner" :taskId="parseInt(selectedId)" @closeModal="closeEditModal" />
+          <Taskdetail :isOwnerOrNot="canWrite" :taskId="parseInt(selectedId)" @closeModal="closeEditModal" />
         </Modal>
         <!-- Add Modal -->
         <Modal :show-modal="showAddModal">
@@ -591,7 +598,7 @@ function makekanbanData() {
 
         <!-- edit limit modal-->
         <Modal :show-modal="showEditLimit">
-          <EditLimitStatus :isOwnerOrNot="isOwner" @close-modal="closeEditLimit" />
+          <EditLimitStatus :isOwnerOrNot="canWrite" @close-modal="closeEditLimit" />
         </Modal>
 
         <Modal :show-modal="showChangeVisibilityModal">
@@ -794,9 +801,7 @@ function makekanbanData() {
         //display: block;*/
         max-height: 0;
         /* ตั้ง max-height มากพอให้ครอบคลุมความสูงทั้งหมดของเมนู */
-        transition:
-          max-height 1.25s ease,
-          opacity 1s ease;
+        transition: max-height 1.25s ease, opacity 1s ease;
       }
     }
 

@@ -127,6 +127,8 @@ public class TaskService {
             throw new WrongBoardException("Board not found");
         }
         BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
+
+
         TaskEntity task = repository.findByTkBoard_BoardIdAndId(boardId, taskId).orElseThrow(() -> new ItemNotFoundException("Task ID " + taskId + " not found in this board!!"));
         SimpleTaskDTO simpleTaskDTO = modelMapper.map(task, SimpleTaskDTO.class);
         repository.delete(task);

@@ -68,7 +68,8 @@ function closeEdit() {
   <div class="itbkk-modal-task flex flex-col gap-3 p-5 text-black bg-slate-50 dark:bg-base-100 dark:text-slate-400 rounded-lg w-full m-auto">
     <h1>Limit Status</h1>
     <hr />
-    <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You don't have a permission to Enable a Limit status">
+    <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You need to be board owner or has write access to perform this action.">
+
       <div class="form-control w-fit">
         <label class="cursor-pointer label">
           <input type="checkbox" class="toggle toggle-primary" v-model="limitStatusValue.isEnable" :disabled="!isOwner" />
@@ -76,7 +77,7 @@ function closeEdit() {
         </label>
       </div>
     </div>
-    <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You don't have a permission to Change a Limit status">
+    <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You need to be board owner or has write access to perform this action.">
       <div class="form-control">
         <label class="label text-error">Limit {{ limitStatusValueError }}</label>
         <input type="number" class="input text-base dark:bg-base-300" v-model="limitStatusValue.limit" :disabled="!isOwner" />
@@ -84,7 +85,7 @@ function closeEdit() {
     </div>
     <div class="flex flex-row-reverse gap-4 mt-5">
       <button class="btn btn-outline btn-error" @click="closeEdit">Close</button>
-      <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You don't have a permission to Change a Limit status">
+      <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You need to be board owner or has write access to perform this action.">
         <button class="btn btn-outline btn-success" @click="confirmEdit" :disabled="limitStatusValueError !== '' || !canConfirmBtn || !isOwner">
           {{ loading ? '' : 'Confirm' }}
           <span class="loading loading-spinner text-success" v-if="loading"></span>

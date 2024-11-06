@@ -99,8 +99,6 @@ public class StatusService {
 //        if (status.getDescription() != null && status.getDescription().trim().length() > 200) {
 //            throw new BadRequestException("Status Description length should be less than 200 !!!");
 //        }
-
-
         try {
             status.setStBoard(boardId);
             status.setId(id);
