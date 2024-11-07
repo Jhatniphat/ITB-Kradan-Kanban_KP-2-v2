@@ -4,6 +4,8 @@ import {getBoardById, getBoardByIdForGuest} from "@/lib/fetchUtils";
 import {useAccountStore} from "@/stores/account.js";
 import { useTaskStore } from "./task";
 import { useStatusStore } from "./status";
+import VueJwtDecode from 'vue-jwt-decode'
+
 
 export const useBoardStore = defineStore("Board", {
     state: () => ({
@@ -18,8 +20,16 @@ export const useBoardStore = defineStore("Board", {
         getBoardById(id) {
             return this.boards.find((board) => board.id === id);
         },
+        // use for invatation page
+
     },
     actions: {
+        getPendingBoardById(id) {
+            // let userId = useAccountStore().tokenDetail.oid;
+            // todo : fix bug cannot get oid from tokenDetail
+            let userId = VueJwtDecode.decode(useAccountStore().tokenRaw).oid;
+            return this.boards.find((board) => board.id === id && board.collaborators.some(collab => collab.oid === userId && collab.status === "PENDING") );
+        },
         isBoardExist(id) {
             return this.boards.some((board) => board.id === id);
         },

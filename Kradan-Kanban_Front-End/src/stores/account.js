@@ -14,6 +14,7 @@ export const useAccountStore = defineStore("account", {
         getters: {
             token: (state) => state.tokenRaw,
             userName: (state) => state.tokenDetail.name || "",
+            isLoggedIn: (state) => state.refreshToken !== "",
         },
         actions: {
             setToken(token) {

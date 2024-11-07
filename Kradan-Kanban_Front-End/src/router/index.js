@@ -31,6 +31,11 @@ const router = createRouter({
       component: () => import("../views/BoardView.vue"),
     },
     {
+      path: "/board/:boardId/collab/invitations",
+      name: "collab-invitations",
+      component: () => import("../views/CollabInvitationAcceptView.vue")
+    },
+    {
       path: "/board/:boardId/status/:statusId/edit",
       name: "status-edit",
       component: () => import("../views/StatusListView.vue"),
@@ -44,7 +49,7 @@ const router = createRouter({
     },
     {
       path: "/board/:boardId/collab",
-      name: "collab",
+      name: "collab-management",
       component: () => import("../views/CollabManageView.vue"),
     },
     {
@@ -75,21 +80,25 @@ const router = createRouter({
       name: "AccessDenied",
       component: () => import("../views/AccessDenied.vue"),
     },
-    { path: "/:pathMatch(.*)*", redirect: { name: "tasklist" } },
+    { path: "/:pathMatch(.*)*", redirect: { name: "board" } },
   ],
 });
+
+
 router.beforeEach(async (to, from, next) => {
   const accountStore = useAccountStore();
   const boardStore = useBoardStore();
-  // const isAuthenticated = accountStore.tokenDetail !== {};
 
-  // if (to.name !== "login") {
-  //     await checkTokenExpired()
-  // }
-  console.log("to.name", to.name);
-  console.log("to.path", to.path);
-
-  if (to.name.includes("task") || to.name.includes("status") || to.name.includes("collab") ) {
+  // if (to.name === "collab-invitations" && accountStore.isLoggedIn) {
+  //   try {
+  //     await getAllBoard();
+  //   } catch (error) { }
+  //   finally {
+  //     next();
+  //   }
+  //   //wait for all board to be fetched then go to invitation page
+  // } 
+   if (to.name.includes("task") || to.name.includes("status") || to.name.includes("collab-management")) {
     if (boardStore.boards.length === 0 && accountStore.refreshToken !== "") {
       await getAllBoard();
     }
@@ -106,7 +115,7 @@ router.beforeEach(async (to, from, next) => {
     // const board = await getBoardById(boardId);
 
     if (!board) {
-      next({ name: "AccessDenied" });
+      router.push({ name: "AccessDenied" });
       return;
     }
 
@@ -119,7 +128,7 @@ router.beforeEach(async (to, from, next) => {
     const isBoardPrivate = board.visibility === "PRIVATE";
 
     if (isBoardPrivate && !isOwner) {
-      next({ name: "AccessDenied" });
+      router.push({ name: "AccessDenied" });
       return;
     }
   }

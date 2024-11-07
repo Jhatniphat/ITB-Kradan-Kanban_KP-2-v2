@@ -31,8 +31,8 @@ const handleLogin = async () => {
   } else {
     let result = await login(userData.value.username, userData.value.password);
     if (result.status === 200) {
-      const decodedToken = VueJwtDecode.decode(result.payload?.access_token);
-      accountStore.setTokenDetail(decodedToken);
+      // const decodedToken = VueJwtDecode.decode(result.payload?.access_token);
+      // accountStore.setTokenDetail(decodedToken);
       router.push({ name: "board" });
     } else {
       showAlert.value = true;

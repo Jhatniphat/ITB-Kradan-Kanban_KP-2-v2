@@ -187,6 +187,7 @@ const showToast = (toastData, timeOut = 3000) => {
                       </div>
                     </label>
                   </td>
+                  <td> {{ collab.status }} </td>
                   <td>
                     <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You need to be board owner to perform this action.">
                       <button class="itbkk-collab-remove btn m-2" :disabled="!isOwner" :class="{ disabled: !isOwner }" @click="removeCollaborator(collab.oid, collab.name)">Remove</button>
