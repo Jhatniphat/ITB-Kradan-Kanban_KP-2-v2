@@ -29,22 +29,30 @@ onBeforeMount(async () => {
   } finally {
     loading.value = false;
     invitedBoard.value = useBoardStore().getPendingBoardById(route.params.boardId);
-    invitedBoard.value.accessRightUserGot = invitedBoard.value.collaborators.find((collaborator) => collaborator.id === accountStore.tokenDetail.oid).accessRight;
-    console.log(invitedBoard.value.accessRightUserGot);
+    if (invitedBoard.value !== undefined && invitedBoard.value !== null) {
+      const collaborator = invitedBoard.value.collaborators.find((collaborator) => collaborator.id === accountStore.tokenDetail.oid);
+      if (collaborator) {
+        invitedBoard.value.accessRightUserGot = collaborator.accessRight;
+      }
+    }
   }
 });
 </script>
 
 <template>
   <transition>
-    <!-- <div class="h-full w-full" v-if="!loading">
-      <p>
-        {{ invitedBoard.owner.name }} has invited you to collaborate with {{ invitedBoard.accessRightUserGot }} access right on {{ invitedBoard.name }} board
+    <div class="h-[90vh] w-full flex flex-col items-center justify-center p-8 rounded-lg" v-if="!loading && !invitedBoard">
+      <p class="text-lg font-semibold text-gray-800 text-center mb-4">
+        Sorry, we couldn't find your active invitation to this board.
       </p>
-      <button @click="boardStore.acceptInvitation(invitedBoard.id)">Accept invitation</button>
-      <button @click="boardStore.rejectInvitation(invitedBoard.id)">Decline</button>
-    </div> -->
-    <div class="h-screen w-full flex flex-col items-center justify-center bg-gray-100 p-8 rounded-lg shadow-md" v-if="!loading">
+      <div class="flex space-x-4">
+        <button @click="router.push({name : 'board'})" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">Go To Board List</button>
+        <button @click="router.push({name : 'login'})" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">Go To Sign In</button>
+      </div>
+    </div>
+  </transition>
+  <transition>
+    <div class="h-[90vh] w-full flex flex-col items-center justify-center p-8 rounded-lg" v-if="!loading && invitedBoard">
       <p class="text-lg font-semibold text-gray-800 text-center mb-4">
         {{ invitedBoard.owner.name }} has invited you to collaborate with <span class="font-bold">{{ invitedBoard.accessRightUserGot }}</span> access right on
         <span class="font-bold">{{ invitedBoard.name }}</span> board
@@ -56,7 +64,9 @@ onBeforeMount(async () => {
     </div>
   </transition>
   <Transition>
-    <LoadingComponent class="h-full w-full" v-if="loading" />
+    <div class="h-[90vh] w-full flex flex-col items-center justify-center p-96">
+      <LoadingComponent v-if="loading" />
+    </div>
   </Transition>
 </template>
 

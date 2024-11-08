@@ -22,7 +22,7 @@ export const useAccountStore = defineStore("account", {
                     this.tokenRaw = token.access_token;
                     localStorage.setItem("token", token.access_token);
                     this.tokenDetail = VueJwtDecode.decode(token.access_token);
-                    localStorage.setItem("tokenDetail", JSON.stringify(this.token));
+                    localStorage.setItem("tokenDetail", JSON.stringify(this.tokenDetail));
                 }
                 if (token.refresh_token) {
                     this.refreshToken = token.refresh_token;
@@ -51,6 +51,7 @@ export const useAccountStore = defineStore("account", {
                 return decodedToken.exp < currentTime;
             },
             clearToken() {
+                console.table(this.tokenDetail)
                 useToastStore().createToast(`See you later, ${this.tokenDetail?.name}`, "success"); 
                 this.tokenRaw = "";
                 this.refreshToken = "";
