@@ -109,5 +109,8 @@ export const useBoardStore = defineStore("Board", {
                 this.boards.splice(index, 1, updatedBoard)
             }
         },
+        clearCollaborator() {
+            this.currentBoard.collaborators = []
+        }
     }
 });

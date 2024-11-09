@@ -4,6 +4,7 @@ import { useBoardStore } from "@/stores/board.js";
 import { useTaskStore } from "@/stores/task.js";
 import { useStatusStore } from "@/stores/status.js";
 import { useToastStore } from "@/stores/toast";
+
 // ! -------------------------------- Task ------------------------------------------
 export async function getAllTasks() {
   const accountStore = useAccountStore();
@@ -738,10 +739,26 @@ export async function addCollaborator(newCollaborator) {
       useBoardStore().removeCollaborator(newCollaborator);
       return res.status;
     }
+    if (res.status === 503) {
+      useBoardStore().clearCollaborator();
+      try {
+        useBoardStore().currentBoard.collaborators = await getAllCollabs();
+      } catch (error) {
+      } finally {
+        console.log(newCollaborator)
+        console.table(useBoardStore().currentBoard.collaborators);
+        console.log(useBoardStore().currentBoard.collaborators.find(collab => collab.email === newCollaborator.email));
+        let invitedUsername = useBoardStore().currentBoard.collaborators.find(collab => collab.email === newCollaborator.email).name;
+        toastStore.createToast(`We could not send e-mail to <span class="font-bold"> ${invitedUsername} </span>, he/she can accept the invitation at  <span class="underline"> /board/${boardId}/collab/invitations </span>`, "warning" , 15000);
+        return res.status;
+      }
+      // useBoardStore().removeCollaborator(newCollaborator);
+      return res.status;
+    }
     return res.status;
   } catch (error) {
     toastStore.createToast("adding collaborator failed", "danger");
-    useBoardStore().removeCollaborator(newCollaborator);
+    // useBoardStore().removeCollaborator(newCollaborator);
     return error;
   }
 }
