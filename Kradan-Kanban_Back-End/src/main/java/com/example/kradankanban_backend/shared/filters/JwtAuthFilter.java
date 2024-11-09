@@ -100,7 +100,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
         boolean isPublic = boardService.isBoardPublic(boardId);
         if (currentUser != null) {
-            if (uri.length > 5 && uri[4].equals("collabs") && uri[5].equals("invitation")) {
+            if (uri.length > 5 && uri[4].equals("collabs") && uri[5].equals("invitations")) {
                 return;
             }
             boolean isOwner = boardService.isBoardOwner(boardId,currentUser.getOid());
@@ -128,7 +128,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         throw new ForbiddenException("Read access not allowed for this request");
                     }
                 }
-            } if (!isOwner && (!isPublic || !requestMethod.equals("GET"))) {
+            } else if (!isOwner&& (!isPublic || !requestMethod.equals("GET"))) {
                 throw new ForbiddenException("FORBIDDEN");
             }
         } else {
