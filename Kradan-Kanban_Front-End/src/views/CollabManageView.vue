@@ -48,7 +48,7 @@ const fetchCollaborators = async () => {
     showToast({ status: 'error', msg: response.message });
     toastStore.createToast(response.message, 'danger');
   } else {
-    response.sort((a, b) => new Date(a.addedOn) - new Date(b.addedOn))
+    response.sort((a, b) => new Date(a.addedOn) - new Date(b.addedOn));
     allCollabs.value = response; // Set the collaborator data
   }
   loading.value = false;
@@ -74,19 +74,31 @@ const openAccessRight = (collabId, name, accessRight) => {
   showChangeAccessModal.value = true;
 };
 
-async function callChangeAccesRight() {
-  let res;
-  try {
-    res = await changeAccessRight(boardStore.currentBoardId, selectCollabId.value, selectAccesRight.value);
-    if (typeof res === 'object') {
-      toastStore.createToast('Change access right successfully');
+async function callChangeAccesRight(confirm) {
+  // handle change access right
+  if (!confirm) {
+    if (selectAccesRight.value === 'WRITE') {
+      selectAccesRight.value = 'READ';
     } else {
-      toastStore.createToast('Change access right Failed', 'danger');
+      selectAccesRight.value = 'WRITE';
     }
-  } catch (err) {
-    console.error(err);
-  } finally {
+    boardStore.currentBoard.collaborators.find((collab) => collab.oid === selectCollabId.value).accessRight = selectAccesRight.value;
     showChangeAccessModal.value = false;
+    return;
+  } else {
+    let res;
+    try {
+      res = await changeAccessRight(boardStore.currentBoardId, selectCollabId.value, selectAccesRight.value);
+      if (typeof res === 'object') {
+        toastStore.createToast('Change access right successfully');
+      } else {
+        toastStore.createToast('Change access right Failed', 'danger');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      showChangeAccessModal.value = false;
+    }
   }
 }
 
@@ -103,6 +115,7 @@ async function callDeleteCollaborator() {
     res = await deleteCollaborator(boardStore.currentBoardId, selectCollabId.value);
     if (typeof res === 'object') {
       toastStore.createToast('Delete collaborator successfully');
+      boardStore.removeCollaborator(boardStore.currentBoard.collaborators.find((collab) => collab.oid === selectCollabId.value));
     } else {
       toastStore.createToast('Delete collaborator Failed, Please Refresh Page', 'danger');
     }
@@ -119,6 +132,17 @@ const showToast = (toastData, timeOut = 3000) => {
   setTimeout(() => {
     toast.value = { ...{ status: '' } };
   }, timeOut);
+};
+
+// ! ================= Style ======================
+const statusStyleBinding = (status) => {
+  if (status === 'PENDING') {
+    return 'text-yellow-400';
+  } else if (status === 'ACCEPTED') {
+    return 'text-green-500';
+  } else if (status === 'REMOVED') {
+    return 'text-red-500';
+  }
 };
 </script>
 
@@ -167,7 +191,7 @@ const showToast = (toastData, timeOut = 3000) => {
                 <tr v-if="allCollabs !== null" v-for="(collab, index) in boardStore.currentBoard.collaborators" :key="collab.oid" class="itbkk-item hover">
                   <th>{{ index + 1 }}</th>
                   <td class="itbkk-name">
-                    {{ collab.name }}
+                    {{ collab.name }} <span class="text-gray-500"> {{ collab.status === 'PENDING' ? '(Pending invite)' : '' }} </span>
                   </td>
                   <td class="itbkk-email">
                     {{ collab.email }}
@@ -187,7 +211,7 @@ const showToast = (toastData, timeOut = 3000) => {
                       </div>
                     </label>
                   </td>
-                  <td> {{ collab.status }} </td>
+                  <td :class="statusStyleBinding(collab.status)" class="font-semibold">{{ collab.status }}</td>
                   <td>
                     <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You need to be board owner to perform this action.">
                       <button class="itbkk-collab-remove btn m-2" :disabled="!isOwner" :class="{ disabled: !isOwner }" @click="removeCollaborator(collab.oid, collab.name)">Remove</button>
@@ -212,8 +236,8 @@ const showToast = (toastData, timeOut = 3000) => {
               <h1 class="itbkk-message font-semibold text-xl p-8">Do you want to change access right of "{{ selectCollabName }}" to "{{ selectAccesRight }}"</h1>
               <hr />
               <div class="flex flex-row-reverse gap-4 mt-5">
-                <button @click="showChangeAccessModal = false" class="itbkk-button-cancel btn btn-outline btn-error basis-1/6">Close</button>
-                <button @click="callChangeAccesRight()" class="itbkk-button-confirm btn btn-outline btn-success basis-1/6">
+                <button @click="callChangeAccesRight(false)" class="itbkk-button-cancel btn btn-outline btn-error basis-1/6">Close</button>
+                <button @click="callChangeAccesRight(true)" class="itbkk-button-confirm btn btn-outline btn-success basis-1/6">
                   {{ loading ? '' : 'Confirm' }}
                   <span class="loading loading-spinner text-success" v-if="loading"></span>
                 </button>

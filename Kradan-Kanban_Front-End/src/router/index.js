@@ -43,7 +43,7 @@ const router = createRouter({
     },
     {
       path: "/board/:boardId/status",
-      name: "status",
+      name: "status-list",
       component: () => import("../views/StatusListView.vue"),
       alias: ["/board/:boardId/status/add"],
     },
@@ -60,14 +60,14 @@ const router = createRouter({
     },
     {
       path: "/board/:boardId",
-      name: "task",
+      name: "task-list",
       component: () => import("../views/TasklistView.vue"),
       alias: ["/board/:boardId/task/add"],
       //  ? alias is similar to redirect but it doesn't change the URL
     },
     {
       path: "/board",
-      name: "board",
+      name: "board-list",
       component: () => import("../views/BoardView.vue"),
     },
     {
@@ -88,16 +88,6 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const accountStore = useAccountStore();
   const boardStore = useBoardStore();
-
-  // if (to.name === "collab-invitations" && accountStore.isLoggedIn) {
-  //   try {
-  //     await getAllBoard();
-  //   } catch (error) { }
-  //   finally {
-  //     next();
-  //   }
-  //   //wait for all board to be fetched then go to invitation page
-  // } 
    if (to.name.includes("task") || to.name.includes("status") || to.name.includes("collab-management")) {
     if (boardStore.boards.length === 0 && accountStore.refreshToken !== "") {
       await getAllBoard();

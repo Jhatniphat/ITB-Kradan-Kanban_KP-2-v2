@@ -29,7 +29,7 @@ export async function getAllTasks() {
       return item;
     }
     return await res.json();
-  } catch (error) {}
+  } catch (error) { }
 }
 
 export async function getTaskById(id) {
@@ -168,7 +168,7 @@ export async function getAllStatus() {
       useStatusStore().status = await res.json();
       return await res.json();
     }
-  } catch (error) {}
+  } catch (error) { }
 }
 
 export async function getStatusById(id) {
@@ -406,7 +406,6 @@ export async function getAllBoard() {
 
 export async function getBoardById(boardId) {
   const boardStore = useBoardStore();
-  console.log(boardStore.isBoardExist(boardId));
   if (boardStore.isBoardExist(boardId)) {
     return useBoardStore().findBoardById(boardId);
   }
@@ -427,6 +426,7 @@ export async function getBoardById(boardId) {
       return null;
     } else if (res.status === 200) {
       let item = await res.json();
+      boardStore.addBoard(item);
       return { status: 200, payload: item };
     } else if (res.status === 400) {
       return { status: 400, payload: 'No board found' };
@@ -553,7 +553,7 @@ export async function getAllStatusForGuest() {
       useStatusStore().status = await res.json();
       return await res.json();
     }
-  } catch (error) {}
+  } catch (error) { }
 }
 
 export async function getStatusByIdForGuest(id) {
@@ -605,7 +605,7 @@ export async function getAllTasksForGuest() {
       return item;
     }
     return await res.json();
-  } catch (error) {}
+  } catch (error) { }
 }
 
 export async function getTaskByIdForGuest(id) {
@@ -695,8 +695,8 @@ export async function addCollaborator(newCollaborator) {
   let res, item;
   const boardId = useBoardStore().currentBoardId;
   const toastStore = useToastStore();
-  toastStore.createToast("Adding collaborator..." , "waiting");
-  useBoardStore().addCollaborator( { ...newCollaborator , name : "waiting for data" } );
+  toastStore.createToast("Adding collaborator...", "waiting");
+  useBoardStore().addCollaborator({ ...newCollaborator, name: "waiting for data" });
   try {
     const accountStore = useAccountStore();
     res = await fetchWithTokenCheck(
@@ -724,19 +724,18 @@ export async function addCollaborator(newCollaborator) {
       return;
     }
     if (res.status === 409) {
-      toastStore.createToast("The user is already a collaborator of this board." , "danger");
+      toastStore.createToast("The user is already a collaborator of this board.", "danger");
       useBoardStore().removeCollaborator(newCollaborator);
       return res.status;
     }
     if (res.status === 403) {
-      toastStore.createToast("You do not have permission to add board collaborator." , "danger");
+      toastStore.createToast("You do not have permission to add board collaborator.", "danger");
       useBoardStore().removeCollaborator(newCollaborator);
       return res.status;
     }
     if (res.status === 404) {
-      toastStore.createToast("User not found" , 'danger');
+      toastStore.createToast("User not found", 'danger');
       useBoardStore().removeCollaborator(newCollaborator);
-      console.log("User not found");
       return res.status;
     }
     return res.status;
@@ -744,6 +743,36 @@ export async function addCollaborator(newCollaborator) {
     toastStore.createToast("adding collaborator failed", "danger");
     useBoardStore().removeCollaborator(newCollaborator);
     return error;
+  }
+}
+
+export async function acceptInvitation(boardId, collabData) {
+  const accountStore = useAccountStore();
+  // let boardId = collabData.boardId;
+  // let collabId = collabData.userId;
+  let res;
+  try {
+    res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/collabs/invitations`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accountStore.tokenRaw}`,
+      },
+      body: JSON.stringify(collabData),
+    });
+
+    if (res.ok) {
+      return { status: res.status, payload: await res.json() };
+    }
+    if (res.status === 401) {
+      accountStore.clearTokenDetail();
+      router.push('/login');
+      return { status: res.status, payload: await res.json() };
+    } else {
+      return { status: res.status, payload: await res.json() };
+    }
+  } catch (error) {
+    console.log(error.toString());
   }
 }
 
@@ -833,7 +862,7 @@ export async function login(username, password) {
         status: res.status,
         payload: 'There is a problem. Please try again later',
       };
-  } catch (error) {}
+  } catch (error) { }
 }
 
 export async function validateToken() {

@@ -1,7 +1,7 @@
-import {defineStore} from "pinia";
+import { defineStore } from "pinia";
 import router from "@/router/index.js";
-import {getBoardById, getBoardByIdForGuest} from "@/lib/fetchUtils";
-import {useAccountStore} from "@/stores/account.js";
+import { getBoardById, getBoardByIdForGuest } from "@/lib/fetchUtils";
+import { useAccountStore } from "@/stores/account.js";
 import { useTaskStore } from "./task";
 import { useStatusStore } from "./status";
 import VueJwtDecode from 'vue-jwt-decode'
@@ -28,7 +28,7 @@ export const useBoardStore = defineStore("Board", {
             // let userId = useAccountStore().tokenDetail.oid;
             // todo : fix bug cannot get oid from tokenDetail
             let userId = VueJwtDecode.decode(useAccountStore().tokenRaw).oid;
-            return this.boards.find((board) => board.id === id && board.collaborators.some(collab => collab.oid === userId && collab.status === "PENDING") );
+            return this.boards.find((board) => board.id === id && board.collaborators.some(collab => collab.oid === userId && collab.status === "PENDING"));
         },
         isBoardExist(id) {
             return this.boards.some((board) => board.id === id);
@@ -70,7 +70,7 @@ export const useBoardStore = defineStore("Board", {
                         board = await getBoardById(boardId);
                     }
                     if (!board || !board.payload) {
-                        router.push({name: "board"});
+                        router.push({ name: "board" });
                     } else {
                         this.currentBoardId = boardId;
                         this.currentBoard = board.payload;
@@ -102,6 +102,12 @@ export const useBoardStore = defineStore("Board", {
             if (index !== -1) {
                 this.currentBoard.collaborators.splice(index, 1, collab);
             }
-        }
+        },
+        editBoard(updatedBoard) {
+            const index = this.boards.findIndex((board) => board.id === updatedBoard.id);
+            if (index !== -1) {
+                this.boards.splice(index, 1, updatedBoard)
+            }
+        },
     }
 });

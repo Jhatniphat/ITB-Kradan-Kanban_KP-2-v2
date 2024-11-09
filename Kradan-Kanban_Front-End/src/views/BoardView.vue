@@ -115,7 +115,8 @@ async function saveAddBoard() {
     if (result.status === 200 || result.status === 201) {
       toastStore.createToast('Create board successfully');
       allBoard.value = result.payload;
-      router.push(`/board/${result.payload.id}`);
+      // router.push(`/board/${result.payload.id}`);
+      router.push({ name: 'task-list' , params: { boardId: result.payload.id } });
     } else {
       toastStore.createToast('Create board Failed', 'danger');
     }

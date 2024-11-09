@@ -6,7 +6,7 @@ import router from '@/router';
 import { useRoute } from 'vue-router';
 import { useToastStore } from '@/stores/toast';
 import { useBoardStore } from '@/stores/board';
-import { getAllBoard } from '@/lib/fetchUtils';
+import { acceptInvitation, deleteCollaborator, getAllBoard, getBoardById } from '@/lib/fetchUtils';
 // !  ====================================== Variable ==================================
 const accountStore = useAccountStore();
 const invitedBoard = ref({});
@@ -37,17 +37,49 @@ onBeforeMount(async () => {
     }
   }
 });
+
+// !  ====================================== Fetch =====================================
+async function handleAcceptInvitation() {
+  let collabData = {
+    // boardId: invitedBoard.value.id,
+    // userId: accountStore.tokenDetail.oid,
+    // accessRight: invitedBoard.value.accessRightUserGot,
+    status: 'ACCEPTED',
+  };
+  let boardId = invitedBoard.value.id;
+  try {
+    let result = await acceptInvitation(boardId, collabData);
+    if (result.status === 200) {
+      toastStore.createToast('Accept invitation successfully', 'success');
+      boardStore.deleteBoard(boardId);
+      try {
+        getBoardById(boardId);
+      } catch (error) {
+      } finally {
+        router.push({ name: 'task-list', params: { boardId: invitedBoard.value.id } });
+      }
+      // boardStore.boards.find((board) => board.id = invitedBoard.value.id).collaborators.find((collaborator) => collaborator.id === accountStore.tokenDetail.oid).status = 'ACCEPTED';
+    } else {
+      toastStore.createToast('Accept invitation failed', 'danger');
+      router.push({ name: 'board-list' });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+async function handleRejectInvitation() {
+  await deleteCollaborator(invitedBoard.value.id, accountStore.tokenDetail.oid);
+}
 </script>
 
 <template>
   <transition>
     <div class="h-[90vh] w-full flex flex-col items-center justify-center p-8 rounded-lg" v-if="!loading && !invitedBoard">
-      <p class="text-lg font-semibold text-gray-800 text-center mb-4">
-        Sorry, we couldn't find your active invitation to this board.
-      </p>
+      <p class="text-lg font-semibold text-gray-800 text-center mb-4">Sorry, we couldn't find your active invitation to this board.</p>
       <div class="flex space-x-4">
-        <button @click="router.push({name : 'board'})" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">Go To Board List</button>
-        <button @click="router.push({name : 'login'})" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">Go To Sign In</button>
+        <button @click="router.push({ name: 'board-list' })" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">Go To Board List</button>
+        <button @click="router.push({ name: 'login' })" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">Go To Sign In</button>
       </div>
     </div>
   </transition>
@@ -58,8 +90,8 @@ onBeforeMount(async () => {
         <span class="font-bold">{{ invitedBoard.name }}</span> board
       </p>
       <div class="flex space-x-4">
-        <button @click="boardStore.acceptInvitation(invitedBoard.id)" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">Accept Invitation</button>
-        <button @click="boardStore.rejectInvitation(invitedBoard.id)" class="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">Decline</button>
+        <button @click="handleAcceptInvitation()" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">Accept Invitation</button>
+        <button @click="handleRejectInvitation()" class="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">Decline</button>
       </div>
     </div>
   </transition>
