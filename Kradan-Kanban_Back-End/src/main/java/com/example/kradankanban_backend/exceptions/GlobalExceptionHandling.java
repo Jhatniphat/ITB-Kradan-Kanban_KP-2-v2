@@ -4,6 +4,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.mail.MailAuthenticationException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
@@ -141,5 +142,11 @@ public class GlobalExceptionHandling {
     @ResponseStatus(HttpStatus.CONFLICT)
     public ResponseEntity<ErrorResponse> handleConflictException(Exception exception, WebRequest request) {
         return buildErrorResponse(exception, exception.getMessage() , HttpStatus.CONFLICT, request);
+    }
+
+    @ExceptionHandler({EmailSentFailedException.class, MailAuthenticationException.class})
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public ResponseEntity<ErrorResponse> handleEmailSentFailedException(Exception exception, WebRequest request) {
+        return buildErrorResponse(exception, exception.getMessage() , HttpStatus.SERVICE_UNAVAILABLE, request);
     }
 }

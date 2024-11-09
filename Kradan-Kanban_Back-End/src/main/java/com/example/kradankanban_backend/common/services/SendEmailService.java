@@ -1,12 +1,15 @@
 package com.example.kradankanban_backend.common.services;
 import com.example.kradankanban_backend.common.entities.CollabEntity;
+import com.example.kradankanban_backend.exceptions.EmailSentFailedException;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
 @Service
@@ -42,14 +45,18 @@ public class SendEmailService {
                 + "</html>";
 
 
-        MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, "utf-8");
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, "utf-8");
 
-        helper.setFrom("no-reply@itbkk.kp2", "Do not reply");
-        helper.setTo(email);
-        helper.setSubject(subject);
-        helper.setText(content, true);
-        mailSender.send(message);
+            helper.setFrom("no-reply@itbkk.kp2", "Do not reply");
+            helper.setTo(email);
+            helper.setSubject(subject);
+            helper.setText(content, true);
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            throw new EmailSentFailedException("Failed to send email");
+        }
     }
 }
 
