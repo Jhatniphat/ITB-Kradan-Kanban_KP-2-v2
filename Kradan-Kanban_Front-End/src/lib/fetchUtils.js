@@ -697,7 +697,7 @@ export async function addCollaborator(newCollaborator) {
   const boardId = useBoardStore().currentBoardId;
   const toastStore = useToastStore();
   toastStore.createToast("Adding collaborator...", "waiting");
-  useBoardStore().addCollaborator({ ...newCollaborator, name: "waiting for data" });
+  useBoardStore().addCollaborator({ ...newCollaborator, name: "processing" , status : "processing" });
   try {
     const accountStore = useAccountStore();
     res = await fetchWithTokenCheck(
@@ -711,48 +711,101 @@ export async function addCollaborator(newCollaborator) {
         body: JSON.stringify({ ...newCollaborator }),
       }
     );
-    console.log(res.status)
-    if (res.status === 201 || res.status === 200) {
-      toastStore.createToast("Collaborator added successfully");
-      item = await res.json();
-      useBoardStore().editCollaborator(item);
-      return item;
-    }
-    if (res.status === 401) {
-      accountStore.clearTokenDetail();
-      router.push("/login");
-      useBoardStore().removeCollaborator(newCollaborator);
-      return;
-    }
-    if (res.status === 409) {
-      toastStore.createToast("The user is already a collaborator of this board.", "danger");
-      useBoardStore().removeCollaborator(newCollaborator);
-      return res.status;
-    }
-    if (res.status === 403) {
-      toastStore.createToast("You do not have permission to add board collaborator.", "danger");
-      useBoardStore().removeCollaborator(newCollaborator);
-      return res.status;
-    }
-    if (res.status === 404) {
-      toastStore.createToast("User not found", 'danger');
-      useBoardStore().removeCollaborator(newCollaborator);
-      return res.status;
-    }
-    if (res.status === 503) {
-      useBoardStore().clearCollaborator();
-      try {
-        useBoardStore().currentBoard.collaborators = await getAllCollabs();
-      } catch (error) {
-      } finally {
-        let invitedUsername = useBoardStore().currentBoard.collaborators.find(collab => collab.email === newCollaborator.email).name;
-        toastStore.createToast(`We could not send e-mail to <span class="font-bold"> ${invitedUsername} </span>, he/she can accept the invitation at  <span class="underline"> /board/${boardId}/collab/invitations </span>`, "warning" , 15000);
+    switch (res.status) {
+      case 201:
+      case 200: {
+        toastStore.createToast("Collaborator added successfully");
+        const item = await res.json();
+        useBoardStore().editCollaborator(item);
+        return item;
+      }
+      case 401: {
+        accountStore.clearTokenDetail();
+        router.push("/login");
+        useBoardStore().removeCollaborator(newCollaborator);
+        return;
+      }
+      case 409: {
+        toastStore.createToast("The user is already a collaborator of this board.", "danger");
+        useBoardStore().removeCollaborator(newCollaborator);
         return res.status;
       }
-      // useBoardStore().removeCollaborator(newCollaborator);
-      return res.status;
+      case 403: {
+        toastStore.createToast("You do not have permission to add board collaborator.", "danger");
+        useBoardStore().removeCollaborator(newCollaborator);
+        return res.status;
+      }
+      case 404: {
+        toastStore.createToast("User not found", "danger");
+        useBoardStore().removeCollaborator(newCollaborator);
+        return res.status;
+      }
+      case 503: {
+        useBoardStore().clearCollaborator();
+        try {
+          useBoardStore().currentBoard.collaborators = await getAllCollabs();
+        } catch (error) {
+          // Handle error if necessary
+        } finally {
+          const invitedUsername = useBoardStore().currentBoard.collaborators.find(
+            collab => collab.email === newCollaborator.email
+          )?.name;
+    
+          toastStore.createToast(
+            `We could not send e-mail to <span class="font-bold">${invitedUsername}</span>, he/she can accept the invitation at <span class="underline"> /board/${boardId}/collab/invitations </span>`,
+            "warning",
+            15000
+          );
+          return res.status;
+        }
+      }
+      default:
+        toastStore.createToast("Unexpected error occurred.", "danger");
+        return res.status;
     }
-    return res.status;
+    // if (res.status === 201 || res.status === 200) {
+    //   toastStore.createToast("Collaborator added successfully");
+    //   item = await res.json();
+    //   useBoardStore().editCollaborator(item);
+    //   return item;
+    // }
+    // if (res.status === 401) {
+    //   accountStore.clearTokenDetail();
+    //   router.push("/login");
+    //   useBoardStore().removeCollaborator(newCollaborator);
+    //   return;
+    // }
+    // if (res.status === 409) {
+    //   toastStore.createToast("The user is already a collaborator of this board.", "danger");
+    //   useBoardStore().removeCollaborator(newCollaborator);
+    //   return res.status;
+    // }
+    // if (res.status === 403) {
+    //   toastStore.createToast("You do not have permission to add board collaborator.", "danger");
+    //   useBoardStore().removeCollaborator(newCollaborator);
+    //   return res.status;
+    // }
+    // if (res.status === 404) {
+    //   toastStore.createToast("User not found", 'danger');
+    //   useBoardStore().removeCollaborator(newCollaborator);
+    //   return res.status;
+    // }
+    // if (res.status === 503) {
+    //   useBoardStore().clearCollaborator();
+    //   try {
+    //     useBoardStore().currentBoard.collaborators = await getAllCollabs();
+    //   } catch (error) {
+    //   } finally {
+    //     let invitedUsername = useBoardStore().currentBoard.collaborators.find(collab => collab.email === newCollaborator.email).name;
+    //     toastStore.createToast(`We could not send e-mail to <span class="font-bold"> ${invitedUsername} </span>, he/she can accept the invitation at  <span class="underline"> /board/${boardId}/collab/invitations </span>`, "warning" , 15000);
+    //     return res.status;
+    //   }
+    // }
+    // if (res.status === 409){
+    //   toastStore.createToast("The user is already a collaborator of this board.", "danger");
+    //   useBoardStore().removeCollaborator(newCollaborator);
+    // }
+    // return res.status;
   } catch (error) {
     toastStore.createToast("adding collaborator failed", "danger");
     // useBoardStore().removeCollaborator(newCollaborator);
