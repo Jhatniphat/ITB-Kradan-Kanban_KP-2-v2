@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onBeforeMount } from 'vue';
+import { ref, onBeforeMount } from 'vue';
 import { useAccountStore } from '@/stores/account';
 import LoadingComponent from '@/components/loadingComponent.vue';
 import router from '@/router';
@@ -17,6 +17,7 @@ const boardStore = useBoardStore();
 // !  ====================================== Function ==================================
 onBeforeMount(async () => {
   if (!accountStore.isLoggedIn) {
+    // router.push({ name: 'login' , query: { redirect : route.path } });
     router.push({ name: 'login' });
     toastStore.createToast('Please login before accept invitation', 'danger');
     return;
@@ -78,7 +79,7 @@ async function handleRejectInvitation() {
     <div class="h-[90vh] w-full flex flex-col items-center justify-center p-8 rounded-lg" v-if="!loading && !invitedBoard">
       <p class="text-lg font-semibold text-gray-800 text-center mb-4">Sorry, we couldn't find your active invitation to this board.</p>
       <div class="flex space-x-4">
-        <button @click="router.push({ name: 'board-list' })" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">Go To Board List</button>
+        <button @click="accountStore.clearToken;router.push({ name: 'board-list' })" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">Go To Board List</button>
         <button @click="router.push({ name: 'login' })" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">Go To Sign In</button>
       </div>
     </div>

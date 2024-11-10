@@ -745,9 +745,6 @@ export async function addCollaborator(newCollaborator) {
         useBoardStore().currentBoard.collaborators = await getAllCollabs();
       } catch (error) {
       } finally {
-        console.log(newCollaborator)
-        console.table(useBoardStore().currentBoard.collaborators);
-        console.log(useBoardStore().currentBoard.collaborators.find(collab => collab.email === newCollaborator.email));
         let invitedUsername = useBoardStore().currentBoard.collaborators.find(collab => collab.email === newCollaborator.email).name;
         toastStore.createToast(`We could not send e-mail to <span class="font-bold"> ${invitedUsername} </span>, he/she can accept the invitation at  <span class="underline"> /board/${boardId}/collab/invitations </span>`, "warning" , 15000);
         return res.status;

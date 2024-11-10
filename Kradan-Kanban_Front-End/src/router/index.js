@@ -32,7 +32,7 @@ const router = createRouter({
     },
     {
       path: "/board/:boardId/collab/invitations",
-      name: "collab-invitations",
+      name: "collab-invitation-accept",
       component: () => import("../views/CollabInvitationAcceptView.vue")
     },
     {
@@ -88,7 +88,13 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const accountStore = useAccountStore();
   const boardStore = useBoardStore();
-   if (to.name.includes("task") || to.name.includes("status") || to.name.includes("collab-management")) {
+  if (to.name === "collab-invitation-accept" && !accountStore.isLoggedIn){
+    // router.push({ name: "login" , query : {redirect: to.fullPath}});
+    next({name: "login" , query : {redirect: to.fullPath}});
+    return
+  }
+
+  if (to.name.includes("task") || to.name.includes("status") || to.name.includes("collab-management")) {
     if (boardStore.boards.length === 0 && accountStore.refreshToken !== "") {
       await getAllBoard();
     }

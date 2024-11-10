@@ -1,15 +1,13 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { login } from "@/lib/fetchUtils.js";
 // import router from "@/router/index.js";
-import VueJwtDecode from "vue-jwt-decode";
 import { useAccountStore } from "@/stores/account.js";
-import { useRoute, useRouter } from "vue-router";
+import { onBeforeRouteUpdate, useRoute, useRouter } from "vue-router";
 import { useToastStore } from "@/stores/toast.js";
 const route = useRoute();
 const router = useRouter();
 const accountStore = useAccountStore();
-
 const userData = ref({
   username: "",
   password: "",
@@ -33,7 +31,9 @@ const handleLogin = async () => {
     if (result.status === 200) {
       // const decodedToken = VueJwtDecode.decode(result.payload?.access_token);
       // accountStore.setTokenDetail(decodedToken);
-      router.push({ name: "board-list" });
+      const redirectPath = route.query.redirect || '/board';
+      router.push(redirectPath);
+      // router.push({ name: "board-list" });
     } else {
       showAlert.value = true;
       errorMsg.value = result.payload;
@@ -44,6 +44,7 @@ const handleLogin = async () => {
 const closeAlert = () => {
   showAlert.value = false;
 };
+
 </script>
 
 <template>
