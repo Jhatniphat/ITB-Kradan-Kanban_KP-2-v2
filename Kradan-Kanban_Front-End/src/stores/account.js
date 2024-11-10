@@ -3,7 +3,6 @@ import VueJwtDecode from 'vue-jwt-decode'
 import {useBoardStore} from "@/stores/board.js";
 import { useToastStore } from "./toast";
 import { useTaskStore } from "./task";
-import Taskdetail from "@/components/Tasks/Taskdetail.vue";
 import { useStatusStore } from "./status";
 export const useAccountStore = defineStore("account", {
         state: () => ({

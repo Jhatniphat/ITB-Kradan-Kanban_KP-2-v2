@@ -1,101 +1,93 @@
-import { createRouter, createWebHistory } from "vue-router";
-import LogicPage from "@/components/LogicPage.vue";
-import { useAccountStore } from "@/stores/account";
-import { useBoardStore } from "@/stores/board.js";
-import {
-  getAllBoard,
-  login,
-  getBoardById,
-  getBoardByIdForGuest,
-  checkTokenExpired,
-} from "@/lib/fetchUtils.js";
+import { createRouter, createWebHistory } from 'vue-router';
+import LogicPage from '@/components/LogicPage.vue';
+import { useAccountStore } from '@/stores/account';
+import { useBoardStore } from '@/stores/board.js';
+import { getAllBoard, login, getBoardById, getBoardByIdForGuest, checkTokenExpired } from '@/lib/fetchUtils.js';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: "/",
-      redirect: { path: "/login" },
+      path: '/',
+      redirect: { path: '/login' },
     },
     {
-      path: "/about",
-      name: "about",
+      path: '/about',
+      name: 'about',
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
-      component: () => import("../views/AboutView.vue"),
+      component: () => import('../views/AboutView.vue'),
     },
     {
-      path: "/board/add",
-      name: "add-board",
-      component: () => import("../views/BoardView.vue"),
+      path: '/board/add',
+      name: 'add-board',
+      component: () => import('../views/BoardView.vue'),
     },
     {
-      path: "/board/:boardId/collab/invitations",
-      name: "collab-invitation-accept",
-      component: () => import("../views/CollabInvitationAcceptView.vue")
+      path: '/board/invitation',
+      name: 'invitation',
+      component: () => import('../views/InvitationList.vue'),
     },
     {
-      path: "/board/:boardId/status/:statusId/edit",
-      name: "status-edit",
-      component: () => import("../views/StatusListView.vue"),
-      alias: ["/board/:boardId/status/:statusId"],
+      path: '/board/:boardId/collab/invitations',
+      name: 'collab-invitations',
+      component: () => import('../views/CollabInvitationAcceptView.vue'),
     },
     {
-      path: "/board/:boardId/status",
-      name: "status-list",
-      component: () => import("../views/StatusListView.vue"),
-      alias: ["/board/:boardId/status/add"],
+      path: '/board/:boardId/status/:statusId/edit',
+      name: 'status-edit',
+      component: () => import('../views/StatusListView.vue'),
+      alias: ['/board/:boardId/status/:statusId'],
     },
     {
-      path: "/board/:boardId/collab",
-      name: "collab-management",
-      component: () => import("../views/CollabManageView.vue"),
+      path: '/board/:boardId/status',
+      name: 'status-list',
+      component: () => import('../views/StatusListView.vue'),
+      alias: ['/board/:boardId/status/add'],
     },
     {
-      path: "/board/:boardId/task/:taskId/edit",
-      name: "task-edit",
-      component: () => import("../views/TasklistView.vue"),
-      alias: ["/board/:boardId/task/:taskId"],
+      path: '/board/:boardId/collab',
+      name: 'collab-management',
+      component: () => import('../views/CollabManageView.vue'),
     },
     {
-      path: "/board/:boardId",
-      name: "task-list",
-      component: () => import("../views/TasklistView.vue"),
-      alias: ["/board/:boardId/task/add"],
+      path: '/board/:boardId/task/:taskId/edit',
+      name: 'task-edit',
+      component: () => import('../views/TasklistView.vue'),
+      alias: ['/board/:boardId/task/:taskId'],
+    },
+    {
+      path: '/board/:boardId',
+      name: 'task-list',
+      component: () => import('../views/TasklistView.vue'),
+      alias: ['/board/:boardId/task/add'],
       //  ? alias is similar to redirect but it doesn't change the URL
     },
     {
-      path: "/board",
-      name: "board-list",
-      component: () => import("../views/BoardView.vue"),
+      path: '/board',
+      name: 'board-list',
+      component: () => import('../views/BoardView.vue'),
     },
     {
-      path: "/login",
-      name: "login",
+      path: '/login',
+      name: 'login',
       component: LogicPage,
     },
     {
-      path: "/access-denied",
-      name: "AccessDenied",
-      component: () => import("../views/AccessDenied.vue"),
+      path: '/access-denied',
+      name: 'AccessDenied',
+      component: () => import('../views/AccessDenied.vue'),
     },
-    { path: "/:pathMatch(.*)*", redirect: { name: "board" } },
+    { path: '/:pathMatch(.*)*', redirect: { name: 'board' } },
   ],
 });
-
 
 router.beforeEach(async (to, from, next) => {
   const accountStore = useAccountStore();
   const boardStore = useBoardStore();
-  if (to.name === "collab-invitation-accept" && !accountStore.isLoggedIn){
-    // router.push({ name: "login" , query : {redirect: to.fullPath}});
-    next({name: "login" , query : {redirect: to.fullPath}});
-    return
-  }
-
-  if (to.name.includes("task") || to.name.includes("status") || to.name.includes("collab-management")) {
-    if (boardStore.boards.length === 0 && accountStore.refreshToken !== "") {
+  if (to.name.includes('task') || to.name.includes('status') || to.name.includes('collab-management')) {
+    if (boardStore.boards.length === 0 && accountStore.refreshToken !== '') {
       await getAllBoard();
     }
 
@@ -103,7 +95,7 @@ router.beforeEach(async (to, from, next) => {
     await boardStore.setCurrentBoardId(boardId);
 
     let board;
-    if (accountStore.refreshToken === "") {
+    if (accountStore.refreshToken === '') {
       board = await getBoardByIdForGuest(boardId);
     } else {
       board = await getBoardById(boardId);
@@ -111,20 +103,20 @@ router.beforeEach(async (to, from, next) => {
     // const board = await getBoardById(boardId);
 
     if (!board) {
-      router.push({ name: "AccessDenied" });
+      router.push({ name: 'AccessDenied' });
       return;
     }
 
-    if (accountStore.refreshToken !== "") {
+    if (accountStore.refreshToken !== '') {
       await checkTokenExpired();
     }
     // await checkTokenExpired()
 
     const isOwner = board.ownerId === accountStore.userId;
-    const isBoardPrivate = board.visibility === "PRIVATE";
+    const isBoardPrivate = board.visibility === 'PRIVATE';
 
     if (isBoardPrivate && !isOwner) {
-      router.push({ name: "AccessDenied" });
+      router.push({ name: 'AccessDenied' });
       return;
     }
   }

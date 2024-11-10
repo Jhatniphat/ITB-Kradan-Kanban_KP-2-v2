@@ -24,16 +24,20 @@ const allBoard = ref(boardStore.boards);
 // const allBoard = computed(() => boardStore.boards);
 const newBoard = ref({ name: `${useAccountStore().userName} personal board` });
 const errorText = ref({ name: '' });
+const allInvites = ref([]);
 // ? ----------------- LIST --------------------------
 const personalBoard = ref([]);
 const collabBoard = ref([]);
 const filterBy = ref('');
 // ! ================= Life Cycle Hook ===============
-onMounted(() => {
+onBeforeMount(() => {
   if (boardStore.boards.length === 0) {
     fetchBoardData();
   } else {
     allBoard.value = boardStore.boards;
+  }
+  if (allInvites.value.length > 0) {
+    toastStore.createToast('You Have New Invitations');
   }
   if (route.path === '/board/add') {
     openAdd();
@@ -48,12 +52,13 @@ async function fetchBoardData() {
     await getAllBoard();
   } catch (err) {
     console.log(err);
-    // showToast({
-    //   status: 'error',
-    //   msg: 'An error has occurred, please try again later',
-    // });
     toastStore.createToast('An error has occurred, please try again later', 'danger');
   } finally {
+    allInvites.value = boardStore.getAllPendingBoard();
+    console.log(allInvites.value);
+    if (allInvites.value.length > 0) {
+      toastStore.createToast('You Have New Invitations');
+    }
     if (allBoard.value !== null && allBoard.value !== undefined) {
       if (allBoard.value?.payload !== 'No board found') {
         allBoard.value = boardStore.boards;
@@ -116,11 +121,10 @@ async function saveAddBoard() {
       toastStore.createToast('Create board successfully');
       allBoard.value = result.payload;
       // router.push(`/board/${result.payload.id}`);
-      router.push({ name: 'task-list' , params: { boardId: result.payload.id } });
+      router.push({ name: 'task-list', params: { boardId: result.payload.id } });
     } else {
       toastStore.createToast('Create board Failed', 'danger');
     }
-
   }
 }
 
@@ -327,103 +331,31 @@ const leaveBoard = async () => {
 
 @keyframes l10 {
   0% {
-    box-shadow:
-      0 -30px #f4dd51,
-      calc(30px * 0.707) calc(-30px * 0.707) #e3aad6,
-      30px 0 #f4dd51,
-      0 0 #e3aad6,
-      0 0 #f4dd51,
-      0 0 #e3aad6,
-      0 0 #f4dd51,
-      0 0 #e3aad6;
+    box-shadow: 0 -30px #f4dd51, calc(30px * 0.707) calc(-30px * 0.707) #e3aad6, 30px 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6;
   }
   12.5% {
-    box-shadow:
-      0 0 #f4dd51,
-      calc(30px * 0.707) calc(-30px * 0.707) #e3aad6,
-      30px 0 #f4dd51,
-      calc(30px * 0.707) calc(30px * 0.707) #e3aad6,
-      0 0 #f4dd51,
-      0 0 #e3aad6,
-      0 0 #f4dd51,
-      0 0 #e3aad6;
+    box-shadow: 0 0 #f4dd51, calc(30px * 0.707) calc(-30px * 0.707) #e3aad6, 30px 0 #f4dd51, calc(30px * 0.707) calc(30px * 0.707) #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6;
   }
   25% {
-    box-shadow:
-      0 0 #f4dd51,
-      0 0 #e3aad6,
-      30px 0 #f4dd51,
-      calc(30px * 0.707) calc(30px * 0.707) #e3aad6,
-      0 30px #f4dd51,
-      0 0 #e3aad6,
-      0 0 #f4dd51,
-      0 0 #e3aad6;
+    box-shadow: 0 0 #f4dd51, 0 0 #e3aad6, 30px 0 #f4dd51, calc(30px * 0.707) calc(30px * 0.707) #e3aad6, 0 30px #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6;
   }
   37.5% {
-    box-shadow:
-      0 0 #f4dd51,
-      0 0 #e3aad6,
-      0 0 #f4dd51,
-      calc(30px * 0.707) calc(30px * 0.707) #e3aad6,
-      0 30px #f4dd51,
-      calc(-30px * 0.707) calc(30px * 0.707) #e3aad6,
-      0 0 #f4dd51,
-      0 0 #e3aad6;
+    box-shadow: 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, calc(30px * 0.707) calc(30px * 0.707) #e3aad6, 0 30px #f4dd51, calc(-30px * 0.707) calc(30px * 0.707) #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6;
   }
   50% {
-    box-shadow:
-      0 0 #f4dd51,
-      0 0 #e3aad6,
-      0 0 #f4dd51,
-      0 0 #e3aad6,
-      0 30px #f4dd51,
-      calc(-30px * 0.707) calc(30px * 0.707) #e3aad6,
-      -30px 0 #f4dd51,
-      0 0 #e3aad6;
+    box-shadow: 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 30px #f4dd51, calc(-30px * 0.707) calc(30px * 0.707) #e3aad6, -30px 0 #f4dd51, 0 0 #e3aad6;
   }
   62.5% {
-    box-shadow:
-      0 0 #f4dd51,
-      0 0 #e3aad6,
-      0 0 #f4dd51,
-      0 0 #e3aad6,
-      0 0 #f4dd51,
-      calc(-30px * 0.707) calc(30px * 0.707) #e3aad6,
-      -30px 0 #f4dd51,
-      calc(-30px * 0.707) calc(-30px * 0.707) #e3aad6;
+    box-shadow: 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, calc(-30px * 0.707) calc(30px * 0.707) #e3aad6, -30px 0 #f4dd51, calc(-30px * 0.707) calc(-30px * 0.707) #e3aad6;
   }
   75% {
-    box-shadow:
-      0 -30px #f4dd51,
-      0 0 #e3aad6,
-      0 0 #f4dd51,
-      0 0 #e3aad6,
-      0 0 #f4dd51,
-      0 0 #e3aad6,
-      -30px 0 #f4dd51,
-      calc(-30px * 0.707) calc(-30px * 0.707) #e3aad6;
+    box-shadow: 0 -30px #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, -30px 0 #f4dd51, calc(-30px * 0.707) calc(-30px * 0.707) #e3aad6;
   }
   87.5% {
-    box-shadow:
-      0 -30px #f4dd51,
-      calc(30px * 0.707) calc(-30px * 0.707) #e3aad6,
-      0 0 #f4dd51,
-      0 0 #e3aad6,
-      0 0 #f4dd51,
-      0 0 #e3aad6,
-      0 0 #f4dd51,
-      calc(-30px * 0.707) calc(-30px * 0.707) #e3aad6;
+    box-shadow: 0 -30px #f4dd51, calc(30px * 0.707) calc(-30px * 0.707) #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, calc(-30px * 0.707) calc(-30px * 0.707) #e3aad6;
   }
   100% {
-    box-shadow:
-      0 -30px #f4dd51,
-      calc(30px * 0.707) calc(-30px * 0.707) #e3aad6,
-      30px 0 #f4dd51,
-      0 0 #e3aad6,
-      0 0 #f4dd51,
-      0 0 #e3aad6,
-      0 0 #f4dd51,
-      0 0 #e3aad6;
+    box-shadow: 0 -30px #f4dd51, calc(30px * 0.707) calc(-30px * 0.707) #e3aad6, 30px 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6;
   }
 }
 
