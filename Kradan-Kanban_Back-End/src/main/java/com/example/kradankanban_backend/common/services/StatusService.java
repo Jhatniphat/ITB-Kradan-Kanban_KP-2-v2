@@ -77,10 +77,10 @@ public class StatusService {
     // * editStatus
     @Transactional
     public StatusEntity editStatus(String boardId ,int id, StatusEntity status) {
+        StatusEntity oldStatus = repository.findById(id).orElseThrow( () -> new ItemNotFoundException("No status found with id: " + id) );
         if (!boardRepository.existsById(boardId) || !repository.existsByIdAndStBoard(id, boardId)) {
             throw new WrongBoardException("No board found with id: " + boardId);
         }
-        StatusEntity oldStatus = repository.findById(id).orElseThrow( () -> new ItemNotFoundException("No status found with id: " + id) );
         if (oldStatus.getName().equals("No Status") || oldStatus.getName().equals("Done")){
             throw new BadRequestException( "'" + oldStatus.getName() +"'"+ " cannot be edited !!!");
         }
@@ -99,8 +99,6 @@ public class StatusService {
 //        if (status.getDescription() != null && status.getDescription().trim().length() > 200) {
 //            throw new BadRequestException("Status Description length should be less than 200 !!!");
 //        }
-
-
         try {
             status.setStBoard(boardId);
             status.setId(id);
@@ -112,7 +110,7 @@ public class StatusService {
 
     // * deleteStatus
     public StatusEntity deleteStatus(String userId, String boardId ,int id) {
-        checkAccessRight(boardId);
+//        checkAccessRight(boardId);
         if (!boardRepository.existsById(boardId) || !repository.existsByIdAndStBoard(id, boardId)) {
             throw new WrongBoardException("No board found with id: " + boardId);
         }
@@ -124,9 +122,6 @@ public class StatusService {
             throw new BadRequestException("Have Task On This Status");
         }
         BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
-        if (!board.getUserId().equals(userId)) {
-            throw new ForbiddenException("You do not have access this board.");
-        }
         if (status.getName().equals("No Status")) {
             throw new BadRequestException("Cannot delete 'No Status'!!!");
         }

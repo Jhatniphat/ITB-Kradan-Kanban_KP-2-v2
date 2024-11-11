@@ -77,7 +77,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
                 handleRequest(request, isTokenValid, tokenError);
             } else if (!isTokenValid && !request.getRequestURI().equals("/v3/boards")) {
-                System.out.println(isTokenValid);
                 throw new AuthenticationFailedException("Invalid token");
             }
             chain.doFilter(request, response);
@@ -87,11 +86,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     }
 
     private void handleRequest(HttpServletRequest request, boolean isTokenValid, String tokenError) {
-        String boardId = request.getRequestURI().split("/")[3];
+        String[] uri = request.getRequestURI().split("/");
+        String boardId = uri[3];
         String requestMethod = request.getMethod();
         AuthUser currentUser = JwtUserDetailsService.getCurrentUser();
         boolean isBoardExist = boardService.boardExists(boardId);
-        System.out.println(isBoardExist);
         if (!isBoardExist) {
             if (!isTokenValid && !requestMethod.equals("GET")) {
                 throw new AuthenticationFailedException("Unauthorized");
@@ -101,22 +100,41 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
         boolean isPublic = boardService.isBoardPublic(boardId);
         if (currentUser != null) {
+            if (uri.length > 5 && uri[4].equals("collabs") && uri[5].equals("invitations")) {
+                return;
+            }
             boolean isOwner = boardService.isBoardOwner(boardId,currentUser.getOid());
             boolean isCollaborator = collabService.isCollaborator(boardId, currentUser.getOid());
-            System.out.println(isCollaborator);
-            if ((!isOwner && !isCollaborator) && (!isPublic || !requestMethod.equals("GET"))) {
-                throw new ForbiddenException("FORBIDDEN");
-            }
+            boolean isWriteAccess = collabService.isWriteAccess(boardId, currentUser.getOid());
             if (isCollaborator) {
-                CollabEntity collab =  collabService.getCollaborators(boardId, currentUser.getOid());
-                if (collab.getAccessRight().equals(CollabEntity.AccessRight.READ) && !(requestMethod.equals("GET") || requestMethod.equals("DELETE")) ) {
-                    throw new ForbiddenException("FORBIDDEN");
+                if (isWriteAccess) {
+                    if ((requestMethod.equals("POST") || requestMethod.equals("PATCH")) && !( uri.length > 4 && (uri[4].equals("tasks") || uri[4].equals("statuses")))) {
+                        throw new ForbiddenException("Write access not allowed for this request");
+                    }
+                    if (requestMethod.equals("DELETE") && request.getRequestURI().contains("/collabs/")) {
+                        String collabId = uri[uri.length - 1];
+                        if (!collabId.equals(currentUser.getOid())) {
+                            throw new ForbiddenException("collaborator cannot delete other collaborators");
+                        }
+                    }
+                } else {
+                    if (requestMethod.equals("DELETE") && request.getRequestURI().contains("/collabs/")) {
+                        String collabId = uri[uri.length - 1];
+                        if (!collabId.equals(currentUser.getOid())) {
+                            throw new ForbiddenException("collaborator cannot delete other collaborators");
+                        }
+                    }
+                    else if (!requestMethod.equals("GET")) {
+                        throw new ForbiddenException("Read access not allowed for this request");
+                    }
                 }
+            } else if (!isOwner&& (!isPublic || !requestMethod.equals("GET"))) {
+                throw new ForbiddenException("FORBIDDEN");
             }
         } else {
             if (!isPublic) {
-                if ( requestMethod.equals("GET")) {
-                    throw new ForbiddenException("FORBIDDEN");
+                if (requestMethod.equals("GET")) {
+                    throw new ForbiddenException("Board is private, Only Collaborator and Owner can access");
                 } else {
                     throw new AuthenticationFailedException(tokenError);
                 }

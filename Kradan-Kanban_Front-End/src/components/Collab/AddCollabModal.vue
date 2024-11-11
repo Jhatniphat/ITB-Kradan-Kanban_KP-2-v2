@@ -1,5 +1,5 @@
 <script setup>
-import { addCollaborator, addTask } from "@/lib/fetchUtils";
+import { addCollaborator } from "@/lib/fetchUtils";
 import { onMounted, ref, watch } from "vue";
 import { useStatusStore } from "@/stores/status.js";
 
@@ -31,25 +31,27 @@ watch(collabData.value, () => {
 const loading = ref(false);
 
 async function fetchData() {
-  loading.value = true;
-  let res;
-  try {
-    res = await addCollaborator(collabData.value);
-    if (res === 404) {
-      console.log("we here in 404 if condition.");
-      Errortext.value.email = `The user does not exist.`;
-    } else if (res === 409) {
-      console.log("we here in 404 if condition.");
-      Errortext.value.email = `The user is already the collaborator of this board.`;
-    } else {
-      console.log("Okay to Add");
-      emit("closeModal", res);
-    }
-  } catch (error) {
-    console.log(error);
-  } finally {
-    loading.value = false;
-  }
+  emit("closeModal", null);
+  addCollaborator(collabData.value);
+  // loading.value = true;
+  // let res;
+  // try {
+  //   res = await addCollaborator(collabData.value);
+  //   if (res === 404) {
+  //     console.log("we here in 404 if condition.");
+  //     Errortext.value.email = `The user does not exist.`;
+  //   } else if (res === 409) {
+  //     console.log("we here in 404 if condition.");
+  //     Errortext.value.email = `The user is already the collaborator of this board.`;
+  //   } else {
+  //     console.log("Okay to Add");
+  //     emit("closeModal", res);
+  //   }
+  // } catch (error) {
+  //   console.log(error);
+  // } finally {
+  //   loading.value = false;
+  // }
 }
 function sendCloseModal() {
   emit("closeModal", null);

@@ -1,7 +1,9 @@
 import {defineStore} from "pinia";
 import VueJwtDecode from 'vue-jwt-decode'
 import {useBoardStore} from "@/stores/board.js";
-
+import { useToastStore } from "./toast";
+import { useTaskStore } from "./task";
+import { useStatusStore } from "./status";
 export const useAccountStore = defineStore("account", {
         state: () => ({
             tokenDetail: JSON.parse(localStorage.getItem("tokenDetail")) || {},
@@ -11,6 +13,7 @@ export const useAccountStore = defineStore("account", {
         getters: {
             token: (state) => state.tokenRaw,
             userName: (state) => state.tokenDetail.name || "",
+            isLoggedIn: (state) => state.refreshToken !== "",
         },
         actions: {
             setToken(token) {
@@ -18,12 +21,13 @@ export const useAccountStore = defineStore("account", {
                     this.tokenRaw = token.access_token;
                     localStorage.setItem("token", token.access_token);
                     this.tokenDetail = VueJwtDecode.decode(token.access_token);
-                    localStorage.setItem("tokenDetail", JSON.stringify(this.token));
+                    localStorage.setItem("tokenDetail", JSON.stringify(this.tokenDetail));
                 }
                 if (token.refresh_token) {
                     this.refreshToken = token.refresh_token;
                     localStorage.setItem("refresh_token", token.refresh_token);
                 }
+                useToastStore().createToast(`Welcome back, ${this.tokenDetail?.name}`, "success"); 
             },
             setTokenDetail(tokenDetail) {
                 this.tokenDetail = tokenDetail;
@@ -46,12 +50,17 @@ export const useAccountStore = defineStore("account", {
                 return decodedToken.exp < currentTime;
             },
             clearToken() {
+                console.table(this.tokenDetail)
+                useToastStore().createToast(`See you later, ${this.tokenDetail?.name}`, "success"); 
                 this.tokenRaw = "";
                 this.refreshToken = "";
                 this.tokenDetail = {};
                 localStorage.removeItem("token");
                 localStorage.removeItem("refresh_token");
                 localStorage.removeItem("tokenDetail");
+                useTaskStore().clearTask()
+                useStatusStore().clearStatus()
+                useBoardStore().clearBoard()
             }
         },
     })

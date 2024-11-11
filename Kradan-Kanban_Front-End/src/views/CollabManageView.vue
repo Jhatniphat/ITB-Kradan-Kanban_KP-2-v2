@@ -1,21 +1,16 @@
 <script setup>
-import { onBeforeMount, ref, watch } from "vue";
-import { useRoute } from "vue-router";
-import {
-  getAllCollabs,
-  getAllTasks,
-  getAllStatus,
-  getAllTasksForGuest,
-  getLimitStatusForGuest,
-} from "../lib/fetchUtils.js";
+import { onBeforeMount, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
+import { getAllCollabs, changeAccessRight, deleteCollaborator } from '../lib/fetchUtils.js';
 
 // ? import component
-import Modal from "../components/Modal.vue";
-import { useBoardStore } from "@/stores/board.js";
-import LoadingComponent from "@/components/loadingComponent.vue";
-import { useAccountStore } from "@/stores/account.js";
-import AddCollab from "@/components/Collab/AddCollabModal.vue";
-import router from "@/router/index.js";
+import Modal from '../components/Modal.vue';
+import { useBoardStore } from '@/stores/board.js';
+import LoadingComponent from '@/components/loadingComponent.vue';
+import { useAccountStore } from '@/stores/account.js';
+import AddCollab from '@/components/Collab/AddCollabModal.vue';
+import router from '@/router/index.js';
+import { useToastStore } from '@/stores/toast.js';
 
 // ! ================= Variable ======================
 // ? ----------------- Store and Route ---------------
@@ -23,10 +18,13 @@ const accountStore = useAccountStore();
 const boardStore = useBoardStore();
 const route = useRoute();
 const currentRoute = route.params?.boardId;
+const toastStore = useToastStore();
 
 // ? ----------------- Modal -------------------------
 const showAddModal = ref(false);
-const toast = ref({ status: "", msg: "" });
+const showChangeAccessModal = ref(false);
+const showRemoveCollabModal = ref(false);
+const toast = ref({ status: '', msg: '' });
 
 // ? ----------------- Common -------------------------
 const loading = ref(false);
@@ -36,6 +34,9 @@ const showErrorModal = ref(false); // * show Error from Edit Limit modal
 const overStatuses = ref([]);
 const currentBoardId = boardStore.currentBoardId;
 const isOwner = ref(false);
+const selectCollabName = ref('');
+const selectAccesRight = ref('');
+const selectCollabId = ref('');
 const allCollabs = ref([]);
 
 // Function to fetch collaborators
@@ -44,8 +45,10 @@ const fetchCollaborators = async () => {
   const response = await getAllCollabs(currentBoardId);
   if (response.error) {
     error.value = response.message;
-    showToast({ status: "error", msg: response.message });
+    showToast({ status: 'error', msg: response.message });
+    toastStore.createToast(response.message, 'danger');
   } else {
+    response.sort((a, b) => new Date(a.addedOn) - new Date(b.addedOn));
     allCollabs.value = response; // Set the collaborator data
   }
   loading.value = false;
@@ -62,26 +65,84 @@ onBeforeMount(async () => {
 const closeAddModal = (res) => {
   showAddModal.value = false;
   if (res === null) return 0;
-  if (typeof res === "object") {
-    showToast({ status: "success", msg: "Add Collaborator successfully" });
-  } else if (res === 403) {
-    showToast({
-      status: "AccessDenied",
-      msg: "You do not have permission to add board collaborator.",
-    });
-  } else
-    showToast({
-      status: "error",
-      msg: "There is a problem. Please try again later.",
-    });
 };
+
+const openAccessRight = (collabId, name, accessRight) => {
+  selectCollabId.value = collabId;
+  selectCollabName.value = name;
+  selectAccesRight.value = accessRight;
+  showChangeAccessModal.value = true;
+};
+
+async function callChangeAccesRight(confirm) {
+  // handle change access right
+  if (!confirm) {
+    if (selectAccesRight.value === 'WRITE') {
+      selectAccesRight.value = 'READ';
+    } else {
+      selectAccesRight.value = 'WRITE';
+    }
+    boardStore.currentBoard.collaborators.find((collab) => collab.oid === selectCollabId.value).accessRight = selectAccesRight.value;
+    showChangeAccessModal.value = false;
+    return;
+  } else {
+    let res;
+    try {
+      res = await changeAccessRight(boardStore.currentBoardId, selectCollabId.value, selectAccesRight.value);
+      if (typeof res === 'object') {
+        toastStore.createToast('Change access right successfully');
+      } else {
+        toastStore.createToast('Change access right Failed', 'danger');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      showChangeAccessModal.value = false;
+    }
+  }
+}
+
+const removeCollaborator = (collabId, name) => {
+  selectCollabId.value = collabId;
+  selectCollabName.value = name;
+  console.log(selectCollabName.value);
+  showRemoveCollabModal.value = true;
+};
+
+async function callDeleteCollaborator() {
+  let res;
+  try {
+    res = await deleteCollaborator(boardStore.currentBoardId, selectCollabId.value);
+    if (typeof res === 'object') {
+      toastStore.createToast('Delete collaborator successfully');
+      boardStore.removeCollaborator(boardStore.currentBoard.collaborators.find((collab) => collab.oid === selectCollabId.value));
+    } else {
+      toastStore.createToast('Delete collaborator Failed, Please Refresh Page', 'danger');
+    }
+  } catch (err) {
+    console.error(err);
+  } finally {
+    showRemoveCollabModal.value = false;
+  }
+}
 
 // ! ================= Toast ======================
 const showToast = (toastData, timeOut = 3000) => {
   toast.value = toastData;
   setTimeout(() => {
-    toast.value = { ...{ status: "" } };
+    toast.value = { ...{ status: '' } };
   }, timeOut);
+};
+
+// ! ================= Style ======================
+const statusStyleBinding = (status) => {
+  if (status === 'PENDING') {
+    return 'text-yellow-400';
+  } else if (status === 'ACCEPTED') {
+    return 'text-green-500';
+  } else if (status === 'REMOVED') {
+    return 'text-red-500';
+  }
 };
 </script>
 
@@ -93,10 +154,7 @@ const showToast = (toastData, timeOut = 3000) => {
       </div>
       <div class="w-3/4 mx-auto mt-10 relative">
         <div class="inline-flex">
-          <a
-            class="itbkk-board-name m-2"
-            @click="router.push(`/board/${boardStore.currentBoardId}`)"
-          >
+          <a class="itbkk-board-name m-2" @click="router.push(`/board/${boardStore.currentBoardId}`)">
             {{ boardStore.currentBoard.name }}
           </a>
           <p class="mr-2 mt-3">></p>
@@ -104,17 +162,8 @@ const showToast = (toastData, timeOut = 3000) => {
         </div>
         <!-- show Add Collab modal -->
         <div class="float-right flex flex-row">
-          <div
-            :class="isOwner ? '' : 'lg:tooltip'"
-            data-tip="You don't have a permission to Add a Collaborator"
-          >
-            <button
-              class="itbkk-collaborator-add btn btn-outline w-40 float-left mb-2"
-              @click="showAddModal = true"
-              :disabled="!isOwner"
-            >
-              Add Collaborator
-            </button>
+          <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You need to be board owner to perform this action.">
+            <button class="itbkk-collaborator-add btn btn-outline w-40 float-left mb-2" @click="showAddModal = true" :disabled="!isOwner">Add Collaborator</button>
           </div>
         </div>
 
@@ -122,9 +171,7 @@ const showToast = (toastData, timeOut = 3000) => {
         <div class="opacity">
           <div class="w-full">
             <!-- Table -->
-            <table
-              class="table table-lg table-pin-rows table-pin-cols font-semibold mx-auto my-5 text-center text-base rounded-lg border-2 border-slate-500 border-separate border-spacing-1"
-            >
+            <table class="table table-lg table-pin-rows table-pin-cols font-semibold mx-auto my-5 text-center text-base rounded-lg border-2 border-slate-500 border-separate border-spacing-1">
               <!-- head -->
               <thead>
                 <tr>
@@ -132,6 +179,7 @@ const showToast = (toastData, timeOut = 3000) => {
                   <th>Name</th>
                   <th>Email</th>
                   <th>Access Right</th>
+                  <th>Status</th>
                   <th>Action</th>
                 </tr>
               </thead>
@@ -140,50 +188,33 @@ const showToast = (toastData, timeOut = 3000) => {
                 <tr v-if="allCollabs === null">
                   <td colspan="4">Waiting For Data</td>
                 </tr>
-                <tr
-                  v-if="allCollabs !== null"
-                  v-for="(collab, index) in allCollabs"
-                  :key="collab.oid"
-                  class="itbkk-item hover"
-                >
+                <tr v-if="allCollabs !== null" v-for="(collab, index) in boardStore.currentBoard.collaborators" :key="collab.oid" class="itbkk-item hover">
                   <th>{{ index + 1 }}</th>
                   <td class="itbkk-name">
-                    {{ collab.name }}
+                    {{ collab.name }} <span class="text-gray-500"> {{ collab.status === 'PENDING' ? '(Pending invite)' : '' }} </span>
                   </td>
                   <td class="itbkk-email">
                     {{ collab.email }}
                   </td>
                   <td class="itbkk-status itbkk-access-right">
                     <label class="form-control w-full max-w-xs">
-                      <div
-                        :class="isOwner ? '' : 'lg:tooltip'"
-                        data-tip="You don't have a permission to Change access right of Collaborator"
-                      >
+                      <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You need to be board owner to perform this action.">
                         <select
                           class="itbkk-access-right select select-bordered bg-white dark:bg-base-300 dark:text-slate-400"
                           v-model="collab.accessRight"
+                          @change="openAccessRight(collab.oid, collab.name, collab.accessRight)"
                           :disabled="!isOwner"
                         >
-                          <option>
-                            {{ collab.accessRight }}
-                          </option>
+                          <option value="READ">READ</option>
+                          <option value="WRITE">WRITE</option>
                         </select>
                       </div>
                     </label>
                   </td>
+                  <td :class="statusStyleBinding(collab.status)" class="font-semibold">{{ collab.status }}</td>
                   <td>
-                    <div
-                      :class="isOwner ? '' : 'lg:tooltip'"
-                      data-tip="You don't have a permission to Remove a Collaborator"
-                    >
-                      <button
-                        class="itbkk-collab-remove btn m-2"
-                        :disabled="!isOwner"
-                        :class="{ disabled: !isOwner }"
-                        @click=""
-                      >
-                        Remove
-                      </button>
+                    <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You need to be board owner to perform this action.">
+                      <button class="itbkk-collab-remove btn m-2" :disabled="!isOwner" :class="{ disabled: !isOwner }" @click="removeCollaborator(collab.oid, collab.name)">Remove</button>
                     </div>
                   </td>
                 </tr>
@@ -197,17 +228,46 @@ const showToast = (toastData, timeOut = 3000) => {
             <AddCollab @closeModal="closeAddModal" />
           </Modal>
 
+          <!-- Change AccessRight Modal -->
+          <Modal :show-modal="showChangeAccessModal">
+            <div class="flex flex-col p-5 bg-slate-50 dark:bg-base-100 rounded-lg w-full">
+              <h1 class="m-2 pb-4 text-2xl font-bold">Change Access Right</h1>
+              <hr />
+              <h1 class="itbkk-message font-semibold text-xl p-8">Do you want to change access right of "{{ selectCollabName }}" to "{{ selectAccesRight }}"</h1>
+              <hr />
+              <div class="flex flex-row-reverse gap-4 mt-5">
+                <button @click="callChangeAccesRight(false)" class="itbkk-button-cancel btn btn-outline btn-error basis-1/6">Close</button>
+                <button @click="callChangeAccesRight(true)" class="itbkk-button-confirm btn btn-outline btn-success basis-1/6">
+                  {{ loading ? '' : 'Confirm' }}
+                  <span class="loading loading-spinner text-success" v-if="loading"></span>
+                </button>
+              </div>
+            </div>
+          </Modal>
+
+          <!-- Change AccessRight Modal -->
+          <Modal :show-modal="showRemoveCollabModal">
+            <div class="flex flex-col p-5 bg-slate-50 dark:bg-base-100 rounded-lg w-full">
+              <h1 class="m-2 pb-4 text-2xl font-bold">Remove Collaborator</h1>
+              <hr />
+              <h1 class="itbkk-message font-semibold text-xl p-8">Do you want to remove "{{ selectCollabName }}" from the board?</h1>
+              <hr />
+              <div class="flex flex-row-reverse gap-4 mt-5">
+                <button @click="showRemoveCollabModal = false" class="itbkk-button-cancel btn btn-outline btn-error basis-1/6">Close</button>
+                <button @click="callDeleteCollaborator()" class="itbkk-button-confirm btn btn-outline btn-success basis-1/6">
+                  {{ loading ? '' : 'Confirm' }}
+                  <span class="loading loading-spinner text-success" v-if="loading"></span>
+                </button>
+              </div>
+            </div>
+          </Modal>
+
           <!-- Error Modal -->
           <Modal :show-modal="showErrorModal">
-            <div
-              class="itbkk-modal-task flex flex-col gap-3 p-5 text-black bg-slate-50 rounded-lg w-full m-auto"
-            >
+            <div class="itbkk-modal-task flex flex-col gap-3 p-5 text-black bg-slate-50 rounded-lg w-full m-auto">
               <h2>Have Task Over Limit!!!</h2>
               <hr />
-              <p>
-                These statuses that have reached the task limit. No additional
-                tasks can be added to these statuses.
-              </p>
+              <p>These statuses that have reached the task limit. No additional tasks can be added to these statuses.</p>
               <table class="table">
                 <thead>
                   <tr>
@@ -222,50 +282,18 @@ const showToast = (toastData, timeOut = 3000) => {
                   </tr>
                 </tbody>
               </table>
-              <button
-                class="btn btn-outline btn-primary w-fit self-end"
-                @click="showErrorModal = false"
-              >
-                OKAY
-              </button>
+              <button class="btn btn-outline btn-primary w-fit self-end" @click="showErrorModal = false">OKAY</button>
             </div>
           </Modal>
 
           <!-- Toast -->
           <div class="toast">
-            <div
-              role="alert"
-              class="alert"
-              :class="`alert-${toast.status}`"
-              v-if="toast.status !== ''"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="stroke-current shrink-0 h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                v-if="toast.status === 'success'"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
+            <div role="alert" class="alert" :class="`alert-${toast.status}`" v-if="toast.status !== ''">
+              <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24" v-if="toast.status === 'success'">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="stroke-current shrink-0 h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                v-if="toast.status === 'error'"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
+              <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24" v-if="toast.status === 'error'">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span>{{ toast.msg }}</span>
             </div>
@@ -281,13 +309,7 @@ const showToast = (toastData, timeOut = 3000) => {
 
 <style scoped>
 ::backdrop {
-  background-image: linear-gradient(
-    45deg,
-    magenta,
-    rebeccapurple,
-    dodgerblue,
-    green
-  );
+  background-image: linear-gradient(45deg, magenta, rebeccapurple, dodgerblue, green);
   opacity: 0.75;
 }
 

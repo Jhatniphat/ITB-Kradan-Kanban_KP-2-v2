@@ -68,9 +68,9 @@ public class TaskService {
             throw new WrongBoardException("Board not found");
         }
         BoardEntity board = boardRepository.findByBoardId(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
-        if (!board.getUserId().equals(userId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this board.");
-        }
+//        if (!board.getUserId().equals(userId)) {
+//            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this board.");
+//        }
         task.setTkBoard(board);
         String newTaskStatus = task.getStatus();
         if (isNumeric(newTaskStatus)) {
@@ -88,13 +88,13 @@ public class TaskService {
     @Transactional
     public TaskEntity editTaskForBoard(String userId, String boardId, int taskId, TaskEntity newTask) {
         if (!repository.existsByIdAndTkBoard(taskId, boardRepository.findByBoardId(boardId).orElseThrow(() -> new WrongBoardException("Board not found")))) {
-            throw new WrongBoardException("Board not found");
+            throw new ItemNotFoundException("No Task Found");
         }
         BoardEntity board = boardRepository.findByBoardId(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
 
-        if (!board.getUserId().equals(userId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this board.");
-        }
+//        if (!board.getUserId().equals(userId)) {
+//            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this board.");
+//        }
 
         TaskEntity existingTask = repository.findByTkBoardAndId(board, taskId).orElseThrow(() -> new ItemNotFoundException("Task ID " + taskId + " not found in this board!!"));
 
@@ -123,16 +123,13 @@ public class TaskService {
 
     @Transactional
     public SimpleTaskDTO deleteTaskByBoardIdAndTaskId(String userId, String boardId, int taskId) {
-        checkAccessRight(boardId);
         if (!repository.existsByIdAndTkBoard(taskId, boardRepository.findByBoardId(boardId).orElseThrow(() -> new WrongBoardException("Board not found")))) {
             throw new WrongBoardException("Board not found");
         }
         BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
-        if (!board.getUserId().equals(userId)) {
-            throw new ForbiddenException("You do not have access this board.");
-        }
-        TaskEntity task = repository.findByTkBoard_BoardIdAndId(boardId, taskId).orElseThrow(() -> new ItemNotFoundException("Task ID " + taskId + " not found in this board!!"));
 
+
+        TaskEntity task = repository.findByTkBoard_BoardIdAndId(boardId, taskId).orElseThrow(() -> new ItemNotFoundException("Task ID " + taskId + " not found in this board!!"));
         SimpleTaskDTO simpleTaskDTO = modelMapper.map(task, SimpleTaskDTO.class);
         repository.delete(task);
         return simpleTaskDTO;

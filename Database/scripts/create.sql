@@ -1,5 +1,5 @@
 -- MySQL Workbench Forward Engineering
-
+DROP SCHEMA IF EXISTS `intergrate-kp-2`;
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
@@ -14,7 +14,6 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,N
 -- -----------------------------------------------------
 -- Schema intergrate-kp-2
 -- -----------------------------------------------------
-DROP SCHEMA IF EXISTS `intergrate-kp-2`;
 CREATE SCHEMA IF NOT EXISTS `intergrate-kp-2` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci ;
 USE `intergrate-kp-2` ;
 
@@ -28,6 +27,25 @@ CREATE TABLE IF NOT EXISTS `intergrate-kp-2`.`board` (
   `visibility` ENUM('PRIVATE', 'PUBLIC') NOT NULL DEFAULT 'PRIVATE',
   `createdOn` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`boardId`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
+
+
+-- -----------------------------------------------------
+-- Table `intergrate-kp-2`.`collab`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `intergrate-kp-2`.`collab` (
+  `board_boardId` VARCHAR(10) NOT NULL,
+  `userId` VARCHAR(36) NOT NULL,
+  `added_On` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  `accessRight` ENUM('READ', 'WRITE') NULL DEFAULT 'READ',
+  `status` ENUM('PENDING', 'ACCEPTED') NULL DEFAULT 'PENDING',
+  PRIMARY KEY (`board_boardId`, `userId`),
+  INDEX `fk_collab_board1_idx` (`board_boardId` ASC) VISIBLE,
+  CONSTRAINT `fk_collab_board1`
+    FOREIGN KEY (`board_boardId`)
+    REFERENCES `intergrate-kp-2`.`board` (`boardId`))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
@@ -49,7 +67,7 @@ CREATE TABLE IF NOT EXISTS `intergrate-kp-2`.`limitsettings` (
     ON DELETE CASCADE
     ON UPDATE CASCADE)
 ENGINE = InnoDB
-AUTO_INCREMENT = 8
+AUTO_INCREMENT = 38
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -73,7 +91,7 @@ CREATE TABLE IF NOT EXISTS `intergrate-kp-2`.`status` (
     ON DELETE CASCADE
     ON UPDATE CASCADE)
 ENGINE = InnoDB
-AUTO_INCREMENT = 38
+AUTO_INCREMENT = 158
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -108,25 +126,6 @@ ENGINE = InnoDB
 AUTO_INCREMENT = 20
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
-
-
--- -----------------------------------------------------
--- Table `intergrate-kp-2`.`collab`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `intergrate-kp-2`.`collab` (
-  `board_boardId` VARCHAR(10) NOT NULL,
-  `userId` VARCHAR(36) NOT NULL,
-  `added_On` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
-  `accessRight` ENUM('READ', 'WRITE') NULL DEFAULT 'READ',
-  INDEX `fk_collab_board1_idx` (`board_boardId` ASC) VISIBLE,
-  PRIMARY KEY (`board_boardId`, `userId`),
-  CONSTRAINT `fk_collab_board1`
-    FOREIGN KEY (`board_boardId`)
-    REFERENCES `intergrate-kp-2`.`board` (`boardId`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8mb4;
 
 
 SET SQL_MODE=@OLD_SQL_MODE;

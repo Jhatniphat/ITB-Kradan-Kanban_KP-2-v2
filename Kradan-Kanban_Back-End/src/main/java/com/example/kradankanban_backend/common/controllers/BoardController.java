@@ -253,11 +253,18 @@ public class BoardController {
         return ResponseEntity.ok(collabEntity);
     }
 
+    @PatchMapping("{boardId}/collabs/invitations")
+    public ResponseEntity<CollabEntity> updateStatusCollaborator(@PathVariable String boardId, @RequestBody CollabEntity newCollabEntity) {
+        CollabEntity collabEntity = collabService.updateStatusCollaborator(boardId, newCollabEntity);
+        return ResponseEntity.ok(collabEntity);
+    }
+
     @DeleteMapping("{boardId}/collabs/{collabId}")
     public ResponseEntity<CollabEntity> deleteCollaborator(@PathVariable String boardId, @PathVariable String collabId) {
         CollabEntity collabEntity = collabService.deleteCollaborator(boardId, collabId);
         return ResponseEntity.ok(collabEntity);
     }
+
 
 
     //  ! ============================================== PRIVATE METHOD ==============================================

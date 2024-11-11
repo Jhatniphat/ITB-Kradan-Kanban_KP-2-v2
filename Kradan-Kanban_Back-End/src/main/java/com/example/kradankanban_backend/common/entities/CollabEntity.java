@@ -34,6 +34,7 @@ public class CollabEntity {
     private OffsetDateTime addedOn;
 
     @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
     private Status status = Status.PENDING;
 
     public enum AccessRight {
