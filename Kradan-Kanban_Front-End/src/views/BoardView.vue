@@ -74,9 +74,9 @@ async function fetchBoardData() {
 }
 
 async function prepareData([filterBy]) {
-  if (useBoardStore().boards.length === 0) {
-    await fetchBoardData();
-  }
+  // if (useBoardStore().boards.length === 0) {
+  //   await fetchBoardData();
+  // }
   if (filterBy !== '') {
     allBoard.value = boardStore.boards.filter((board) => board.visibility.includes(filterBy) || board.name.includes(filterBy) || board.owner.name.includes(filterBy));
   } else {
@@ -91,6 +91,10 @@ watch([filterBy, boardStore.boards], (newValue) => {
 });
 
 prepareData(['']);
+
+watch(boardStore.boards, () => {
+  prepareData(['']);
+});
 
 // todo : Move this add Modal component
 function openAdd() {
