@@ -69,6 +69,7 @@ async function fetchBoardData() {
         allBoard.value = [];
       }
     }
+    prepareData([''])
     loading.value = false;
   }
 }
@@ -77,13 +78,14 @@ async function prepareData([filterBy]) {
   // if (useBoardStore().boards.length === 0) {
   //   await fetchBoardData();
   // }
+  console.log('prepareData')
   if (filterBy !== '') {
     allBoard.value = boardStore.boards.filter((board) => board.visibility.includes(filterBy) || board.name.includes(filterBy) || board.owner.name.includes(filterBy));
   } else {
     allBoard.value = boardStore.boards;
   }
-  personalBoard.value = allBoard.value.filter((board) => board.owner.oid === useAccountStore().tokenDetail.oid);
-  collabBoard.value = allBoard.value.filter((board) => board.owner.oid !== useAccountStore().tokenDetail.oid);
+  personalBoard.value = boardStore.boards.filter((board) => board.owner.oid === useAccountStore().tokenDetail.oid);
+  collabBoard.value =  boardStore.boards.filter((board) => board.owner.oid !== useAccountStore().tokenDetail.oid && board.collaborators.findIndex((collab) => collab.oid === useAccountStore().tokenDetail.oid && collab.status !== "PENDING"  !== -1)) 
 }
 
 watch([filterBy, boardStore.boards], (newValue) => {
@@ -94,7 +96,7 @@ prepareData(['']);
 
 watch(boardStore.boards, () => {
   prepareData(['']);
-});
+} , { deep: true });
 
 // todo : Move this add Modal component
 function openAdd() {
