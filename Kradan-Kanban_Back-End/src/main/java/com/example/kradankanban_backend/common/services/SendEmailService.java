@@ -20,7 +20,7 @@ public class SendEmailService {
 
     public void sendEmail(String inviteName, String email,String boardName, CollabEntity.AccessRight accessRight, String boardId) throws MessagingException, UnsupportedEncodingException {
         String subject = inviteName + " has invited you to be collaborator";
-        String acceptedPath = "http://localhost:5173/board/" + boardId + "/collab/invitations";
+        String acceptedPath = "https://intproj23.sit.kmutt.ac.th/kp2/board/" + boardId + "/collab/invitations";
         String content = "<html>"
                 + "<head>"
                 + "<style>"
