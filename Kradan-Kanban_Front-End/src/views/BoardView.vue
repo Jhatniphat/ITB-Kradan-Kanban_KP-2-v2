@@ -85,7 +85,12 @@ async function prepareData([filterBy]) {
     allBoard.value = boardStore.boards;
   }
   personalBoard.value = boardStore.boards.filter((board) => board.owner.oid === useAccountStore().tokenDetail.oid);
-  collabBoard.value =  boardStore.boards.filter((board) => board.owner.oid !== useAccountStore().tokenDetail.oid && board.collaborators.findIndex((collab) => collab.oid === useAccountStore().tokenDetail.oid && collab.status !== "PENDING"  !== -1)) 
+  collabBoard.value =  boardStore.boards.filter((board) => {
+    return board.owner.oid !== useAccountStore().tokenDetail.oid && 
+    ( board.collaborators.findIndex((collab) => ( collab.oid === useAccountStore().tokenDetail.oid  && collab.status !== "PENDING" ) ) !== -1 ) 
+  }) 
+  console.log(collabBoard.value)
+  console.log(boardStore.boards)
 }
 
 watch([filterBy, boardStore.boards], (newValue) => {
