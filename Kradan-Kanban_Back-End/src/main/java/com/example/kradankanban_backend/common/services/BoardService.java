@@ -73,7 +73,6 @@ public class BoardService {
         collabDTO.setName(user.getName());
         collabDTO.setEmail(user.getEmail());
         collabDTO.setAccessRight(collabEntity.getAccessRight());
-        collabDTO.setStatus(collabEntity.getStatus());
         collabDTO.setAddedOn(collabEntity.getAddedOn());
         return collabDTO;
     }

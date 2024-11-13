@@ -35,10 +35,6 @@ public class CollabService {
         return collabRepository.findByBoardIdAndUserId(boardId, userId).orElseThrow(() -> new ItemNotFoundException("No Collaborator found"));
     }
 
-    public List<CollabEntity> getAllInvitations(String boardId) {
-        return collabRepository.findPendingCollaboratorsByBoardId(boardId);
-    }
-
     public CollabEntity addCollaborator(String boardId, CollabRequestDTO collabRequestDTO) {
         BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("No Board found"));
         UserEntity user = userRepository.findByEmail(collabRequestDTO.getEmail()).orElseThrow(() -> new ItemNotFoundException("No Collaborator found"));
@@ -55,7 +51,6 @@ public class CollabService {
         collabEntity.setBoardId(boardId);
         collabEntity.setUserId(user.getOid());
         collabEntity.setAccessRight(collabRequestDTO.getAccessRight());
-        collabEntity.setStatus(CollabEntity.Status.PENDING);
         collabRepository.save(collabEntity);
 
         return collabEntity;
@@ -82,9 +77,6 @@ public class CollabService {
     }
 
     public boolean isCollaborator(String boardId, String userId) {
-        if (!collabRepository.existsByBoardIdAndUserIdAndStatus(boardId, userId, CollabEntity.Status.ACCEPTED)) {
-            return false;
-        }
         Optional<CollabEntity> collab = collabRepository.findByBoardIdAndUserId(boardId, userId);
         return collab.isPresent();
     }
@@ -97,8 +89,4 @@ public class CollabService {
 //        return collabRepository.existsByBoardIdAndUserIdAndStatus(boardId, userId, CollabEntity.Status.ACCEPTED);
 //    }
 
-    public boolean isStatusPending(String boardId, String userId) {
-        CollabEntity collab = collabRepository.findByBoardIdAndUserId(boardId, userId).orElseThrow(() -> new ItemNotFoundException("No Collaborator found"));
-        return collab.getStatus().equals(CollabEntity.Status.PENDING);
-    }
 }

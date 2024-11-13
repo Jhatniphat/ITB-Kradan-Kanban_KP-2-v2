@@ -33,15 +33,8 @@ public class CollabEntity {
     @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ssXXX", timezone="UTC")
     private OffsetDateTime addedOn;
 
-    @Column(name = "status", nullable = false)
-    @Enumerated(EnumType.STRING)
-    private Status status = Status.PENDING;
-
     public enum AccessRight {
         READ, WRITE
     }
 
-    public enum Status {
-        PENDING, ACCEPTED
-    }
 }

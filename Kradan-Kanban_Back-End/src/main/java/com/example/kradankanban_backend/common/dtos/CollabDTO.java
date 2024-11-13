@@ -15,5 +15,4 @@ public class CollabDTO {
     private String email;
     private CollabEntity.AccessRight accessRight;
     private OffsetDateTime addedOn;
-    private CollabEntity.Status status;
 }
