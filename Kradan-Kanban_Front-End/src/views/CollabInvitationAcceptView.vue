@@ -9,7 +9,7 @@ import { useBoardStore } from '@/stores/board';
 import { acceptInvitation, deleteCollaborator, getAllBoard, getBoardById } from '@/lib/fetchUtils';
 // !  ====================================== Variable ==================================
 const accountStore = useAccountStore();
-const invitedBoard = ref({});
+const invitedBoard = ref();
 const loading = ref(false);
 const route = useRoute();
 const toastStore = useToastStore();
@@ -17,8 +17,8 @@ const boardStore = useBoardStore();
 // !  ====================================== Function ==================================
 onBeforeMount(async () => {
   if (!accountStore.isLoggedIn) {
-    // router.push({ name: 'login' , query: { redirect : route.path } });
-    router.push({ name: 'login' });
+    router.push({ name: 'login' , query: { redirect : route.path } });
+    // router.push({ name: 'login' });
     toastStore.createToast('Please login before accept invitation', 'danger');
     return;
   }
@@ -87,8 +87,8 @@ async function handleRejectInvitation() {
   <transition>
     <div class="h-[90vh] w-full flex flex-col items-center justify-center p-8 rounded-lg" v-if="!loading && invitedBoard">
       <p class="text-lg font-semibold text-gray-800 text-center mb-4">
-        {{ invitedBoard.owner.name }} has invited you to collaborate with <span class="font-bold">{{ invitedBoard.accessRightUserGot }}</span> access right on
-        <span class="font-bold">{{ invitedBoard.name }}</span> board
+        {{ invitedBoard?.owner.name }} has invited you to collaborate with <span class="font-bold">{{ invitedBoard?.accessRightUserGot }}</span> access right on
+        <span class="font-bold">{{ invitedBoard?.name }}</span> board
       </p>
       <div class="flex space-x-4">
         <button @click="handleAcceptInvitation()" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">Accept Invitation</button>

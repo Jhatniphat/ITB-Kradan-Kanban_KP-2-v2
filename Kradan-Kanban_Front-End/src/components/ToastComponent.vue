@@ -5,12 +5,36 @@ const toastStore = useToastStore();
 setInterval(() => {
   toastStore.reduceTime(10);
 }, 10);
+
+// const copyToClipboard = async () => {
+//   try {
+//     await navigator.clipboard.writeText(linkToCopy.value); // คัดลอกไปที่คลิปบอร์ด
+//     copySuccess.value = 'Link copied to clipboard!';
+//   } catch (err) {
+//     console.error('Failed to copy: ', err);
+//     copySuccess.value = 'Failed to copy link.';
+//   }
+
+//   // เคลียร์ข้อความแจ้งเตือนหลัง 3 วินาที
+//   setTimeout(() => {
+//     copySuccess.value = '';
+//   }, 3000);
+// };
+
+function copyToClipboard(text) {
+  if (!text) {
+    return;
+  }
+  navigator.clipboard.writeText(text).then(() => {
+    toastStore.createToast('Copied to clipboard', 'success');
+  });
+}
 </script>
 
 <template>
   <Teleport to="#toast">
     <TransitionGroup name="list" tag="ul">
-      <li v-for="(toast, index) in toastStore.toasts" :key="index">
+      <li v-for="(toast, index) in toastStore.toasts" :key="index" @click="copyToClipboard(toast.copy)">
         <div id="toast-success" class="flex items-center w-full max-w-xs p-4 mb-4 text-gray-500 bg-white rounded-lg shadow" role="alert">
           <!-- Toast Icon -->
           <div v-if="toast.status === 'success'" class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-green-500 bg-green-100 rounded-lg dark:bg-green-800 dark:text-green-200">

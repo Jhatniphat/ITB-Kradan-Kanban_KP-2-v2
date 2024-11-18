@@ -55,7 +55,6 @@ async function fetchBoardData() {
     toastStore.createToast('An error has occurred, please try again later', 'danger');
   } finally {
     allInvites.value = boardStore.getAllPendingBoard();
-    console.log(allInvites.value);
     if (allInvites.value.length > 0) {
       toastStore.createToast('You Have New Invitations');
     }
@@ -78,7 +77,6 @@ async function prepareData([filterBy]) {
   // if (useBoardStore().boards.length === 0) {
   //   await fetchBoardData();
   // }
-  console.log('prepareData')
   if (filterBy !== '') {
     allBoard.value = boardStore.boards.filter((board) => board.visibility.includes(filterBy) || board.name.includes(filterBy) || board.owner.name.includes(filterBy));
   } else {
@@ -89,8 +87,6 @@ async function prepareData([filterBy]) {
     return board.owner.oid !== useAccountStore().tokenDetail.oid && 
     ( board.collaborators.findIndex((collab) => ( collab.oid === useAccountStore().tokenDetail.oid  && collab.status !== "PENDING" ) ) !== -1 ) 
   }) 
-  console.log(collabBoard.value)
-  console.log(boardStore.boards)
 }
 
 watch([filterBy, boardStore.boards], (newValue) => {
