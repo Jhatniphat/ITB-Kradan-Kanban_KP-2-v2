@@ -61,6 +61,7 @@ const closeAddModal = (res) => {
   if (res === null) return 0;
   if (typeof res === 'object') {
     toastStore.createToast('Add task successfully');
+    router.push({ name: 'task-list', params: { boardId: currentBoardId } , hash : '#task-' + res.id });
     taskStore.addStoreTask(res);
     // const
   } else {
@@ -445,7 +446,7 @@ function makekanbanData() {
               <tr v-if="allTasks === null">
                 <td colspan="4">Waiting For Data</td>
               </tr>
-              <tr v-if="allTasks !== null" v-for="(task, index) in filteredTasks" :key="task.id" class="itbkk-item hover">
+              <tr v-if="allTasks !== null" v-for="(task, index) in filteredTasks" :key="task.id" :id="`task-${task.id}`"class="itbkk-item hover">
                 <th>{{ index + 1 }}</th>
                 <td class="itbkk-title">
                   <!-- <RouterLink :to="`/task/${task.id}`"> -->

@@ -188,7 +188,7 @@ const statusStyleBinding = (status) => {
                 <tr v-if="allCollabs === null">
                   <td colspan="4">Waiting For Data</td>
                 </tr>
-                <tr v-if="allCollabs !== null" v-for="(collab, index) in boardStore.currentBoard.collaborators" :key="collab.oid" class="itbkk-item hover">
+                <tr v-if="allCollabs !== null" v-for="(collab, index) in boardStore.currentBoard.collaborators" :key="collab.oid" :id="`collaborator-${collab.oid}`" class="itbkk-item hover">
                   <th>{{ index + 1 }}</th>
                   <td class="itbkk-name">
                     {{ collab.name }} <span class="text-gray-500"> {{ collab.status === 'PENDING' ? '(Pending invite)' : '' }} </span>
