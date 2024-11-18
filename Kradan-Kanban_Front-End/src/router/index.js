@@ -9,7 +9,8 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: { path: '/login' },
+      name: 'none'
+      // redirect: { path: '/login' },
     },
     {
       path: '/about',
@@ -81,11 +82,32 @@ const router = createRouter({
     },
     { path: '/:pathMatch(.*)*', redirect: { name: 'board' } },
   ],
+  scrollBehavior(to) {
+    if (to.hash) {
+      const element = document.querySelector(to.hash);
+      if (element) {
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',  // จัดตำแหน่ง element ให้อยู่ในมุมมองที่ใกล้ที่สุด
+        });
+      }
+    }
+    return false; // ไม่ใช้การเลื่อนค่าเริ่มต้น
+  },
 });
 
 router.beforeEach(async (to, from, next) => {
+
   const accountStore = useAccountStore();
   const boardStore = useBoardStore();
+  if (to.name === 'none') {
+    console.log(accountStore.isLoggedIn);
+    if (!accountStore.isLoggedIn) {
+      next({ name: 'login' });
+    }
+    else { next({ name: 'board-list' }); }
+  }
+
   if (to.name.includes('task') || to.name.includes('status') || to.name.includes('collab-management')) {
     if (boardStore.boards.length === 0 && accountStore.refreshToken !== '') {
       await getAllBoard();
@@ -120,11 +142,6 @@ router.beforeEach(async (to, from, next) => {
       return;
     }
   }
-
-  // Ensure the user is authenticated if necessary
-  // if (!isAuthenticated && to.name !== "login") {
-  //     return {name: "login"}; // Redirect to login if not authenticated
-  // }
 
   next(); // Proceed to the route
 });
