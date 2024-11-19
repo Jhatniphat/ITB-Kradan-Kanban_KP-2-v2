@@ -4,7 +4,7 @@ import { onMounted, ref, watch } from 'vue';
 import { useStatusStore } from '@/stores/status.js';
 import { useToastStore } from '@/stores/toast.js';
 import * as pdfjsLib from "pdfjs-dist/webpack"; // ใช้ Webpack version ของ PDF.js
-
+import { marked } from 'marked';
 const emit = defineEmits(['closeModal']);
 const statusStore = useStatusStore();
 
@@ -247,11 +247,11 @@ function handelScroll() {
                 </button>
               </div>
               <div v-if="descriptionTab === 'write'" class="w-full">
-                <textarea id="{{ $id }}" class="textarea prose rounded-t-none rounded-b-md shadow-sm border border-gray-300 p-1 bg-white overflow-y-auto w-full min-h-64" name="content"></textarea>
+                <textarea id="{{ $id }}" class="textarea prose rounded-t-none rounded-b-md shadow-sm border border-gray-300 p-1 bg-white overflow-y-auto w-full min-h-64" name="content" v-model="taskData.description"></textarea>
               </div>
 
               <div v-if="descriptionTab === 'preview'">
-                <div class="w-full prose max-w-none prose-indigo leading-6 rounded-b-md shadow-sm border border-gray-300 p-5 bg-white overflow-y-auto min-h-64"></div>
+                <div class="markdown-preview w-full prose max-w-none prose-indigo leading-6 rounded-b-md shadow-sm border border-gray-300 p-5 bg-white overflow-y-auto min-h-64" v-html="marked(taskData.description)"></div>
               </div>
             </div>
           </label>
@@ -410,5 +410,28 @@ function handelScroll() {
 .full-preview {
   max-width: 100%;
   max-height: 100%;
+}
+
+.markdown-preview {
+  max-height: 18.75rem;
+  overflow: scroll;
+  h1 {
+    font-size: 1.5rem;
+  }
+  h2 {
+    font-size: 1.25rem;
+  }
+  h3 {
+    font-size: 1.125rem;
+  }
+  h4 {
+    font-size: 1rem;
+  }
+  h5 {
+    font-size: 0.875rem;
+  }
+  h6 {
+    font-size: 0.75rem;
+  }
 }
 </style>
