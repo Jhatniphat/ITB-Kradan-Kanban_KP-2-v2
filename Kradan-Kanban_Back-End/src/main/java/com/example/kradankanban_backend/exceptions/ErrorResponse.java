@@ -33,7 +33,7 @@ public class ErrorResponse{
     @Getter
     @Setter
     @RequiredArgsConstructor
-    private static class ValidationError {
+    public static class ValidationError {
         private final String field;
         private final String message;
     }

@@ -6,10 +6,7 @@ import com.example.kradankanban_backend.common.entities.BoardEntity;
 import com.example.kradankanban_backend.common.entities.CollabEntity;
 import com.example.kradankanban_backend.common.entities.StatusEntity;
 import com.example.kradankanban_backend.common.entities.TaskEntity;
-import com.example.kradankanban_backend.common.services.BoardService;
-import com.example.kradankanban_backend.common.services.CollabService;
-import com.example.kradankanban_backend.common.services.StatusService;
-import com.example.kradankanban_backend.common.services.TaskService;
+import com.example.kradankanban_backend.common.services.*;
 import com.example.kradankanban_backend.shared.Entities.UserEntity;
 import com.example.kradankanban_backend.shared.services.JwtUserDetailsService;
 import io.jsonwebtoken.Claims;
@@ -25,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -42,6 +40,8 @@ public class BoardController {
     private TaskService taskService;
     @Autowired
     private CollabService collabService;
+    @Autowired
+    private FileService fileService;
     @Autowired
     private ModelMapper modelMapper;
     @Autowired
@@ -263,6 +263,28 @@ public class BoardController {
     public ResponseEntity<CollabEntity> deleteCollaborator(@PathVariable String boardId, @PathVariable String collabId) {
         CollabEntity collabEntity = collabService.deleteCollaborator(boardId, collabId);
         return ResponseEntity.ok(collabEntity);
+    }
+
+    //  ! ============================================== ATTACHMENT ==============================================
+    @GetMapping("/{boardId}/tasks/{taskId}/attachments")
+    public ResponseEntity<List<AttachmentDTO>> getAllAttachments(@PathVariable String boardId, @PathVariable Integer taskId) {
+        List<AttachmentDTO> attachments = fileService.getAllAttachments(taskId);
+        return ResponseEntity.ok(attachments);
+    }
+
+    @PostMapping("/{boardId}/tasks/{taskId}/attachments")
+    public ResponseEntity<List<AttachmentResponseDTO>> uploadAttachments(
+            @PathVariable String boardId,
+            @PathVariable Integer taskId,
+            @RequestParam("files") List<MultipartFile> files) {
+        List<AttachmentResponseDTO> responseDTOs = fileService.uploadAttachments(taskId, files);
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseDTOs);
+    }
+
+    @DeleteMapping("/{boardId}/tasks/{taskId}/attachments/{attachmentId}")
+    public ResponseEntity<AttachmentDTO> deleteAttachment(@PathVariable String boardId, @PathVariable Integer taskId, @PathVariable Integer attachmentId) {
+        AttachmentDTO deletedAttachment = fileService.deleteAttachment(attachmentId);
+        return ResponseEntity.ok(deletedAttachment);
     }
 
 
