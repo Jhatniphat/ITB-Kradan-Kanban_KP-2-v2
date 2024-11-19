@@ -6,6 +6,7 @@ import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 @Getter
@@ -52,6 +53,9 @@ public class TaskEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "tk_boardId", nullable = false)
     private BoardEntity tkBoard;
+
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<AttachmentEntity> attachments;
 
 //    @ManyToOne
 //    @JoinColumn(name = "stutus")
