@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS `intergrate-kp-2`.`limitsettings` (
     ON DELETE CASCADE
     ON UPDATE CASCADE)
 ENGINE = InnoDB
-AUTO_INCREMENT = 38
+AUTO_INCREMENT = 39
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS `intergrate-kp-2`.`status` (
     ON DELETE CASCADE
     ON UPDATE CASCADE)
 ENGINE = InnoDB
-AUTO_INCREMENT = 158
+AUTO_INCREMENT = 162
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -126,6 +126,26 @@ ENGINE = InnoDB
 AUTO_INCREMENT = 20
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
+
+
+-- -----------------------------------------------------
+-- Table `intergrate-kp-2`.`attachment`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `intergrate-kp-2`.`attachment` (
+  `attachment_id` INT NOT NULL auto_increment,
+  `fileName` VARCHAR(255) NULL,
+  `fileType` VARCHAR(255) NULL,
+  `fileData` LONGBLOB NULL,
+  `uploadedOn` DATETIME NULL,
+  `task_id` INT NOT NULL,
+  PRIMARY KEY (`attachment_id`),
+  INDEX `fk_attachment_task1_idx` (`task_id` ASC) VISIBLE,
+  CONSTRAINT `fk_attachment_task1`
+    FOREIGN KEY (`task_id`)
+    REFERENCES `intergrate-kp-2`.`task` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
 
 
 SET SQL_MODE=@OLD_SQL_MODE;
