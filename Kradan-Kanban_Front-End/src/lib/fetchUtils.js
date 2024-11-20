@@ -911,7 +911,8 @@ export async function addCollaborator(newCollaborator) {
           toastStore.createToast(
             `We could not send e-mail to <span class="font-bold">${invitedUsername}</span>, he/she can accept the invitation at <span class="underline"> /board/${boardId}/collab/invitations </span>`,
             "warning",
-            15000
+            15000 , 
+            `${import.meta.env.VITE_FRONTEND_ROOT}/board/${boardId}/collab/invitations`
           );
           return res.status;
         }

@@ -6,11 +6,12 @@ export const useToastStore = defineStore('toast', {
         currentId: 0,
     }),
     actions: {
-        createToast(message, status = 'success', timeout = 3000) {
+        createToast(message, status = 'success', timeout = 3000 , copy = '') {
             this.toasts.push({
                 message: message,
                 status: status,
                 timeout: timeout,
+                copy: copy,
             });
         },
         reduceTime(time = 10) {

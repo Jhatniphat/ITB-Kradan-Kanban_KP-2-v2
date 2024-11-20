@@ -112,6 +112,7 @@ const closeAddModal = (res) => {
   if (res === null) return 0;
   if (typeof res === 'object') {
     toastStore.createToast('Add status successfuly');
+    router.push({ name : 'status-list', hash : `#status-${res.id}` });
     statusStore.addStoreStatus(res);
   } else {
     toastStore.createToast('Add status Failed', 'danger');
@@ -201,7 +202,7 @@ function closeEditLimit(overStatus) {
             <tr v-if="status === null">
               <td colspan="4">Waiting For Data</td>
             </tr>
-            <tr v-if="status !== null" v-for="(status, index) in statusStore.status" :key="status.id" class="itbkk-item hover">
+            <tr v-if="status !== null" v-for="(status, index) in statusStore.status" :key="status.id" :id="`status-${status.id}`" class="itbkk-item hover">
               <td>{{ index + 1 }}</td>
               <td class="itbkk-status-name break-all">
                 {{ status.name }}

@@ -3,7 +3,7 @@
 </script>
 
 <template>
-  <div class="h-full w-full">
+  <div class="h-screen w-full">
     <div class="loader mx-auto">
     </div>
   </div>

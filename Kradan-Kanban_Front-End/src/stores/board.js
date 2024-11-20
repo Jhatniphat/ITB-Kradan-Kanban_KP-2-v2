@@ -72,7 +72,7 @@ export const useBoardStore = defineStore('Board', {
             board = await getBoardById(boardId);
           }
           if (!board || !board.payload) {
-            router.push({ name: 'board' });
+            router.push({ name: 'board-list' });
           } else {
             this.currentBoardId = boardId;
             this.currentBoard = board.payload;
