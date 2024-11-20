@@ -101,6 +101,7 @@ function handleFileUpload(e) {
     console.log('Blob URL:', blobURL);
     const reader = new FileReader();
     reader.onload = async (e) => {
+      console.log('file type ...', file.type);
       uploadedFiles.value.push({
         name: file.name,
         size: file.size,
@@ -111,7 +112,7 @@ function handleFileUpload(e) {
         //   : file.type === 'application/pdf'
         //     ? URL.createObjectURL(file) // ใช้ URL สำหรับ PDF
         //     : null,
-        previewUrl : URL.createObjectURL(file),
+        previewUrl : file.type.startsWith('application/msword') ? `https://docs.google.com/viewer?url=${encodeURIComponent(URL.createObjectURL(file))}&embedded=true` : URL.createObjectURL(file) ,
         thumbnail: file.type.startsWith('image/') ? URL.createObjectURL(file) : file.type === 'application/pdf' ? await generatePDFThumbnail(file) : null,
         // preview : blobURL,
         errorText: file.size > 20 * 1024 * 1024 ? 'File size is too large' : '',
