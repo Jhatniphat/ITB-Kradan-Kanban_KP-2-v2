@@ -3,7 +3,7 @@ import { addTask } from '@/lib/fetchUtils';
 import { onMounted, ref, watch } from 'vue';
 import { useStatusStore } from '@/stores/status.js';
 import { useToastStore } from '@/stores/toast.js';
-import * as pdfjsLib from "pdfjs-dist/webpack"; // ใช้ Webpack version ของ PDF.js
+import * as pdfjsLib from 'pdfjs-dist/webpack'; // ใช้ Webpack version ของ PDF.js
 import { marked } from 'marked';
 const emit = defineEmits(['closeModal']);
 const statusStore = useStatusStore();
@@ -33,6 +33,7 @@ const previewFile = ref(null);
 const isHeaderSticky = ref(false);
 const isFooterSticky = ref(false);
 const content = ref();
+const createAnotherTask = ref(false);
 
 watch(taskData.value, () => {
   if (taskData.value.title.trim().length > 100) Errortext.value.title = `Title can't long more than 100 character`;
@@ -47,12 +48,6 @@ watch(taskData.value, () => {
 });
 
 onMounted(async () => {
-  // try {
-  //   const fetchStatus = await getAllStatus();
-  //   statusList.value = fetchStatus.map((item) => item.name);
-  // }catch (err){
-  //   console.log(err)
-  // }
   statusList.value = statusStore.getAllStatusWithLimit();
 });
 
@@ -74,7 +69,7 @@ async function fetchData() {
     console.log(error);
   } finally {
     loading.value = false;
-    emit('closeModal', res);
+    emit('closeModal', {...res , createAnotherTask: createAnotherTask.value});
   }
 }
 
@@ -93,7 +88,7 @@ function handleFileUpload(e) {
     let blobURL;
     // if (file.type.startsWith('image/')){
     //   blobURL = URL.createObjectURL(file);
-    // } else if (file.type === 'application/pdf'){ 
+    // } else if (file.type === 'application/pdf'){
     //   blobURL = await generatePDFThumbnail(file);
     // } else {
     //   blobURL = null;
@@ -112,7 +107,7 @@ function handleFileUpload(e) {
         //   : file.type === 'application/pdf'
         //     ? URL.createObjectURL(file) // ใช้ URL สำหรับ PDF
         //     : null,
-        previewUrl : file.type.startsWith('application/msword') ? `https://docs.google.com/viewer?url=${encodeURIComponent(URL.createObjectURL(file))}&embedded=true` : URL.createObjectURL(file) ,
+        previewUrl: file.type.startsWith('application/msword') ? `https://docs.google.com/viewer?url=${encodeURIComponent(URL.createObjectURL(file))}&embedded=true` : URL.createObjectURL(file),
         thumbnail: file.type.startsWith('image/') ? URL.createObjectURL(file) : file.type === 'application/pdf' ? await generatePDFThumbnail(file) : null,
         // preview : blobURL,
         errorText: file.size > 20 * 1024 * 1024 ? 'File size is too large' : '',
@@ -158,8 +153,7 @@ const generatePDFThumbnail = async (file) => {
 // เปิด Preview Modal
 const openPreview = (file) => {
   // previewFile.value = file;
-  window.open(file.previewUrl, "_blank");
-
+  window.open(file.previewUrl, '_blank');
 };
 
 // ปิด Preview Modal
@@ -248,11 +242,19 @@ function handelScroll() {
                 </button>
               </div>
               <div v-if="descriptionTab === 'write'" class="w-full">
-                <textarea id="{{ $id }}" class="textarea prose rounded-t-none rounded-b-md shadow-sm border border-gray-300 p-1 bg-white overflow-y-auto w-full min-h-64" name="content" v-model="taskData.description"></textarea>
+                <textarea
+                  id="{{ $id }}"
+                  class="textarea prose rounded-t-none rounded-b-md shadow-sm border border-gray-300 p-1 bg-white overflow-y-auto w-full min-h-64"
+                  name="content"
+                  v-model="taskData.description"
+                ></textarea>
               </div>
 
               <div v-if="descriptionTab === 'preview'">
-                <div class="markdown-preview w-full prose max-w-none prose-indigo leading-6 rounded-b-md shadow-sm border border-gray-300 p-5 bg-white overflow-y-auto min-h-64" v-html="marked(taskData.description)"></div>
+                <div
+                  class="markdown-preview w-full prose max-w-none prose-indigo leading-6 rounded-b-md shadow-sm border border-gray-300 p-5 bg-white overflow-y-auto min-h-64"
+                  v-html="marked(taskData.description)"
+                ></div>
               </div>
             </div>
           </label>
@@ -318,6 +320,12 @@ function handelScroll() {
           {{ loading ? '' : 'Save' }}
           <span class="loading loading-spinner text-success" v-if="loading"></span>
         </button>
+        <div class="form-control">
+          <label class="label cursor-pointer">
+            <input type="checkbox" checked="false" v-model="createAnotherTask" class="toggle" />
+            <span class="label-text p-3">Create Another Task</span>
+          </label>
+        </div>
       </div>
     </div>
   </div>

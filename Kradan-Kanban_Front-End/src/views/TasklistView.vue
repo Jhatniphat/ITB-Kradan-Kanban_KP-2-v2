@@ -63,6 +63,8 @@ const closeAddModal = (res) => {
     toastStore.createToast('Add task successfully');
     router.push({ name: 'task-list', params: { boardId: currentBoardId } , hash : '#task-' + res.id });
     taskStore.addStoreTask(res);
+    console.log(res.createAnotherTask);
+    showAddModal.value = res.createAnotherTask;
     // const
   } else {
     toastStore.createToast('Add task Failed', 'danger');
