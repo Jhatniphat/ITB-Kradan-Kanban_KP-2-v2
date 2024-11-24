@@ -348,6 +348,8 @@ function makekanbanData() {
 
 <template>
   <transition>
+
+    
     <div class="h-full w-full" v-if="!loading">
       <!-- dropdowns status -->
       <div class="w-3/4 mx-auto mt-10 relative" v-if="!loading">

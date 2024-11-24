@@ -19,197 +19,179 @@ const handleLogout = () => {
 
 const route = useRoute();
 
+let showTaskStatusCollabMenu = ref(false);
+
 function routeChange(to) {
   const currentBoardId = useBoardStore().currentBoardId;
   console.log(to);
   if (to === 'task') {
-    router.push(`/board/${currentBoardId}`);
+    router.push({ name: 'task-list', params: { boardId: currentBoardId } });
+  } else if (to === 'status') {
+    router.push({ name: 'status-list', params: { boardId: currentBoardId } });
+  } else if (to === 'collab') {
+    router.push({ name: 'collab-management', params: { boardId: currentBoardId } });
   } else if (to === 'board') {
-    router.push(`/board`);
+    router.push({ name: 'board-list' });
   } else if (to === 'invitation') {
-    router.push(`/board/invitation`);
-  } else {
-    router.push(`/board/${currentBoardId}/status`);
+    router.push({ name: 'invitation' });
   }
 }
 
-let currentRoute = ref(route.name);
+function checkrouteName(value) {
+  console.log(value);
+  if (value.toString().includes('collab') || value.toString().includes('task') || value.toString().includes('status')) {
+    showTaskStatusCollabMenu.value = true;
+  } else {
+    showTaskStatusCollabMenu.value = false;
+  }
+
+  if (value.toString().includes('task')) {
+    return `Board : ${useBoardStore().currentBoard.name}`;
+  } else if (value.toString().includes('status')) {
+    return `Board : ${useBoardStore().currentBoard.name} - Status`;
+  } else if (value.toString().includes('board')) {
+    return 'Board Management';
+  } else if (value.toString().includes('collab')) {
+    return `Board : ${useBoardStore().currentBoard.name} - Collaborator`;
+  } else if (value.toString().includes('invitation')) {
+    return 'invitation';
+  } else {
+    return value;
+  }
+}
+
+let currentRouteName = ref(checkrouteName(route.name));
+
 watch(
   () => route.name,
   (value) => {
-    currentRoute.value = value;
-    showNavBar.value = checkShowNavBar();
+    currentRouteName.value = checkrouteName(value);
   }
 );
-let showNavBar = ref(false);
-function checkShowNavBar() {
-  return (
-    currentRoute.value.toString().includes('task') ||
-    currentRoute.value.toString().includes('status') ||
-    currentRoute.value.toString().includes('board') ||
-    currentRoute.value.toString().includes('collab') ||
-    currentRoute.value.toString().includes('invitation')
-  );
+
+const isSidebarCollapsed = ref(false);
+{
+  /* <i class="fa-solid fa-envelope"></i> */
 }
+{
+  /* <i class="fa-solid fa-table-columns"></i> */
+}
+const menus = computed(() => [
+  {
+    label: 'Board Management',
+    icon: '<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" viewBox="0 0 24 24"><path fill="currentColor" d="M5 21q-.825 0-1.412-.587T3 19V5q0-.825.588-1.412T5 3h14q.825 0 1.413.588T21 5v14q0 .825-.587 1.413T19 21zm2-4h2V7H7zm8-2h2V7h-2zm-4-3h2V7h-2z"/></svg>',
+    action: () => routeChange('board'),
+    visble: true,
+  },
+  {
+    label: 'Task / Issues',
+    icon: '<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" viewBox="0 0 24 24"><path fill="currentColor" d="M2 21V6h6V2h8v4h6v15zm8-15h4V4h-4z"/></svg>',
+    action: () => routeChange('task'),
+    visble: showTaskStatusCollabMenu.value,
+  },
+  {
+    label: 'Status',
+    icon: '<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" viewBox="0 0 24 24"><path fill="currentColor" d="M2 21v-2h20v2zm4-4q-.825 0-1.412-.587T4 15V8q0-.825.588-1.412T6 6h3q0-1.25.875-2.125T12 3t2.125.875T15 6h3q.825 0 1.413.588T20 8v7q0 .825-.587 1.413T18 17zm11-2h1V8h-1zm-6.5-9h3q0-.65-.425-1.075T12 4.5t-1.075.425T10.5 6M7 15V8H6v7zm1.5-7v7h7V8zM7 15h1.5zm10 0h-1.5zM7 15H6zm1.5 0h7zm8.5 0h1z"/></svg>',
+    action: () => routeChange('status'),
+    visble: showTaskStatusCollabMenu.value,
+  },
+  {
+    label: 'Collaborator',
+    icon: '<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" viewBox="0 0 24 24"><path fill="currentColor" d="M0 18v-1.575q0-1.075 1.1-1.75T4 14q.325 0 .625.013t.575.062q-.35.525-.525 1.1t-.175 1.2V18zm6 0v-1.625q0-.8.438-1.463t1.237-1.162T9.588 13T12 12.75q1.325 0 2.438.25t1.912.75t1.225 1.163t.425 1.462V18zm13.5 0v-1.625q0-.65-.162-1.225t-.488-1.075q.275-.05.563-.062T20 14q1.8 0 2.9.663t1.1 1.762V18zM4 13q-.825 0-1.412-.587T2 11q0-.85.588-1.425T4 9q.85 0 1.425.575T6 11q0 .825-.575 1.413T4 13m16 0q-.825 0-1.412-.587T18 11q0-.85.588-1.425T20 9q.85 0 1.425.575T22 11q0 .825-.575 1.413T20 13m-8-1q-1.25 0-2.125-.875T9 9q0-1.275.875-2.137T12 6q1.275 0 2.138.863T15 9q0 1.25-.862 2.125T12 12"/></svg>',
+    action: () => routeChange('collab'),
+    visble: showTaskStatusCollabMenu.value,
+  },
+  {
+    label: 'Invitation',
+    icon: '<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" viewBox="0 0 24 24"><path fill="currentColor" d="M4 20q-.825 0-1.412-.587T2 18V6q0-.825.588-1.412T4 4h16q.825 0 1.413.588T22 6v12q0 .825-.587 1.413T20 20zm8-7l8-5V6l-8 5l-8-5v2z"/></svg>',
+    action: () => routeChange('invitation'),
+    visble: true,
+  },
+]);
+
+const toggleSidebar = () => {
+  isSidebarCollapsed.value = !isSidebarCollapsed.value;
+};
 </script>
 
 <template>
-  <nav class="bg-gray-800 sticky" v-if="showNavBar">
-    <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8 sticky">
-      <div class="relative flex h-16 items-center justify-between">
-        <div class="absolute inset-y-0 left-0 flex items-center sm:hidden">
-          <!-- Mobile menu button-->
-          <button
-            type="button"
-            class="relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
-            aria-controls="mobile-menu"
-            aria-expanded="false"
-          >
-            <span class="absolute -inset-0.5"></span>
-            <span class="sr-only">Open main menu</span>
-            <!--
-              Icon when menu is closed.
+  <div class="flex h-screen">
+    <!-- Sidebar -->
+    <div class="bg-slate-100 text-white flex flex-col" :class="isSidebarCollapsed ? 'w-16' : 'w-64'">
+      <!-- Sidebar Header -->
+      <div class="flex items-center justify-between p-4 bg-gray-800">
+        <span v-if="!isSidebarCollapsed" class="text-xl font-bold">ITB Kradan Kanban</span>
+        <button @click="toggleSidebar" class="text-gray-400 hover:text-white">
+          <svg xmlns="http://www.w3.org/2000/svg" :class="isSidebarCollapsed ? 'rotate-180' : ''" class="w-6 h-6 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m7 7l-7-7 7-7" />
+          </svg>
+        </button>
+      </div>
 
-              Menu open: "hidden", Menu closed: "block"
-            -->
-            <svg class="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-            </svg>
-            <!--
-              Icon when menu is open.
+      <!-- Sidebar Menu -->
+      <nav class="flex-1 p-2">
+        <TransitionGroup name="list" tag="ul">
+          <li v-for="menu in menus.filter((menu) => menu.visble)" :key="menu.label" class="group flex items-center gap-4 p-2 rounded-md hover:bg-gray-700 cursor-pointer" @click="menu.action">
+            <span class="text-black group-hover:text-white" v-html="menu.icon"> </span>
+            <span v-if="!isSidebarCollapsed" class="text-sm font-medium text-black group-hover:text-white">
+              {{ menu.label }}
+            </span>
+          </li>
+        </TransitionGroup>
+      </nav>
 
-              Menu open: "block", Menu closed: "hidden"
-            -->
-            <svg class="hidden h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+      <!-- Sidebar Footer -->
+      <div class="p-4 bg-gray-800">
+        <div class="flex items-center gap-4">
+          <span class="rounded-full bg-gray-700 w-8 h-8 flex items-center justify-center text-gray-400">
+            <i class="fas fa-user"></i>
+          </span>
+          <span v-if="!isSidebarCollapsed" class="text-sm text-gray-300">{{ userName }}</span>
         </div>
-        <div class="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
-          <div class="flex flex-shrink-0 items-center">
-            <!--            <img-->
-            <!--              class="h-8 w-auto"-->
-            <!--              src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500"-->
-            <!--              alt="Your Company"-->
-            <!--            />-->
-          </div>
-          <div class="hidden sm:ml-6 sm:block">
-            <div class="flex space-x-4" v-if="!route.name.includes('board') && !route.name.includes('invitation')">
-              <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
-              <!--              <h5-->
-              <!--                  @click="routeChange('task')"-->
-              <!--                  class="rounded-md px-3 py-2 text-sm bg-gray-900 font-medium text-white"-->
-              <!--                  aria-current="page"-->
-              <!--              >Task</h5-->
-              <!--              >-->
-              <h5 @click="routeChange('board')" class="itbkk-home rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white cursor-pointer">ITB-KK</h5>
-              <h5 @click="routeChange('task')" class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white cursor-pointer" aria-current="page">Task</h5>
-              <h5 @click="routeChange('status')" class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white itbkk-manage-status cursor-pointer">Manage Status</h5>
-            </div>
-          </div>
-          <div class="hidden sm:ml-6 sm:block">
-            <div class="flex space-x-4" v-if="route.name.includes('invitation')">
-              <h5 @click="routeChange('board')" class="itbkk-home rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white cursor-pointer">ITB-KK</h5>
-            </div>
-          </div>
-        </div>
-        <div class="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-          <button
-            @click="routeChange('invitation')"
-            type="button"
-            class="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-          >
-            <span class="absolute -inset-1.5"></span>
-            <span class="sr-only">View notifications</span>
-            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col">
+      <!-- Navbar -->
+      <div class="h-16 bg-white flex items-center justify-between px-4 shadow-sm">
+        <span class="text-lg font-bold">{{ currentRouteName }}</span>
+        <div class="flex items-center gap-4">
+          <button class="text-gray-500 hover:text-gray-700">
+            <svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" viewBox="0 0 24 24">
               <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"
+                fill="currentColor"
+                d="M4 20q-.825 0-1.412-.587T2 18V6q0-.825.588-1.412T4 4h16q.825 0 1.413.588T22 6v12q0 .825-.587 1.413T20 20zM20 8l-7.475 4.675q-.125.075-.262.113t-.263.037t-.262-.037t-.263-.113L4 8v10h16zm-8 3l8-5H4zM4 8v.25v-1.475v.025V6v.8v-.012V8.25zv10z"
               />
             </svg>
           </button>
-
-          <!-- Profile dropdown -->
-          <div class="relative ml-3">
-            <div class="dropdown dropdown-end">
-              <div tabindex="0" role="button" class="m-1 flex flex-row">
-                <h1 class="m-2 text-slate-300 itbkk-fullname">
-                  {{ userName == '' ? 'GUEST' : userName }}
-                </h1>
-                <img
-                  class="h-8 w-8 rounded-full"
-                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                  alt=""
-                />
-              </div>
-              <ul tabindex="0" class="dropdown-content menu bg-gray-800 rounded-box z-[1] w-52 p-2 shadow">
-                <li><a @click="handleLogout">Logout</a></li>
-              </ul>
-            </div>
-            <!-- <div>
-              <button
-                type="button"
-                class="relative flex rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-                id="user-menu-button"
-                aria-expanded="false"
-                aria-haspopup="true"
-              >
-                <span class="absolute -inset-1.5"></span>
-                <span class="sr-only">Open user menu</span>
-                <h1 class="m-2 text-slate-300 itbkk-fullname">
-                  {{ userName == "" ? "GUEST" : userName }}
-                </h1>
-                <img
-                  class="h-8 w-8 rounded-full"
-                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                  alt=""
-                />
-              </button>
-            </div> -->
-
-            <!--
-              Dropdown menu, show/hide based on menu state.
-
-              Entering: "transition ease-out duration-100"
-                From: "transform opacity-0 scale-95"
-                To: "transform opacity-100 scale-100"
-              Leaving: "transition ease-in duration-75"
-                From: "transform opacity-100 scale-100"
-                To: "transform opacity-0 scale-95"
-            -->
-            <!--            <div class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">-->
-            <!--              &lt;!&ndash; Active: "bg-gray-100", Not Active: "" &ndash;&gt;-->
-            <!--              <a href="#" class="block px-4 py-2 text-sm text-gray-700" role="menuitem" tabindex="-1" id="user-menu-item-0">Your Profile</a>-->
-            <!--              <a href="#" class="block px-4 py-2 text-sm text-gray-700" role="menuitem" tabindex="-1" id="user-menu-item-1">Settings</a>-->
-            <!--              <a href="#" class="block px-4 py-2 text-sm text-gray-700" role="menuitem" tabindex="-1" id="user-menu-item-2">Sign out</a>-->
-            <!--            </div>-->
+          <div class="flex items-center gap-2">
+            <span class="rounded-full bg-gray-300 w-8 h-8 flex items-center justify-center text-gray-700">
+              <i class="fas fa-user"></i>
+            </span>
+            <span class="text-sm font-medium text-gray-700">{{ userName }}</span>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Mobile menu, show/hide based on menu state. -->
-    <div class="sm:hidden" id="mobile-menu">
-      <div class="space-y-1 px-2 pb-3 pt-2" v-if="!route.name.includes('board')">
-        <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
-        <!--        <a href="#" class="block rounded-md bg-gray-900 px-3 py-2 text-base font-medium text-white" aria-current="page">Dashboard</a>-->
-        <!--        <router-link-->
-        <!--            to="/task"-->
-        <!--            class="block rounded-md bg-gray-900 px-3 py-2 text-base font-medium text-white"-->
-        <!--            aria-current="page"-->
-        <!--        >Task-->
-        <!--        </router-link-->
-        <!--        >-->
-        <router-link to="/board" class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white">ITB-KK </router-link>
-        <router-link to="/task" class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white" aria-current="page">Task </router-link>
-        <router-link to="/status" class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white">Status </router-link>
-        <!--        <a href="#" class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white">Team</a>-->
-        <!--        <a href="#" class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white">Projects</a>-->
-        <!--        <a href="#" class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white">Calendar</a>-->
-      </div>
+      <!-- Content Area -->
+      <slot> </slot>
+      <!-- <div class="flex-1 bg-gray-100 p-4">
+        <h1 class="text-2xl font-bold">Main Content Area</h1>
+        <p>Here is where your main content will go.</p>
+      </div> -->
     </div>
-  </nav>
+  </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.5s ease;
+}
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(-30px);
+}
+</style>
