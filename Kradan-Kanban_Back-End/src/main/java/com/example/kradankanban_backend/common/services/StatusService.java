@@ -196,4 +196,7 @@ public class StatusService {
         }
     }
 
+    public boolean isStatusAvailable(int id, String boardId) {
+        return repository.existsByIdAndStBoard(id, boardId);
+    }
 }

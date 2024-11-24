@@ -246,4 +246,8 @@ public class TaskService {
             throw new ForbiddenException("You do not have permission to perform this action.");
         }
     }
+
+    public boolean isTaskAvailable(int id, String boardId) {
+        return statusRepository.existsByIdAndStBoard(id, boardId);
+    }
 }

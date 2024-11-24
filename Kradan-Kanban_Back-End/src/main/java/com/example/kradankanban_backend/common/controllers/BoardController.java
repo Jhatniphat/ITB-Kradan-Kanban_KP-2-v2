@@ -188,7 +188,7 @@ public class BoardController {
     }
 
     @PutMapping("/{boardId}/statuses/{statusId}")
-    public ResponseEntity<Object> updateStatus(@PathVariable String boardId,@PathVariable int statusId, @Valid @RequestBody StatusEntity status, HttpServletRequest request) {
+    public ResponseEntity<Object> updateStatus(@PathVariable String boardId,@PathVariable int statusId, @Valid @RequestBody StatusEntity status) {
         return new ResponseEntity<>(statusService.editStatus(boardId, statusId, status) , HttpStatus.OK);
     }
 

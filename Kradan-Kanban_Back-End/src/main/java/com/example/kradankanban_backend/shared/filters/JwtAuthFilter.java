@@ -3,6 +3,8 @@ package com.example.kradankanban_backend.shared.filters;
 import com.example.kradankanban_backend.common.entities.CollabEntity;
 import com.example.kradankanban_backend.common.services.BoardService;
 import com.example.kradankanban_backend.common.services.CollabService;
+import com.example.kradankanban_backend.common.services.StatusService;
+import com.example.kradankanban_backend.common.services.TaskService;
 import com.example.kradankanban_backend.exceptions.*;
 import com.example.kradankanban_backend.shared.Entities.AuthUser;
 import com.example.kradankanban_backend.shared.services.JwtTokenUtil;
@@ -35,6 +37,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private BoardService boardService;
     @Autowired
     private CollabService collabService;
+    @Autowired
+    private TaskService taskService;
+    @Autowired
+    private StatusService statusService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -74,7 +80,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 }
             }
             if (request.getRequestURI().startsWith("/v3/boards/")) {
-
+                System.out.println("Request URI: " + request.getRequestURI());
                 handleRequest(request, isTokenValid, tokenError);
             } else if (!isTokenValid && !request.getRequestURI().equals("/v3/boards")) {
                 throw new AuthenticationFailedException("Invalid token");
@@ -86,6 +92,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     }
 
     private void handleRequest(HttpServletRequest request, boolean isTokenValid, String tokenError) {
+        System.out.println("Inside handleRequest");
         String boardId = request.getRequestURI().split("/")[3];
         String requestMethod = request.getMethod();
         AuthUser currentUser = JwtUserDetailsService.getCurrentUser();
@@ -142,6 +149,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     throw new AuthenticationFailedException(tokenError);
                 }
             }
+        }
+        if (request.getRequestURI().contains("/tasks/") && !taskService.isTaskAvailable(Integer.parseInt(request.getRequestURI().split("/")[5]), boardId)) {
+            throw new ItemNotFoundException("Task not found");
+        }
+        if (request.getRequestURI().contains("/statuses/") && !request.getRequestURI().contains("/maximum-task") && !statusService.isStatusAvailable(Integer.parseInt(request.getRequestURI().split("/")[5]), boardId)) {
+            throw new ItemNotFoundException("Status not found");
         }
     }
 
