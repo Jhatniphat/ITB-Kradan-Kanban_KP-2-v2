@@ -1,6 +1,6 @@
 <script setup>
 import { addTask } from '@/lib/fetchUtils';
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch, nextTick } from 'vue';
 import { useStatusStore } from '@/stores/status.js';
 import { useToastStore } from '@/stores/toast.js';
 import * as pdfjsLib from 'pdfjs-dist/webpack'; // ใช้ Webpack version ของ PDF.js
@@ -80,7 +80,6 @@ function sendCloseModal() {
 
 function handleFileUpload(e) {
   let files = Array.from(e.target.files);
-  // uploadedFiles.value = [];
   console.log(files);
 
   files.forEach(async (file, index) => {
@@ -89,28 +88,32 @@ function handleFileUpload(e) {
       useToastStore().createToast(`"${file.name}" file size is too large`, error);
       error.push('this file is too large');
     }
-    if (index >= 10) {
+    if (uploadedFiles.value.length >= 10) {
       error.push('can upload only 10 file per task');
     }
 
     const reader = new FileReader();
 
     reader.onload = async (e) => {
-      // error handling
-
       uploadedFiles.value.push({
         name: file.name,
         size: file.size,
         type: file.type,
         previewUrl: file.type.startsWith('application/msword') ? `https://docs.google.com/viewer?url=${encodeURIComponent(URL.createObjectURL(file))}&embedded=true` : URL.createObjectURL(file),
         thumbnail: file.type.startsWith('image/') ? URL.createObjectURL(file) : file.type === 'application/pdf' ? await generatePDFThumbnail(file) : null,
-        errorText: error.join(', '),
+        errorText: error,
       });
     };
 
     reader.readAsDataURL(file);
+
+    console.log(file);
+    console.log(uploadedFiles.value.length);
+
+    // console.log(uploadedFiles.value);
   });
 
+  console.log(uploadedFiles.value.length);
   console.log(uploadedFiles.value);
 }
 
@@ -166,8 +169,13 @@ function hideErrorTooltip() {
 }
 function removeFile(index) {
   uploadedFiles.value.splice(index, 1); // ลบไฟล์ที่คลิก
+  if (uploadedFiles.value.length >= 10) {
+    uploadedFiles.value[9].errorText.splice(
+      uploadedFiles.value[9].errorText.findIndex((e) => e === 'can upload only 10 file per task'),
+      1
+    );
+  }
 }
-
 </script>
 
 <template>
@@ -287,11 +295,25 @@ function removeFile(index) {
           v-for="(file, index) in uploadedFiles"
           :key="index"
           class="relative w-48 h-32 bg-white border rounded-md flex flex-col items-center justify-between shadow-sm overflow-hidden"
-          :class="file.errorText ? 'border-red-500' : 'border-gray-300'"
+          :class="file.errorText.length !== 0 ? 'border-red-500' : 'border-gray-300'"
           @mouseover="showErrorTooltip(index)"
           @mouseleave="hideErrorTooltip"
           @click="openPreview(file)"
         >
+          <!-- Close Button -->
+          <div class="absolute top-2 left-2 z-50">
+            <svg
+              @click="removeFile(index)"
+              xmlns="http://www.w3.org/2000/svg"
+              width="1.5em"
+              height="1.5em"
+              class="cursor-pointer text-gray-400 hover:text-red-500 transition-colors"
+              viewBox="0 0 24 24"
+            >
+              <path fill="currentColor" d="M6.4 19L5 17.6l5.6-5.6L5 6.4L6.4 5l5.6 5.6L17.6 5L19 6.4L13.4 12l5.6 5.6l-1.4 1.4l-5.6-5.6z" />
+            </svg>
+          </div>
+
           <!-- Close Button -->
           <div class="absolute top-2 right-2 z-50">
             <svg
@@ -321,9 +343,12 @@ function removeFile(index) {
 
           <!-- v-if="file.showError" -->
           <!-- Error Tooltip -->
-           <!-- todo : transition don't work -->
-          <div v-if="hoveredFileIndex === index && file.errorText" class="absolute top-2 left-1/2 transform -translate-x-1/2 transition-all bg-red-500 text-white text-xs px-2 py-1 rounded-md shadow-md z-30">
-            {{ file.errorText }}
+          <!-- todo : transition don't work -->
+          <div
+            v-if="hoveredFileIndex === index && file.errorText.length !== 0"
+            class="absolute top-2 left-1/2 transform -translate-x-1/2 transition-all bg-red-500 text-white text-xs px-2 py-1 rounded-md shadow-md z-30"
+          >
+            {{ file.errorText.join(', ') }}
           </div>
         </div>
       </div>
