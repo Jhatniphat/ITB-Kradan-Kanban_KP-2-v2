@@ -1,12 +1,15 @@
 <script setup>
-import { addTask } from '@/lib/fetchUtils';
-import { onMounted, ref, watch, nextTick } from 'vue';
+import { addTask, uploadAttachments } from '@/lib/fetchUtils';
+import { onMounted, ref, watch } from 'vue';
 import { useStatusStore } from '@/stores/status.js';
+import { useBoardStore } from '@/stores/board';
+import { useAccountStore } from '@/stores/account';
 import { useToastStore } from '@/stores/toast.js';
 import * as pdfjsLib from 'pdfjs-dist/webpack'; // ใช้ Webpack version ของ PDF.js
 import { marked } from 'marked';
 const emit = defineEmits(['closeModal']);
 const statusStore = useStatusStore();
+const boardStore = useBoardStore();
 
 const statusList = ref([]);
 const canSave = ref(false);
@@ -28,6 +31,7 @@ const descriptionTab = ref('write');
 const uploadedFiles = ref([]);
 const fileInput = ref(null);
 const previewFile = ref(null);
+const filesToUpload = ref([]);
 
 // style
 const isHeaderSticky = ref(false);
@@ -64,8 +68,14 @@ async function fetchData() {
   taskData.value.assignees = taskData.value.assignees.trim();
   loading.value = true;
   let res;
+  let resUp;
   try {
     res = await addTask(taskData.value);
+    console.log('Task created with ID:', res.id);
+    if (filesToUpload.value.length > 0) {
+      resUp = await uploadAttachments(boardStore.currentBoardId, res.id, filesToUpload.value);
+      console.log('File upload response:', resUp);
+    }
   } catch (error) {
     console.log(error);
   } finally {
@@ -78,9 +88,11 @@ function sendCloseModal() {
   emit('closeModal', null);
 }
 
-function handleFileUpload(e) {
+async function handleFileUpload(e) {
   let files = Array.from(e.target.files);
   console.log(files);
+  filesToUpload.value.push(...files);
+  console.log('Raw files:', filesToUpload.value);
 
   files.forEach(async (file, index) => {
     let error = [];
@@ -95,6 +107,7 @@ function handleFileUpload(e) {
     const reader = new FileReader();
 
     reader.onload = async (e) => {
+      // error handling
       uploadedFiles.value.push({
         name: file.name,
         size: file.size,
@@ -175,6 +188,8 @@ function removeFile(index) {
       1
     );
   }
+  filesToUpload.value.splice(index, 1);
+  console.log("Files Array After Remove :",filesToUpload.value);
 }
 </script>
 
@@ -345,10 +360,10 @@ function removeFile(index) {
           <!-- Error Tooltip -->
           <!-- todo : transition don't work -->
           <div
-            v-if="hoveredFileIndex === index && file.errorText.length !== 0"
+            v-if="hoveredFileIndex === index && file.errorText"
             class="absolute top-2 left-1/2 transform -translate-x-1/2 transition-all bg-red-500 text-white text-xs px-2 py-1 rounded-md shadow-md z-30"
           >
-            {{ file.errorText.join(', ') }}
+            {{ file.errorText }}
           </div>
         </div>
       </div>

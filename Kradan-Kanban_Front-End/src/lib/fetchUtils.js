@@ -1,12 +1,12 @@
-import router from "@/router";
-import { useAccountStore } from "@/stores/account";
-import { useBoardStore } from "@/stores/board.js";
-import { useTaskStore } from "@/stores/task.js";
-import { useStatusStore } from "@/stores/status.js";
-import { useToastStore } from "@/stores/toast";
+import router from '@/router';
+import { useAccountStore } from '@/stores/account';
+import { useBoardStore } from '@/stores/board.js';
+import { useTaskStore } from '@/stores/task.js';
+import { useStatusStore } from '@/stores/status.js';
+import { useToastStore } from '@/stores/toast';
 
 // ! -------------------------------- Task ------------------------------------------
-/** 
+/**
  * ? Retrieves All Task By specified UserId and Current BoardId
  * * If tasks already exist in TaskStore, this function will not make a network request.
  * * The retrieved tasks will be automatically added to TaskStore.tasks
@@ -39,13 +39,13 @@ export async function getAllTasks() {
       return item;
     }
     return await res.json();
-  } catch (error) { }
+  } catch (error) {}
 }
 
-/** 
+/**
  * ? Retrieves Task Detail By specified UserId , TaskId and Current BoardId
  * * Automatically redirect to login when get 401
- * @param {Number} id 
+ * @param {Number} id
  * @function getTaskById
  * @returns {Promise<Object>} A promise that resolves to Task Detail
  * @throws {Error} Throws an error if the fetch operation fails.
@@ -79,10 +79,10 @@ export async function getTaskById(id) {
   }
 }
 
-/** 
+/**
  * ? This function will send a request to add the specified task and Current BoardId then return the details of the newly created task upon success.
  * * Automatically redirect to login when get 401
- * @param {Task} newTask 
+ * @param {Task} newTask
  * @function addTask
  * @returns {Promise<Object>} A promise that resolves to New Task Detail
  * @throws {Error} Throws an error if the fetch operation fails.
@@ -116,7 +116,7 @@ export async function addTask(newTask) {
   }
 }
 
-/** 
+/**
  * ? This function will send a request to update the specified task By TaskId , Current BoardId , UserId Then return the details of the updated task upon success.
  * * Automatically redirect to login when get 401
  * @param {number} taskId - task id for update task
@@ -152,10 +152,10 @@ export async function editTask(taskId, Task) {
   }
 }
 
-/** 
+/**
  * ? This function will send a request to delete the specified task By TaskId , Current BoardId , UserId Then return the details of the deleted task upon success.
  * * Automatically redirect to login when get 401
- * @param {number} taskId 
+ * @param {number} taskId
  * @function deleteTask
  * @returns {Promise<Object>} A promise that resolves to Deleted Task Detail
  * @throws {Error} Throws an error if the fetch operation fails.
@@ -188,7 +188,7 @@ export async function deleteTask(id) {
 }
 
 // ! ------------------------------- Status --------------------------------
-/** 
+/**
  * ? Retrieves All Status By specified UserId and Current BoardId
  * * If statuses already exist in StatusStore, this function will not make a network request.
  * * The retrieved statuses will be automatically added to StatusStore.status
@@ -218,13 +218,13 @@ export async function getAllStatus() {
       useStatusStore().status = await res.json();
       return await res.json();
     }
-  } catch (error) { }
+  } catch (error) {}
 }
 
-/** 
+/**
  * ? Retrieves Status Detail By specified UserId , StatusId and Current BoardId
  * * Automatically redirect to login when get 401
- * @param {Number} id 
+ * @param {Number} id
  * @function getStatusById
  * @returns {Promise<Object>} A promise that resolves to Status Detail
  * @throws {Error} Throws an error if the fetch operation fails.
@@ -258,10 +258,10 @@ export async function getStatusById(id) {
   }
 }
 
-/** 
+/**
  * ? This function will send a request to add the specified status and Current BoardId then return the details of the newly created status upon success.
  * * Automatically redirect to login when get 401
- * @param {Status} newStatus 
+ * @param {Status} newStatus
  * @function addStatus
  * @returns {Promise<Object>} A promise that resolves to New Status Detail
  * @throws {Error} Throws an error if the fetch operation fails.
@@ -295,7 +295,7 @@ export async function addStatus(newStatus) {
   }
 }
 
-/** 
+/**
  * ? This function will send a request to update the specified status By StatusId , Current BoardId , UserId Then return the details of the updated status upon success.
  * * Automatically redirect to login when get 401
  * @param {number} id - status id for update status
@@ -333,7 +333,7 @@ export async function editStatus(id, Status) {
   }
 }
 
-/** 
+/**
  * ? This function will send a request to delete the specified status By StatusId , Current BoardId , UserId Then return the details of the deleted status upon success.
  * * Automatically redirect to login when get 401
  * @param {number} id - Status id that want to delete
@@ -370,7 +370,7 @@ export async function deleteStatus(id) {
   }
 }
 
-/** 
+/**
  * ? This function will send a request to transfer task in old Status to new Status and delet old Status Then return the details of the deleted old status upon success.
  * * Automatically redirect to login when get 401
  * @param {number} oldId - Status id that want to delete
@@ -408,7 +408,7 @@ export async function transferStatus(oldId, newId) {
   }
 }
 
-/** 
+/**
  * ? This function will send a request to change limitStatus to opposite Then return status code of response
  * * Automatically redirect to login when get 401
  * @function toggleLimitStatus
@@ -437,7 +437,7 @@ export async function toggleLimitStatus() {
   }
 }
 
-/** 
+/**
  * ? This function will send a request to Retrieves limitStatus to opposite Then return boolean of limitStatus
  * * The retrieved limitStatus will be automatically added to StatusStore.limitEnable
  * * Automatically redirect to login when get 401
@@ -476,8 +476,8 @@ export async function getLimitStatus() {
 
 // ! -------------------------- BOARD ----------------------------
 
-/** 
- * ? Retrieves All Board By specified UserId 
+/**
+ * ? Retrieves All Board By specified UserId
  * * If boards already exist in BoardStore, this function will not make a network request.
  * * The retrieved boards will be automatically added to BoardStore.boards
  * * Automatically redirect to login when get 401
@@ -519,7 +519,7 @@ export async function getAllBoard() {
   }
 }
 
-/** 
+/**
  * ? Retrieves Board Detail By specified UserId and BoardId
  * * If specified boards already exist in BoardStore, this function will not make a network request.
  * * Automatically redirect to login when get 401
@@ -560,7 +560,7 @@ export async function getBoardById(boardId) {
   }
 }
 
-/** 
+/**
  * ? This function will send a request to add the specified board and Current BoardId then return the details of the newly created board upon success.
  * * Automatically redirect to login when get 401
  * @param {Board} newBoard
@@ -601,7 +601,7 @@ export async function addBoard(newBoard) {
   }
 }
 
-/** 
+/**
  * ? This function will send a request to change visibility of board Then return new visibility of board
  * * Automatically redirect to login when get 401
  * @param {String} mode - only allow PUBLIC or PRIVATE
@@ -641,7 +641,7 @@ export async function changeVisibility(mode) {
 }
 
 // ! -------------------------- GUEST USER -----------------------
-/** 
+/**
  * ? This function is same at getBoardById But don't require login
  */
 export async function getBoardByIdForGuest(boardId) {
@@ -676,7 +676,7 @@ export async function getBoardByIdForGuest(boardId) {
   }
 }
 
-/** 
+/**
  * ? This function is same at getAllStatus But don't require login
  */
 export async function getAllStatusForGuest() {
@@ -698,10 +698,10 @@ export async function getAllStatusForGuest() {
       useStatusStore().status = await res.json();
       return await res.json();
     }
-  } catch (error) { }
+  } catch (error) {}
 }
 
-/** 
+/**
  * ? This function is same at getStatusById But don't require login
  */
 export async function getStatusByIdForGuest(id) {
@@ -731,7 +731,7 @@ export async function getStatusByIdForGuest(id) {
   }
 }
 
-/** 
+/**
  * ? This function is same at getAllTasks But don't require login
  */
 export async function getAllTasksForGuest() {
@@ -756,10 +756,10 @@ export async function getAllTasksForGuest() {
       return item;
     }
     return await res.json();
-  } catch (error) { }
+  } catch (error) {}
 }
 
-/** 
+/**
  * ? This function is same at getTaskById But don't require login
  */
 export async function getTaskByIdForGuest(id) {
@@ -791,7 +791,7 @@ export async function getTaskByIdForGuest(id) {
   }
 }
 
-/** 
+/**
  * ? This function is same at getLimitStatus But don't require login
  */
 export async function getLimitStatusForGuest() {
@@ -846,54 +846,50 @@ export async function getAllCollabs() {
     console.error('Failed to fetch collaborators:', error);
     return null;
   }
-
 }
 
 export async function addCollaborator(newCollaborator) {
   let res, item;
   const boardId = useBoardStore().currentBoardId;
   const toastStore = useToastStore();
-  toastStore.createToast("Adding collaborator...", "waiting");
-  useBoardStore().addCollaborator({ ...newCollaborator, name: "processing" , status : "processing" });
+  toastStore.createToast('Adding collaborator...', 'waiting');
+  useBoardStore().addCollaborator({ ...newCollaborator, name: 'processing', status: 'processing' });
   try {
     const accountStore = useAccountStore();
-    res = await fetchWithTokenCheck(
-      `${import.meta.env.VITE_API_ROOT}/boards/${boardId}/collabs`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accountStore.tokenRaw}`,
-        },
-        body: JSON.stringify({ ...newCollaborator }),
-      }
-    );
+    res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/collabs`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accountStore.tokenRaw}`,
+      },
+      body: JSON.stringify({ ...newCollaborator }),
+    });
     switch (res.status) {
       case 201:
       case 200: {
-        toastStore.createToast("Collaborator added successfully");
+        toastStore.createToast('Collaborator added successfully');
         const item = await res.json();
         useBoardStore().editCollaborator(item);
         return item;
       }
       case 401: {
         accountStore.clearTokenDetail();
-        router.push("/login");
+        router.push('/login');
         useBoardStore().removeCollaborator(newCollaborator);
         return;
       }
       case 409: {
-        toastStore.createToast("The user is already a collaborator of this board.", "danger");
+        toastStore.createToast('The user is already a collaborator of this board.', 'danger');
         useBoardStore().removeCollaborator(newCollaborator);
         return res.status;
       }
       case 403: {
-        toastStore.createToast("You do not have permission to add board collaborator.", "danger");
+        toastStore.createToast('You do not have permission to add board collaborator.', 'danger');
         useBoardStore().removeCollaborator(newCollaborator);
         return res.status;
       }
       case 404: {
-        toastStore.createToast("User not found", "danger");
+        toastStore.createToast('User not found', 'danger');
         useBoardStore().removeCollaborator(newCollaborator);
         return res.status;
       }
@@ -904,21 +900,19 @@ export async function addCollaborator(newCollaborator) {
         } catch (error) {
           // Handle error if necessary
         } finally {
-          const invitedUsername = useBoardStore().currentBoard.collaborators.find(
-            collab => collab.email === newCollaborator.email
-          )?.name;
-    
+          const invitedUsername = useBoardStore().currentBoard.collaborators.find((collab) => collab.email === newCollaborator.email)?.name;
+
           toastStore.createToast(
             `We could not send e-mail to <span class="font-bold">${invitedUsername}</span>, he/she can accept the invitation at <span class="underline"> /board/${boardId}/collab/invitations </span>`,
-            "warning",
-            15000 , 
+            'warning',
+            15000,
             `${import.meta.env.VITE_FRONTEND_ROOT}/board/${boardId}/collab/invitations`
           );
           return res.status;
         }
       }
       default:
-        toastStore.createToast("Unexpected error occurred.", "danger");
+        toastStore.createToast('Unexpected error occurred.', 'danger');
         return res.status;
     }
     // if (res.status === 201 || res.status === 200) {
@@ -965,7 +959,7 @@ export async function addCollaborator(newCollaborator) {
     // }
     // return res.status;
   } catch (error) {
-    toastStore.createToast("adding collaborator failed", "danger");
+    toastStore.createToast('adding collaborator failed', 'danger');
     // useBoardStore().removeCollaborator(newCollaborator);
     return error;
   }
@@ -1056,13 +1050,102 @@ export async function deleteCollaborator(boardId, collabId) {
   }
 }
 
+// ! -------------------------- ATTACHMENT -----------------------
+
+export async function getAllAttachments(boardId, taskId) {
+  const accountStore = useAccountStore();
+  let res;
+  try {
+    res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks/${taskId}/attachments`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accountStore.tokenRaw}`,
+      },
+    });
+
+    if (res.ok) {
+      const attachments = await res.json();
+      console.log(attachments);
+
+      return attachments;
+    }
+    if (res.status === 401) {
+      accountStore.clearTokenDetail();
+      router.push('/login');
+      return res.status;
+    } else {
+      return res.status;
+    }
+  } catch (error) {
+    console.log(error.toString());
+  }
+}
+
+export async function uploadAttachments(boardId, taskId, files) {
+  const accountStore = useAccountStore();
+  let res;
+  try {
+    const formData = new FormData();
+    files.forEach((file) => formData.append('files', file));
+
+    res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks/${taskId}/attachments`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accountStore.tokenRaw}`,
+      },
+      body: formData,
+    });
+
+    if (res.ok) {
+      const uploadedAttachments = await res.json();
+      return uploadedAttachments;
+    }
+    if (res.status === 401) {
+      accountStore.clearTokenDetail();
+      router.push('/login');
+      return res.status;
+    } else {
+      return res.status;
+    }
+  } catch (error) {
+    console.log(error.toString());
+  }
+}
+
+export async function deleteAttachment(boardId, taskId, attachmentId) {
+  const accountStore = useAccountStore();
+  let res;
+  try {
+    res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks/${taskId}/attachments/${attachmentId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${accountStore.tokenRaw}`,
+      },
+    });
+
+    if (res.ok) {
+      const deletedAttachment = await res.json();
+      return deletedAttachment;
+    }
+    if (res.status === 401) {
+      accountStore.clearTokenDetail();
+      router.push('/login');
+      return res.status;
+    } else {
+      return res.status;
+    }
+  } catch (error) {
+    console.log(error.toString());
+  }
+}
+
 // ! -------------------------- LOGIN ----------------------------
-/** 
+/**
  * ? This function will send a request to login Then return access token and refresh token
  * * The retrieved access token and refresh token will be automatically added to AccountStore
  * @function login
- * @param {String} username 
- * @param {String} password 
+ * @param {String} username
+ * @param {String} password
  * @returns {Promise<Object>} A promise that resolves to access token and refresh token
  * @throws {Error} Throws an error if the fetch operation fails.
  */
@@ -1095,7 +1178,7 @@ export async function login(username, password) {
         status: res.status,
         payload: 'There is a problem. Please try again later',
       };
-  } catch (error) { }
+  } catch (error) {}
 }
 
 export async function validateToken() {
@@ -1121,11 +1204,11 @@ export async function validateToken() {
 }
 
 // ! -------------------------- Private function ----------------------------
-/** 
- * ? This function will check acesstoken exiped if expired this function will request to get new acesstoken before fetch 
+/**
+ * ? This function will check acesstoken exiped if expired this function will request to get new acesstoken before fetch
  * * The retrieved access token will be automatically added to AccountStore
  * @function fetchWithTokenCheck
- * @param {String} url - url parameter of fetch 
+ * @param {String} url - url parameter of fetch
  * @param {Object} options - options parameter of fetch
  * @returns {fetch}
  * @throws {Error} Throws an error if the fetch operation fails.
