@@ -140,15 +140,9 @@ const generatePDFThumbnail = async (file) => {
   });
 };
 
-// เปิด Preview Modal
 const openPreview = (file) => {
   // previewFile.value = file;
   window.open(file.previewUrl, '_blank');
-};
-
-// ปิด Preview Modal
-const closePreview = () => {
-  previewFile.value = null;
 };
 
 function handelScroll() {
@@ -162,7 +156,6 @@ function handelScroll() {
   } else {
     isFooterSticky.value = false;
   }
-  // console.log(isHeaderSticky.value, isFooterSticky.value);
 }
 
 function showErrorTooltip(index) {
@@ -174,6 +167,7 @@ function hideErrorTooltip() {
 function removeFile(index) {
   uploadedFiles.value.splice(index, 1); // ลบไฟล์ที่คลิก
 }
+
 </script>
 
 <template>
@@ -296,6 +290,7 @@ function removeFile(index) {
           :class="file.errorText ? 'border-red-500' : 'border-gray-300'"
           @mouseover="showErrorTooltip(index)"
           @mouseleave="hideErrorTooltip"
+          @click="openPreview(file)"
         >
           <!-- Close Button -->
           <div class="absolute top-2 right-2 z-50">
