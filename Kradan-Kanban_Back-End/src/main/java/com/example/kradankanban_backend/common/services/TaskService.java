@@ -248,6 +248,6 @@ public class TaskService {
     }
 
     public boolean isTaskAvailable(int id, String boardId) {
-        return statusRepository.existsByIdAndStBoard(id, boardId);
+        return repository.existsByIdAndTkBoard(id, boardRepository.findByBoardId(boardId).orElseThrow(() -> new WrongBoardException("Board not found")));
     }
 }
