@@ -71,7 +71,7 @@ async function fetchData() {
   let resUp;
   try {
     res = await addTask(taskData.value);
-    console.log('Task created with ID:', res.id);
+    
     if (filesToUpload.value.length > 0) {
       resUp = await uploadAttachments(boardStore.currentBoardId, res.id, filesToUpload.value);
       console.log('File upload response:', resUp);

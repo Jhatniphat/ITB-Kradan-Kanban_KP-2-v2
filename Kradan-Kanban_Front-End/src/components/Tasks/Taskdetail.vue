@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
-import { getTaskById, editTask, getTaskByIdForGuest, getAllAttachments } from '@/lib/fetchUtils.js';
+import { getTaskById, editTask, getTaskByIdForGuest, getAllAttachments, deleteAttachment, uploadAttachments } from '@/lib/fetchUtils.js';
 import router from '@/router';
 import { useTaskStore } from '@/stores/task';
 import { useStatusStore } from '@/stores/status.js';
@@ -67,7 +67,7 @@ watch(
       (originalTask.value.title !== taskDetail.value.title ||
         originalTask.value.description !== taskDetail.value.description ||
         originalTask.value.assignees !== taskDetail.value.assignees ||
-        originalTask.value.status !== taskDetail.value.status);
+        originalTask.value.status !== taskDetail.value.status) && (filesToUpload.value.length > 0 || filesToRemove.value.length > 0);
     JSON.stringify(newVal) !== JSON.stringify(originalTask.value);
   },
   { deep: true }
@@ -108,8 +108,7 @@ async function fetchTask(id) {
     let uploadedFilesDetail;
     uploadedFilesDetail = await getAllAttachments(currentBoardId, id);
 
-    uploadedFiles.value = { ...uploadedFilesDetail };
-    console.table(uploadedFiles);
+    uploadedFiles.value = [...uploadedFilesDetail];
 
     // Process Uploaded Files
     uploadedFilesDetail.forEach(async (file) => {
@@ -124,6 +123,7 @@ async function fetchTask(id) {
         const previewUrl = URL.createObjectURL(blob);
 
         previewFiles.value.push({
+          id: file.id,
           name: file.fileName,
           size: blob.size,
           type: file.fileType,
@@ -145,12 +145,29 @@ async function saveTask() {
   loading.value = true;
   let res;
   try {
-    delete taskDetail.value.id;
-    delete taskDetail.value.createdOn;
-    delete taskDetail.value.updatedOn;
-    res = await editTask(props.taskId, taskDetail.value);
-    taskDetail.value = res;
-    taskStore.editStoreTask(res);
+    if (filesToUpload.value.length > 0 || filesToRemove.value.length > 0) {
+      console.log('Attachment Only Working!!!');
+
+      if (filesToUpload.value.length > 0) {
+        const resUp = await uploadAttachments(currentBoardId, props.taskId, filesToUpload.value);
+        console.log('File upload response:', resUp);
+      }
+
+      if (filesToRemove.value.length > 0) {
+        for (const file of filesToRemove.value) {
+          const resRemove = await deleteAttachment(currentBoardId, props.taskId, file.id);
+          console.log(`Removed file ID: ${file.id}, Response:`, resRemove);
+        }
+      }
+    } else {
+      console.log('Edit Task Is Working!!');
+      delete taskDetail.value.id;
+      delete taskDetail.value.createdOn;
+      delete taskDetail.value.updatedOn;
+      res = await editTask(props.taskId, taskDetail.value);
+      taskDetail.value = res;
+      taskStore.editStoreTask(res);
+    }
   } catch (error) {
     console.log(error);
   } finally {
@@ -167,16 +184,15 @@ function sendCloseModal() {
 
 const uploadedFiles = ref([]);
 const previewFiles = ref([]);
-const filesToUpload = ref([])
+const filesToUpload = ref([]);
+const filesToRemove = ref([]);
 const hoveredFileIndex = ref(null);
 
 //Handle New Files
 async function handleFileUpload(e) {
   let files = Array.from(e.target.files);
-  // uploadedFiles.value = [];
-  console.log(files);
   filesToUpload.value.push(...files);
-  console.log('Raw files:', filesToUpload.value);
+  console.log('File to Upload:', filesToUpload.value);
 
   files.forEach(async (file, index) => {
     let error = [];
@@ -204,8 +220,6 @@ async function handleFileUpload(e) {
 
     reader.readAsDataURL(file);
   });
-
-  console.log(uploadedFiles.value);
 }
 
 const generatePDFThumbnail = async (file) => {
@@ -234,16 +248,31 @@ const generatePDFThumbnail = async (file) => {
   });
 };
 
+function removeFile(index) {
+  const file = previewFiles.value[index];
+  // Check if file is a new file or an existing file
+  const isExistingFile = uploadedFiles.value.some((uploadedFile) => uploadedFile.fileName === file.name);
+
+  if (isExistingFile) {
+    // Add to filesToRemove if it's an existing file
+    filesToRemove.value.push(file);
+  } else {
+    // Remove from filesToUpload if it's a new file
+    const updatedFiles = filesToUpload.value.filter((f) => f.name !== file.name); // Create a new filtered array
+    filesToUpload.value = [...updatedFiles]; // Reassign to trigger reactivity
+  }
+
+  // Remove from preview list
+  previewFiles.value.splice(index, 1);
+  console.log('Files to Upload:', filesToUpload.value);
+  console.log('Files to Remove:', filesToRemove.value);
+}
+
 function showErrorTooltip(index) {
   hoveredFileIndex.value = index; // กำหนด index ของไฟล์ที่ชี้เมาส์
 }
 function hideErrorTooltip() {
   hoveredFileIndex.value = null; // ซ่อน tooltip เมื่อเมาส์ออก
-}
-function removeFile(index) {
-  previewFiles.value.splice(index, 1); // ลบไฟล์ที่คลิก
-  filesToUpload.value.splice(index, 1);
-  console.log("Files Array After Remove :",filesToUpload.value);
 }
 </script>
 
