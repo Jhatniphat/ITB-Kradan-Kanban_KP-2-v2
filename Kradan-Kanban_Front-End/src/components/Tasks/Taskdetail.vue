@@ -9,6 +9,7 @@ import { useAccountStore } from '@/stores/account.js';
 import { useToastStore } from '@/stores/toast.js';
 import * as pdfjsLib from 'pdfjs-dist/webpack'; // ใช้ Webpack version ของ PDF.js
 import LoadingComponent from '@/components/loadingComponent.vue';
+import { marked } from 'marked';
 
 const currentBoardId = useBoardStore().currentBoardId;
 const taskStore = useTaskStore();
@@ -24,10 +25,10 @@ const props = defineProps({
     required: true,
   },
 });
-
+console.log(props.isOwnerOrNot)
 // const editMode = ref(false);
 const statusList = ref([]);
-const canSave = ref(false);
+// const canSave = ref(false);
 const loading = ref(false);
 const taskDetail = ref({});
 const originalTask = ref(null);
@@ -48,6 +49,36 @@ const editTaskAssigneesLength = computed(() => {
   return taskDetail.value?.assignees?.trim()?.length;
 });
 
+const isHeaderSticky = ref(false);
+const isFooterSticky = ref(false);
+const content = ref();
+const createAnotherTask = ref(false);
+// const hoveredFileIndex = ref(null);
+const fileLoading = ref(false);
+const descriptionTab = ref('write');
+
+/* File Handle */
+const uploadedFiles = ref([]);
+const previewFiles = ref([]);
+const filesToUpload = ref([]);
+const filesToRemove = ref([]);
+const hoveredFileIndex = ref(null);
+
+
+
+function handelScroll() {
+  if (content.value.scrollTop > 0) {
+    isHeaderSticky.value = true;
+  } else {
+    isHeaderSticky.value = false;
+  }
+  if (content.value.scrollTop + content.value.clientHeight < content.value.scrollHeight) {
+    isFooterSticky.value = true;
+  } else {
+    isFooterSticky.value = false;
+  }
+}
+
 watch(() => props.taskId, fetchTask, { immediate: true });
 
 watch(
@@ -60,15 +91,38 @@ watch(
     else Errortext.value.description = '';
     if (editTaskAssigneesLength.value > 30) Errortext.value.assignees = "Assignees can't long more than 30 character";
     else Errortext.value.assignees = '';
-    canSave.value =
-      Errortext.value.title === '' &&
-      Errortext.value.description === '' &&
-      Errortext.value.assignees === '' &&
-      (originalTask.value.title !== taskDetail.value.title ||
-        originalTask.value.description !== taskDetail.value.description ||
-        originalTask.value.assignees !== taskDetail.value.assignees ||
-        originalTask.value.status !== taskDetail.value.status) && (filesToUpload.value.length > 0 || filesToRemove.value.length > 0);
+    // canSave.value =
+    //   Errortext.value.title === '' &&
+    //   Errortext.value.description === '' &&
+    //   Errortext.value.assignees === '' &&
+    //   (originalTask.value.title !== taskDetail.value.title ||
+    //     originalTask.value.description !== taskDetail.value.description ||
+    //     originalTask.value.assignees !== taskDetail.value.assignees ||
+    //     originalTask.value.status !== taskDetail.value.status) &&
+    //   (filesToUpload.value.length > 0 || filesToRemove.value.length > 0);
     JSON.stringify(newVal) !== JSON.stringify(originalTask.value);
+  },
+  { deep: true }
+);
+
+const canSave = computed(() => {
+  return (
+    Errortext.value.title === '' &&
+    Errortext.value.description === '' &&
+    Errortext.value.assignees === '' &&
+    (originalTask.value.title !== taskDetail.value.title ||
+      originalTask.value.description !== taskDetail.value.description ||
+      originalTask.value.assignees !== taskDetail.value.assignees ||
+      originalTask.value.status !== taskDetail.value.status) ||
+    (filesToUpload.value.length > 0 || filesToRemove.value.length > 0)
+  );
+});
+
+watch(
+  statusStore.status,
+  () => {
+    statusList.value = statusStore.getAllStatusWithLimit();
+    console.table(statusList.value);
   },
   { deep: true }
 );
@@ -76,11 +130,9 @@ watch(
 async function fetchTask(id) {
   if (id === 0) {
     loading.value = true;
-    // emit("closeModal", 404);
-    // router.push("/task");
     return 0;
   }
-  error.value = taskDetail.value = statusList.value = null;
+  error.value = null;
   loading.value = true;
   statusList.value = statusStore.getAllStatusWithLimit();
   try {
@@ -94,7 +146,6 @@ async function fetchTask(id) {
     console.table(await originalTaskDetails);
     if (originalTaskDetails === 404 || originalTaskDetails === 400 || originalTaskDetails === 500) {
       emit('closeModal', 404);
-
       router.push(`/board/${currentBoardId}`);
     }
     originalTask.value = { ...originalTaskDetails };
@@ -129,6 +180,7 @@ async function fetchTask(id) {
           type: file.fileType,
           previewUrl: file.fileType.startsWith('application/msword') ? `https://docs.google.com/viewer?url=${encodeURIComponent(previewUrl)}&embedded=true` : previewUrl,
           thumbnail: file.fileType.startsWith('image/') ? previewUrl : file.fileType === 'application/pdf' ? await generatePDFThumbnail(blob) : null,
+          errorText: [],
         });
       } catch (fileProcessingError) {
         console.error('Error processing file:', file, fileProcessingError);
@@ -143,34 +195,53 @@ async function fetchTask(id) {
 
 async function saveTask() {
   loading.value = true;
-  let res;
+  let res, editTaskResponse;
+  let deleteAttachmentResponses = [];
+  let uploadAttachmentsResponses = [];
   try {
-    if (filesToUpload.value.length > 0 || filesToRemove.value.length > 0) {
-      console.log('Attachment Only Working!!!');
+    console.log('Attachment Only Working!!!');
 
-      if (filesToUpload.value.length > 0) {
-        const resUp = await uploadAttachments(currentBoardId, props.taskId, filesToUpload.value);
-        console.log('File upload response:', resUp);
-      }
+    if (filesToUpload.value.length > 0) {
+      const resUp = await uploadAttachments(currentBoardId, props.taskId, filesToUpload.value);
+      console.log('File upload response:', resUp);
+      uploadAttachmentsResponses.push(resUp);
+    }
 
-      if (filesToRemove.value.length > 0) {
-        for (const file of filesToRemove.value) {
-          const resRemove = await deleteAttachment(currentBoardId, props.taskId, file.id);
-          console.log(`Removed file ID: ${file.id}, Response:`, resRemove);
-        }
+    if (filesToRemove.value.length > 0) {
+      for (const file of filesToRemove.value) {
+        const resRemove = await deleteAttachment(currentBoardId, props.taskId, file.id);
+        console.log(`Removed file ID: ${file.id}, Response:`, resRemove);
+        deleteAttachmentResponses.push(resRemove);
       }
+    }
+
+    if (
+      originalTask.value.title === taskDetail.value.title &&
+      originalTask.value.description === taskDetail.value.description &&
+      originalTask.value.assignees === taskDetail.value.assignees &&
+      originalTask.value.status === taskDetail.value.status
+    ) {
+      editTaskResponse = 200;
+      console.log(editTaskResponse);
     } else {
-      console.log('Edit Task Is Working!!');
       delete taskDetail.value.id;
       delete taskDetail.value.createdOn;
       delete taskDetail.value.updatedOn;
-      res = await editTask(props.taskId, taskDetail.value);
-      taskDetail.value = res;
-      taskStore.editStoreTask(res);
+      let editRes = await editTask(props.taskId, taskDetail.value);
+      taskDetail.value = editRes;
+      taskStore.editStoreTask(editRes.payload);
+      editTaskResponse = editRes.status;
     }
   } catch (error) {
     console.log(error);
   } finally {
+    console.log(res);
+    if (editTaskResponse === 200 && !deleteAttachmentResponses.some((res) => res.status !== 200) && !uploadAttachmentsResponses.some((res) => res.status !== 200)) {
+      res = 200;
+    } else {
+      res = editTaskResponse;
+    }
+    console.log('res', res);
     loading.value = false;
     router.push(`/board/${currentBoardId}`);
     emit('closeModal', res);
@@ -182,13 +253,9 @@ function sendCloseModal() {
   router.push(`/board/${currentBoardId}`);
 }
 
-const uploadedFiles = ref([]);
-const previewFiles = ref([]);
-const filesToUpload = ref([]);
-const filesToRemove = ref([]);
-const hoveredFileIndex = ref(null);
 
-//Handle New Files
+
+// Handle New Files
 async function handleFileUpload(e) {
   let files = Array.from(e.target.files);
   filesToUpload.value.push(...files);
@@ -200,8 +267,8 @@ async function handleFileUpload(e) {
       useToastStore().createToast(`"${file.name}" file size is too large`, error);
       error.push('this file is too large');
     }
-    if (index >= 10) {
-      error.push('can upload only 10 file per task');
+    if (previewFiles.value.some((file) => file.name === file.name)) {
+      error.push('dulpicate file uploaded');
     }
 
     const reader = new FileReader();
@@ -214,12 +281,44 @@ async function handleFileUpload(e) {
         type: file.type,
         previewUrl: file.type.startsWith('application/msword') ? `https://docs.google.com/viewer?url=${encodeURIComponent(URL.createObjectURL(file))}&embedded=true` : URL.createObjectURL(file),
         thumbnail: file.type.startsWith('image/') ? URL.createObjectURL(file) : file.type === 'application/pdf' ? await generatePDFThumbnail(file) : null,
-        errorText: error.join(', '),
+        errorText: error,
       });
     };
 
     reader.readAsDataURL(file);
   });
+
+  checkErrorText();
+}
+
+function checkErrorText() {
+  fileLoading.value = true;
+
+  uploadedFiles.value.forEach((file, index) => {
+    file.errorText = [];
+
+    console.log(file.name);
+    if (uploadedFiles.value.length >= 10) {
+      if (!file.errorText.includes('can upload only 10 file per task')) {
+        file.errorText.push('can upload only 10 file per task');
+      }
+    }
+
+    const duplicateFiles = uploadedFiles.value.filter((uploadedFile) => uploadedFile.name === file.name);
+    if (duplicateFiles.length > 1) {
+      if (!file.errorText.includes('duplicate file uploaded')) {
+        file.errorText.push('duplicate file uploaded');
+      }
+    }
+
+    if (file.size > 20 * 1024 * 1024) {
+      if (!file.errorText.includes('this file is too large')) {
+        file.errorText.push('this file is too large');
+      }
+    }
+
+  });
+  fileLoading.value = false;
 }
 
 const generatePDFThumbnail = async (file) => {
@@ -264,8 +363,9 @@ function removeFile(index) {
 
   // Remove from preview list
   previewFiles.value.splice(index, 1);
-  console.log('Files to Upload:', filesToUpload.value);
-  console.log('Files to Remove:', filesToRemove.value);
+  // console.log('Files to Upload:', filesToUpload.value);
+  // console.log('Files to Remove:', filesToRemove.value);
+  checkErrorText();
 }
 
 function showErrorTooltip(index) {
@@ -274,105 +374,58 @@ function showErrorTooltip(index) {
 function hideErrorTooltip() {
   hoveredFileIndex.value = null; // ซ่อน tooltip เมื่อเมาส์ออก
 }
+const openPreview = (file) => {
+  // previewFile.value = file;
+  window.open(file.previewUrl, '_blank');
+};
 </script>
 
 <template>
   <div class="flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 rounded-lg w-full min-h-96" v-if="loading === true">
     <loading-component class="absolute top-1/2" />
   </div>
+
   <!-- Title -->
-  <div class="flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 rounded-lg w-full itbkk-modal-task" v-if="loading === false">
-    <div>
-      <label class="form-control w-full">
-        <div class="label">
-          <h1 class="m-2 text-3xl font-bold" v-if="loading === true">Loading Data For TaskId = {{ props.taskId }}</h1>
-          <div v-if="loading === false && error === null">
-            <h1 class="m-2 mt-0 text-2xl font-bold text-wrap break-all dark:text-slate-400">Edit task</h1>
-            <hr />
-            <span class="label-text">Title</span>
-          </div>
-          <hr />
-        </div>
-        <input v-model="taskDetail.title" type="text" placeholder="Type here" class="itbkk-title input input-bordered w-full bg-white dark:bg-base-300 dark:text-slate-400" />
-        <div class="label">
-          <!-- ? Error Text -->
-          <span v-if="Errortext.title !== ''" class="label-text-alt text-error">{{ Errortext.title }}</span>
-          <span v-if="editTaskTitleLength <= 100 && editTaskTitleLength > 0" class="justify-end text-gray-400 label-text-alt">{{ editTaskTitleLength }} / 100</span>
-          <span v-if="editTaskTitleLength === 0 && Errortext.title !== ''" class="flex justify-end text-red-400 label-text-alt">{{ editTaskTitleLength }} / 100</span>
-          <span v-if="editTaskTitleLength > 100" class="flex justify-end text-red-400 label-text-alt">{{ editTaskTitleLength }} / 100</span>
-        </div>
-      </label>
+  <div class="h-[50rem] w-full bg-white rounded-md flex flex-col overflow-scroll" v-if="loading === false">
+    <!-- ? HEADER -->
+    <div class="sticky top-0 flex flex-row p-4 bg-white z-50" :class="isHeaderSticky ? 'shadow-lg' : ''">
+      <div class="flex-1 text-2xl">Create Task / Issue</div>
+      <div class="flex-1 flex flex-row-reverse">
+        <svg @click="sendCloseModal" xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M6.4 19L5 17.6l5.6-5.6L5 6.4L6.4 5l5.6 5.6L17.6 5L19 6.4L13.4 12l5.6 5.6l-1.4 1.4l-5.6-5.6z" />
+        </svg>
+      </div>
     </div>
 
-    <!--    <div v-if="!editMode">-->
-    <!--      <label class="form-control w-full">-->
-    <!--        <div class="label">-->
-    <!--          <h1 class="m-2 text-3xl font-bold" v-if="loading === true">-->
-    <!--            Loading Data For TaskId = {{ props.taskId }}-->
-    <!--          </h1>-->
-    <!--          <h1-->
-    <!--              class="itbkk-title m-2 text-2xl font-bold text-wrap break-all dark:text-slate-400"-->
-    <!--              v-if="loading === false && error === null"-->
-    <!--          >-->
-    <!--            {{ taskDetail.title }}-->
-    <!--          </h1>-->
-    <!--        </div>-->
-    <!--        <hr/>-->
-    <!--      </label>-->
-    <!--    </div>-->
-
-    <!-- * description -->
-    <div class="flex mb-5 mx-auto flex-col w-full" v-if="loading === false && error === null">
-      <div class="flex flex-row gap-3">
-        <label class="form-control basis-3/4">
-          <div class="label">
-            <!-- ? Head -->
-            <span class="label-text">Description</span>
-          </div>
-          <textarea
-            v-model="taskDetail.description"
-            class="itbkk-description textarea textarea-bordered h-72 bg-white dark:bg-base-300 dark:text-slate-400 resize-none"
-            placeholder="No Description Provided"
-            :class="taskDetail.description === '' || taskDetail.description === null ? 'italic text-gray-600' : ''"
-            >{{ taskDetail.description == '' || taskDetail.description === null ? 'No Description Provided' : taskDetail.description }}</textarea
-          >
-          <div class="label">
-            <!-- ? Error Text -->
-            <span v-if="Errortext.description !== ''" class="label-text-alt text-error"> {{ Errortext.description }}</span>
-            <span v-if="editTaskDescriptionLength <= 500" class="flex justify-end text-gray-400 label-text-alt">{{ editTaskDescriptionLength }} / 500</span>
-            <span v-if="editTaskDescriptionLength > 500" class="flex justify-end text-red-400 label-text-alt">{{ editTaskDescriptionLength }} / 500</span>
-          </div>
-        </label>
-
-        <!-- * assignee -->
-        <div class="basis-1/4">
-          <label class="form-control">
+    <!-- ? BODY -->
+    <div class="flex flex-col overflow-scroll p-2 grow" ref="content" @scroll="handelScroll">
+      <div class="w-full flex flex-row">
+        <div class="basis-2/3 px-2">
+          <!-- ? Title -->
+          <label class="form-control w-full">
             <div class="label">
               <!-- ? Head -->
-              <span class="label-text">Assignees</span>
+              <span class="label-text">Title</span>
             </div>
-            <textarea
-              v-model="taskDetail.assignees"
-              class="itbkk-assignees textarea textarea-bordered h-24 bg-white dark:bg-base-300 dark:text-slate-400 resize-none"
-              placeholder="Unassigned"
-              :class="taskDetail.assignees === '' || taskDetail.assignees === null ? 'italic text-gray-600' : ''"
-              >{{ taskDetail.assignees == '' || taskDetail.assignees === null ? 'Unassigned' : taskDetail.assignees }}</textarea
-            >
+            <input v-model="taskDetail.title" type="text" placeholder="Type here" class="itbkk-title input input-bordered w-full bg-white dark:bg-base-300 dark:text-slate-400" :disabled="!isOwnerOrNot"/>
             <div class="label">
               <!-- ? Error Text -->
-              <span v-if="Errortext.assignees !== ''" class="label-text-alt text-error"> {{ Errortext.assignees }}</span>
-              <span v-if="editTaskAssigneesLength <= 30" class="flex justify-end text-gray-400 label-text-alt">{{ editTaskAssigneesLength }} / 30</span>
-              <span v-if="editTaskAssigneesLength > 30" class="flex justify-end text-red-400 label-text-alt">{{ editTaskAssigneesLength }} / 30</span>
+              <span v-if="Errortext.title !== ''" class="label-text-alt text-error">{{ Errortext.title }}</span>
+              <!-- count input name -->
+              <span v-if="taskDetail.title?.length <= 100 && taskDetail.title?.length > 0" class="justify-end text-gray-400 label-text-alt">{{ taskDetail.title?.length }} / 100</span>
+              <span v-if="taskDetail.title?.length === 0 && Errortext?.title !== ''" class="flex justify-end text-red-400 label-text-alt">{{ taskDetail.title?.length }} / 100</span>
+              <span v-if="taskDetail.title?.length > 100" class="flex justify-end text-red-400 label-text-alt">{{ taskDetail.title?.length }} / 100</span>
             </div>
           </label>
-
-          <!-- * status -->
+        </div>
+        <div class="basis-1/3 px-2">
+          <!-- ? Status -->
           <label class="form-control w-full max-w-xs">
             <div class="label">
               <span class="label-text">Status</span>
             </div>
-            <select class="itbkk-status select select-bordered bg-white dark:bg-base-300 dark:text-slate-400" v-model="taskDetail.status">
-              <option v-for="status in statusList" :value="status.name" :disabled="originalTask.status !== status.name && status.isLimit">
+            <select class="itbkk-status select select-bordered bg-white dark:bg-base-300 dark:text-slate-400" v-model="taskDetail.status" :disabled="!isOwnerOrNot">
+              <option v-for="status in statusStore.getAllStatusWithLimit()" :value="status.name" :disabled="status.isLimit">
                 {{ status.name }}
                 <span class="text-error">
                   {{ status.isLimit ? '(max)' : '' }}
@@ -380,33 +433,56 @@ function hideErrorTooltip() {
               </option>
             </select>
           </label>
-
-          <div class="mt-5 text-xs text-black dark:text-slate-400">
-            <div class="flex flex-row justify-between">
-              <h1 class="font-bold">TimeZone</h1>
-              <h1 class="itbkk-timezone font-semibold">
-                {{ Intl.DateTimeFormat().resolvedOptions().timeZone }}
-              </h1>
-            </div>
-            <div class="flex flex-row justify-between">
-              <h1 class="font-bold">Created On</h1>
-              <h1 class="itbkk-created-on font-semibold">
-                {{ taskDetail.createdOn }}
-              </h1>
-            </div>
-            <div class="flex flex-row justify-between">
-              <h1 class="font-bold">Updated On</h1>
-              <h1 class="itbkk-updated-on font-semibold">
-                {{ taskDetail.updatedOn }}
-              </h1>
-            </div>
-          </div>
         </div>
       </div>
+      <div class="flex flex-row">
+        <div class="basis-2/3 p-2 pt-0">
+          <label class="form-control">
+            <div class="label">
+              <span class="label-text">Description</span>
+            </div>
+            <div class="relative">
+              <div class="bg-gray-50 border border-b-0 border-gray-300 top-0 left-0 right-0 block rounded-t-md">
+                <button type="button" class="py-2 px-4 inline-block text-gray-400 font-semibold" :class="{ 'text-indigo-600': descriptionTab === 'write' }" @click="descriptionTab = 'write'">
+                  Write
+                </button>
+                <button type="button" class="py-2 px-4 inline-block text-gray-400 font-semibold" :class="{ 'text-indigo-600': descriptionTab === 'preview' }" @click="descriptionTab = 'preview'">
+                  Preview
+                </button>
+              </div>
+              <div v-if="descriptionTab === 'write'" class="w-full">
+                <textarea
+                  id="{{ $id }}"
+                  class="textarea prose rounded-t-none rounded-b-md shadow-sm border border-gray-300 p-1 bg-white overflow-y-auto w-full min-h-64"
+                  name="content"
+                  v-model="taskDetail.description"
+                  :disabled="!isOwnerOrNot"
+                ></textarea>
+              </div>
 
-      <div class="flex my-5 mx-auto" v-if="error !== null">
-        <div>
-          <h1>{{ error }}</h1>
+              <div v-if="descriptionTab === 'preview'">
+                <div
+                  class="markdown-preview w-full prose max-w-none prose-indigo leading-6 rounded-b-md shadow-sm border border-gray-300 p-5 bg-white overflow-y-auto min-h-64"
+                  v-html="!!taskDetail ? marked(taskDetail.description) : ''"
+                ></div>
+              </div>
+            </div>
+          </label>
+        </div>
+        <div class="basis-1/3 px-2">
+          <label class="form-control">
+            <div class="label">
+              <!-- ? Head -->
+              <span class="label-text">Assignees</span>
+            </div>
+            <textarea v-model="taskDetail.assignees" class="itbkk-assignees textarea textarea-bordered h-24 bg-white dark:bg-base-300 dark:text-slate-400 min-h-[18.625rem]" placeholder="Bio"></textarea>
+            <div class="label">
+              <!-- ? Error Text -->
+              <span v-if="Errortext.assignees !== ''" class="label-text-alt text-error"> {{ Errortext.assignees }}</span>
+              <span v-if="taskDetail.assignees?.length <= 30" class="flex justify-end text-gray-400 label-text-alt">{{ taskDetail.assignees?.length }} / 30</span>
+              <span v-if="taskDetail.assignees?.length > 30" class="flex justify-end text-red-400 label-text-alt">{{ taskDetail.assignees?.length }} / 30</span>
+            </div>
+          </label>
         </div>
       </div>
       <!-- ? Upload FILE -->
@@ -415,7 +491,7 @@ function hideErrorTooltip() {
           <div class="label pt-0">
             <span class="label-text pt-0">File attachment</span>
           </div>
-          <input type="file" class="file-input file-input-sm file-input-bordered w-full" multiple @change="handleFileUpload" ref="fileInput" />
+          <input type="file" class="file-input file-input-sm file-input-bordered w-full" multiple @change="handleFileUpload" ref="fileInput" :disabled="!isOwnerOrNot"/>
           <div class="label">
             <span class="label-text-alt">can upload only 10 file per task and 20MB per file</span>
           </div>
@@ -427,12 +503,29 @@ function hideErrorTooltip() {
           v-for="(file, index) in previewFiles"
           :key="index"
           class="relative w-48 h-32 bg-white border rounded-md flex flex-col items-center justify-between shadow-sm overflow-hidden"
-          :class="file.errorText ? 'border-red-500' : 'border-gray-300'"
+          :class="file.errorText.length !== 0 ? 'border-red-500' : 'border-gray-300'"
           @mouseover="showErrorTooltip(index)"
           @mouseleave="hideErrorTooltip"
         >
+          <!-- Preview Button -->
+          <div class="absolute top-2 left-2 z-50">
+            <svg
+              @click="openPreview(file)"
+              xmlns="http://www.w3.org/2000/svg"
+              width="1.5em"
+              height="1.5em"
+              viewBox="0 0 24 24"
+              class="cursor-pointer text-gray-400 hover:text-blue-500 transition-colors"
+            >
+              <path
+                fill="currentColor"
+                d="M6 23H3q-.825 0-1.412-.587T1 21v-3h2v3h3zm12 0v-2h3v-3h2v3q0 .825-.587 1.413T21 23zm-6-4.5q-3 0-5.437-1.775T3 12q1.125-2.95 3.563-4.725T12 5.5t5.438 1.775T21 12q-1.125 2.95-3.562 4.725T12 18.5m0-2q2.2 0 4.025-1.2t2.8-3.3q-.975-2.1-2.8-3.3T12 7.5T7.975 8.7t-2.8 3.3q.975 2.1 2.8 3.3T12 16.5m0-1q1.45 0 2.475-1.025T15.5 12t-1.025-2.475T12 8.5T9.525 9.525T8.5 12t1.025 2.475T12 15.5m0-2q-.625 0-1.063-.437T10.5 12t.438-1.062T12 10.5t1.063.438T13.5 12t-.437 1.063T12 13.5M1 6V3q0-.825.588-1.412T3 1h3v2H3v3zm20 0V3h-3V1h3q.825 0 1.413.588T23 3v3zm-9 6"
+              />
+            </svg>
+          </div>
+
           <!-- Close Button -->
-          <div class="absolute top-2 right-2 z-50">
+          <div class="absolute top-2 right-2 z-50" v-if="isOwnerOrNot">
             <svg
               @click="removeFile(index)"
               xmlns="http://www.w3.org/2000/svg"
@@ -462,31 +555,29 @@ function hideErrorTooltip() {
           <!-- Error Tooltip -->
           <!-- todo : transition don't work -->
           <div
-            v-if="hoveredFileIndex === index && file.errorText"
+            v-if="hoveredFileIndex === index && file.errorText.length !== 0"
             class="absolute top-2 left-1/2 transform -translate-x-1/2 transition-all bg-red-500 text-white text-xs px-2 py-1 rounded-md shadow-md z-30"
           >
-            {{ file.errorText }}
+            {{ file.errorText.join(',') }}
           </div>
         </div>
       </div>
-      <hr />
-      <div class="flex flex-row-reverse gap-4 mt-5">
-        <!-- Cancel button -->
+    </div>
+
+    <!-- ? FOOTER -->
+    <div class="sticky bottom-0 w-full z-50 gap-4 p-2" :class="isFooterSticky ? 'shadow-top' : ''">
+      <div class="float-right flex flex-row-reverse gap-3">
         <button class="itbkk-button-cancel btn btn-outline btn-error basis-1/6" @click="sendCloseModal()">Cancel</button>
-
-        <!--        <button-->
-        <!--            v-if="!editMode"-->
-        <!--            class="btn btn-outline btn-primary basis-1/6"-->
-        <!--            @click="editMode = true"-->
-        <!--            :disabled="!isOwner"-->
-        <!--        >-->
-        <!--          Edit-->
-        <!--        </button>-->
-
-        <button class="itbkk-button-confirm btn btn-outline btn-success basis-1/6" :disabled="!canSave" @click="saveTask">
+        <button class="itbkk-button-confirm btn btn-outline btn-success basis-1/6" :disabled="!canSave" :class="!canSave ? 'disabled' : ''" @click="saveTask()">
           {{ loading ? '' : 'Save' }}
           <span class="loading loading-spinner text-success" v-if="loading"></span>
         </button>
+        <!-- <div class="form-control">
+          <label class="label cursor-pointer">
+            <input type="checkbox" checked="false" v-model="createAnotherTask" class="toggle" />
+            <span class="label-text p-3">Create Another Task</span>
+          </label>
+        </div> -->
       </div>
     </div>
   </div>

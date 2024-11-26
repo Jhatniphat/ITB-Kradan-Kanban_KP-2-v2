@@ -143,12 +143,15 @@ export async function editTask(taskId, Task) {
       return;
     }
     if (res.ok) {
-      return await res.json();
+      // return await res.json();
+      return { status : res.status , payload : res.json() }
     } else {
-      throw new Error(`Failed to update task: ${res.status}`);
+      // throw new Error(`Failed to update task: ${res.status}`);
+      return { status : res.status , payload : res.json() }
     }
   } catch (error) {
-    throw new Error(`Error updating task: ${error.message}`);
+    // throw new Error(`Error updating task: ${error.message}`);
+    return { status : res.status , payload : res.json() }
   }
 }
 
@@ -1097,15 +1100,15 @@ export async function uploadAttachments(boardId, taskId, files) {
     });
 
     if (res.ok) {
-      const uploadedAttachments = await res.json();
-      return uploadedAttachments;
+      // const uploadedAttachments = await res.json();
+      return { status : res.status , payload : res.json() }
     }
     if (res.status === 401) {
       accountStore.clearTokenDetail();
       router.push('/login');
-      return res.status;
+      return { status : res.status , payload : res.json() }
     } else {
-      return res.status;
+      return { status : res.status , payload : res.json() }
     }
   } catch (error) {
     console.log(error.toString());
@@ -1124,15 +1127,16 @@ export async function deleteAttachment(boardId, taskId, attachmentId) {
     });
 
     if (res.ok) {
-      const deletedAttachment = await res.json();
-      return deletedAttachment;
+      // const deletedAttachment = await res.json();
+      // return deletedAttachment;
+      return { status : res.status , payload : res.json() }
     }
     if (res.status === 401) {
       accountStore.clearTokenDetail();
       router.push('/login');
-      return res.status;
+      return { status : res.status , payload : res.json() }
     } else {
-      return res.status;
+      return { status : res.status , payload : res.json() }
     }
   } catch (error) {
     console.log(error.toString());

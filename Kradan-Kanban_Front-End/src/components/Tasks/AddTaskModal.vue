@@ -1,6 +1,6 @@
 <script setup>
 import { addTask, uploadAttachments } from '@/lib/fetchUtils';
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useStatusStore } from '@/stores/status.js';
 import { useBoardStore } from '@/stores/board';
 import { useAccountStore } from '@/stores/account';
@@ -12,7 +12,7 @@ const statusStore = useStatusStore();
 const boardStore = useBoardStore();
 
 const statusList = ref([]);
-const canSave = ref(false);
+// const canSave = ref(false);
 const taskData = ref({
   title: '',
   description: '',
@@ -39,6 +39,7 @@ const isFooterSticky = ref(false);
 const content = ref();
 const createAnotherTask = ref(false);
 const hoveredFileIndex = ref(null);
+const fileLoading = ref(false);
 
 watch(taskData.value, () => {
   if (taskData.value.title.trim().length > 100) Errortext.value.title = `Title can't long more than 100 character`;
@@ -49,7 +50,17 @@ watch(taskData.value, () => {
   if (taskData.value.assignees.trim().length > 30) Errortext.value.assignees = `Assignees can't long more than 30 character`;
   else Errortext.value.assignees = '';
   // ? disabled or enabled save btn
-  canSave.value = Errortext.value.title === '' && Errortext.value.description === '' && Errortext.value.assignees === '';
+  // canSave.value = Errortext.value.title === '' && Errortext.value.description === '' && Errortext.value.assignees === '';
+});
+
+const canSave = computed(() => {
+  return (
+    Errortext.value.title === '' &&
+    Errortext.value.description === '' &&
+    Errortext.value.assignees === '' &&
+    taskData.value.title.trim().length > 0 &&
+    !uploadedFiles.value.some((file) => file.errorText.length > 0)
+  );
 });
 
 onMounted(async () => {
@@ -71,7 +82,7 @@ async function fetchData() {
   let resUp;
   try {
     res = await addTask(taskData.value);
-    
+
     if (filesToUpload.value.length > 0) {
       resUp = await uploadAttachments(boardStore.currentBoardId, res.id, filesToUpload.value);
       console.log('File upload response:', resUp);
@@ -100,6 +111,9 @@ async function handleFileUpload(e) {
       useToastStore().createToast(`"${file.name}" file size is too large`, error);
       error.push('this file is too large');
     }
+    if (uploadedFiles.value.some((uploadedFile) => uploadedFile.name === file.name)) {
+      error.push('dulpicate file uploaded');
+    }
     // if (uploadedFiles.value.length >= 10) {
     //   error.push('can upload only 10 file per task');
     // }
@@ -119,15 +133,9 @@ async function handleFileUpload(e) {
     };
 
     reader.readAsDataURL(file);
-
-    console.log(file);
-    console.log(uploadedFiles.value.length);
-
-    // console.log(uploadedFiles.value);
   });
 
-  console.log(uploadedFiles.value.length);
-  console.log(uploadedFiles.value);
+  checkErrorText();
 }
 
 const generatePDFThumbnail = async (file) => {
@@ -189,24 +197,42 @@ function removeFile(index) {
     );
   }
   filesToUpload.value.splice(index, 1);
-  console.log("Files Array After Remove :",filesToUpload.value);
+  checkErrorText();
 }
 
-watch(uploadedFiles, (newFiles) => {
-  newFiles.forEach((file, index) => {
-    if (index < 10) {
-      const errorIndex = file.errorText.findIndex((e) => e === 'can upload only 10 file per task');
-      if (errorIndex !== -1) {
-        file.errorText.splice(errorIndex, 1);
-      }
-    } else {
+// watch(uploadedFiles, () => {
+//   checkErrorText();
+// });
+
+function checkErrorText() {
+  fileLoading.value = true;
+
+  uploadedFiles.value.forEach((file, index) => {
+    file.errorText = [];
+
+    console.log(file.name);
+    if (uploadedFiles.value.length >= 10) {
       if (!file.errorText.includes('can upload only 10 file per task')) {
         file.errorText.push('can upload only 10 file per task');
       }
     }
-  });
-}, { deep: true });
 
+    const duplicateFiles = uploadedFiles.value.filter((uploadedFile) => uploadedFile.name === file.name);
+    if (duplicateFiles.length > 1) {
+      if (!file.errorText.includes('duplicate file uploaded')) {
+        file.errorText.push('duplicate file uploaded');
+      }
+    }
+
+    if (file.size > 20 * 1024 * 1024) {
+      if (!file.errorText.includes('this file is too large')) {
+        file.errorText.push('this file is too large');
+      }
+    }
+
+  });
+  fileLoading.value = false;
+}
 </script>
 
 <template>
@@ -329,11 +355,21 @@ watch(uploadedFiles, (newFiles) => {
           :class="file.errorText.length !== 0 ? 'border-red-500' : 'border-gray-300'"
           @mouseover="showErrorTooltip(index)"
           @mouseleave="hideErrorTooltip"
-          
         >
-          <!-- Close Button -->
+          <!-- Preview Button -->
           <div class="absolute top-2 left-2 z-50">
-            <svg @click="openPreview(file)" xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" viewBox="0 0 24 24" class="cursor-pointer text-gray-400 hover:text-blue-500 transition-colors"><path fill="currentColor" d="M6 23H3q-.825 0-1.412-.587T1 21v-3h2v3h3zm12 0v-2h3v-3h2v3q0 .825-.587 1.413T21 23zm-6-4.5q-3 0-5.437-1.775T3 12q1.125-2.95 3.563-4.725T12 5.5t5.438 1.775T21 12q-1.125 2.95-3.562 4.725T12 18.5m0-2q2.2 0 4.025-1.2t2.8-3.3q-.975-2.1-2.8-3.3T12 7.5T7.975 8.7t-2.8 3.3q.975 2.1 2.8 3.3T12 16.5m0-1q1.45 0 2.475-1.025T15.5 12t-1.025-2.475T12 8.5T9.525 9.525T8.5 12t1.025 2.475T12 15.5m0-2q-.625 0-1.063-.437T10.5 12t.438-1.062T12 10.5t1.063.438T13.5 12t-.437 1.063T12 13.5M1 6V3q0-.825.588-1.412T3 1h3v2H3v3zm20 0V3h-3V1h3q.825 0 1.413.588T23 3v3zm-9 6"/>
+            <svg
+              @click="openPreview(file)"
+              xmlns="http://www.w3.org/2000/svg"
+              width="1.5em"
+              height="1.5em"
+              viewBox="0 0 24 24"
+              class="cursor-pointer text-gray-400 hover:text-blue-500 transition-colors"
+            >
+              <path
+                fill="currentColor"
+                d="M6 23H3q-.825 0-1.412-.587T1 21v-3h2v3h3zm12 0v-2h3v-3h2v3q0 .825-.587 1.413T21 23zm-6-4.5q-3 0-5.437-1.775T3 12q1.125-2.95 3.563-4.725T12 5.5t5.438 1.775T21 12q-1.125 2.95-3.562 4.725T12 18.5m0-2q2.2 0 4.025-1.2t2.8-3.3q-.975-2.1-2.8-3.3T12 7.5T7.975 8.7t-2.8 3.3q.975 2.1 2.8 3.3T12 16.5m0-1q1.45 0 2.475-1.025T15.5 12t-1.025-2.475T12 8.5T9.525 9.525T8.5 12t1.025 2.475T12 15.5m0-2q-.625 0-1.063-.437T10.5 12t.438-1.062T12 10.5t1.063.438T13.5 12t-.437 1.063T12 13.5M1 6V3q0-.825.588-1.412T3 1h3v2H3v3zm20 0V3h-3V1h3q.825 0 1.413.588T23 3v3zm-9 6"
+              />
             </svg>
           </div>
 
@@ -415,8 +451,6 @@ watch(uploadedFiles, (newFiles) => {
 </template>
 
 <style scoped>
-
-
 .tooltip {
   transition:
     opacity 1s ease,

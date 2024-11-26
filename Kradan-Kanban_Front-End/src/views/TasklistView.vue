@@ -72,13 +72,17 @@ const closeAddModal = (res) => {
 };
 
 const closeEditModal = (res) => {
+  console.log(res);
   showDetailModal.value = false;
   if (res === null) return 0;
-  if (typeof res === 'object') {
+  if (res === 200) {
     toastStore.createToast('Edit task successfully');
     taskStore.editStoreTask(res);
+  } else if (res === 400){
+    toastStore.createToast('The error occurred, the task does not exist', 'danger');
   } else {
-    toastStore.createToast('The error occurred, the status does not exist', 'danger');
+    console.log(res);
+    toastStore.createToast('Edit task Failed', 'danger');
   }
 };
 
@@ -486,13 +490,6 @@ function makekanbanData() {
                         <li>
                           <button class="itbkk-button-delete button" :disabled="!canWrite" :class="{ disabled: !canWrite }" @click="openDeleteModal(task.title, task.id)">Delete</button>
                         </li>
-                        <!--                    <div v-if="!isOwner">-->
-                        <!--                      <li>-->
-                        <!--                        <h1>-->
-                        <!--                          You don't have a permission to Edit or Delete a Task-->
-                        <!--                        </h1>-->
-                        <!--                      </li>-->
-                        <!--                    </div>-->
                       </ul>
                     </div>
                   </div>

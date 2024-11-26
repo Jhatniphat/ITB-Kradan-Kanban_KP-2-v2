@@ -39,7 +39,7 @@ function routeChange(to) {
 
 function checkrouteName(value) {
   console.log(value);
-  if (value.toString().includes('collab') || value.toString().includes('task') || value.toString().includes('status')) {
+  if ((value.toString().includes('collab') || value.toString().includes('task') || value.toString().includes('status')) && value.toString() !== 'collab-invitations') {
     showTaskStatusCollabMenu.value = true;
   } else {
     showTaskStatusCollabMenu.value = false;
@@ -51,6 +51,8 @@ function checkrouteName(value) {
     return `Board : ${useBoardStore().currentBoard.name} - Status`;
   } else if (value.toString().includes('board')) {
     return 'Board Management';
+  } else if (value.toString() === 'collab-invitations') {
+    return `Board Invitation`;
   } else if (value.toString().includes('collab')) {
     return `Board : ${useBoardStore().currentBoard.name} - Collaborator`;
   } else if (value.toString().includes('invitation')) {
@@ -70,12 +72,6 @@ watch(
 );
 
 const isSidebarCollapsed = ref(false);
-{
-  /* <i class="fa-solid fa-envelope"></i> */
-}
-{
-  /* <i class="fa-solid fa-table-columns"></i> */
-}
 const menus = computed(() => [
   {
     label: 'Board Management',
@@ -170,16 +166,20 @@ const toggleSidebar = () => {
               <i class="fas fa-user"></i>
             </span>
             <span class="text-sm font-medium text-gray-700">{{ userName }}</span>
+            <span class="rounded-full w-8 h-8 flex items-center justify-center text-gray-700" @click="handleLogout()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" viewBox="0 0 24 24">
+                <path
+                  fill="currentColor"
+                  d="M5 21q-.825 0-1.412-.587T3 19v-4h2v4h14V5H5v4H3V5q0-.825.588-1.412T5 3h14q.825 0 1.413.588T21 5v14q0 .825-.587 1.413T19 21zm5.5-4l-1.4-1.45L11.65 13H3v-2h8.65L9.1 8.45L10.5 7l5 5z"
+                />
+              </svg>
+            </span>
           </div>
         </div>
       </div>
 
       <!-- Content Area -->
       <slot> </slot>
-      <!-- <div class="flex-1 bg-gray-100 p-4">
-        <h1 class="text-2xl font-bold">Main Content Area</h1>
-        <p>Here is where your main content will go.</p>
-      </div> -->
     </div>
   </div>
 </template>
