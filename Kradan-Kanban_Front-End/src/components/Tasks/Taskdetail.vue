@@ -25,7 +25,7 @@ const props = defineProps({
     required: true,
   },
 });
-console.log(props.isOwnerOrNot)
+console.log(props.isOwnerOrNot);
 // const editMode = ref(false);
 const statusList = ref([]);
 // const canSave = ref(false);
@@ -64,8 +64,6 @@ const filesToUpload = ref([]);
 const filesToRemove = ref([]);
 const hoveredFileIndex = ref(null);
 
-
-
 function handelScroll() {
   if (content.value.scrollTop > 0) {
     isHeaderSticky.value = true;
@@ -91,15 +89,6 @@ watch(
     else Errortext.value.description = '';
     if (editTaskAssigneesLength.value > 30) Errortext.value.assignees = "Assignees can't long more than 30 character";
     else Errortext.value.assignees = '';
-    // canSave.value =
-    //   Errortext.value.title === '' &&
-    //   Errortext.value.description === '' &&
-    //   Errortext.value.assignees === '' &&
-    //   (originalTask.value.title !== taskDetail.value.title ||
-    //     originalTask.value.description !== taskDetail.value.description ||
-    //     originalTask.value.assignees !== taskDetail.value.assignees ||
-    //     originalTask.value.status !== taskDetail.value.status) &&
-    //   (filesToUpload.value.length > 0 || filesToRemove.value.length > 0);
     JSON.stringify(newVal) !== JSON.stringify(originalTask.value);
   },
   { deep: true }
@@ -107,14 +96,15 @@ watch(
 
 const canSave = computed(() => {
   return (
-    Errortext.value.title === '' &&
-    Errortext.value.description === '' &&
-    Errortext.value.assignees === '' &&
-    (originalTask.value.title !== taskDetail.value.title ||
-      originalTask.value.description !== taskDetail.value.description ||
-      originalTask.value.assignees !== taskDetail.value.assignees ||
-      originalTask.value.status !== taskDetail.value.status) ||
-    (filesToUpload.value.length > 0 || filesToRemove.value.length > 0)
+    (Errortext.value.title === '' &&
+      Errortext.value.description === '' &&
+      Errortext.value.assignees === '' &&
+      (originalTask.value.title !== taskDetail.value.title ||
+        originalTask.value.description !== taskDetail.value.description ||
+        originalTask.value.assignees !== taskDetail.value.assignees ||
+        originalTask.value.status !== taskDetail.value.status)) ||
+    filesToUpload.value.length > 0 ||
+    filesToRemove.value.length > 0
   );
 });
 
@@ -253,8 +243,6 @@ function sendCloseModal() {
   router.push(`/board/${currentBoardId}`);
 }
 
-
-
 // Handle New Files
 async function handleFileUpload(e) {
   let files = Array.from(e.target.files);
@@ -264,50 +252,46 @@ async function handleFileUpload(e) {
   files.forEach(async (file, index) => {
     let error = [];
     if (file.size > 20 * 1024 * 1024) {
-      useToastStore().createToast(`"${file.name}" file size is too large`, error);
+      useToastStore().createToast(`"${file.name}" file size is too large`, 'danger');
       error.push('this file is too large');
     }
-    if (previewFiles.value.some((file) => file.name === file.name)) {
-      error.push('dulpicate file uploaded');
+
+    if (previewFiles.value.length + index + 1 > 10) {
+      error.push('can upload only 10 file per task');
     }
 
-    const reader = new FileReader();
+    if (previewFiles.value.some((previewFile) => previewFile.name === file.name)) {
+      useToastStore().createToast(`"${file.name}" file is already uploaded`, 'danger', 5000);
+    } else {
+      const reader = new FileReader();
 
-    reader.onload = async (e) => {
-      // error handling
-      previewFiles.value.push({
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        previewUrl: file.type.startsWith('application/msword') ? `https://docs.google.com/viewer?url=${encodeURIComponent(URL.createObjectURL(file))}&embedded=true` : URL.createObjectURL(file),
-        thumbnail: file.type.startsWith('image/') ? URL.createObjectURL(file) : file.type === 'application/pdf' ? await generatePDFThumbnail(file) : null,
-        errorText: error,
-      });
-    };
-
-    reader.readAsDataURL(file);
+      reader.onload = async (e) => {
+        // error handling
+        previewFiles.value.push({
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          previewUrl: file.type.startsWith('application/msword') ? `https://docs.google.com/viewer?url=${encodeURIComponent(URL.createObjectURL(file))}&embedded=true` : URL.createObjectURL(file),
+          thumbnail: file.type.startsWith('image/') ? URL.createObjectURL(file) : file.type === 'application/pdf' ? await generatePDFThumbnail(file) : null,
+          errorText: error,
+        });
+      };
+      reader.readAsDataURL(file);
+    }
   });
 
   checkErrorText();
 }
 
 function checkErrorText() {
-  fileLoading.value = true;
+  // fileLoading.value = true;
 
-  uploadedFiles.value.forEach((file, index) => {
+  previewFiles.value.forEach((file, index) => {
     file.errorText = [];
 
-    console.log(file.name);
-    if (uploadedFiles.value.length >= 10) {
+    if (previewFiles.value.length > 10) {
       if (!file.errorText.includes('can upload only 10 file per task')) {
         file.errorText.push('can upload only 10 file per task');
-      }
-    }
-
-    const duplicateFiles = uploadedFiles.value.filter((uploadedFile) => uploadedFile.name === file.name);
-    if (duplicateFiles.length > 1) {
-      if (!file.errorText.includes('duplicate file uploaded')) {
-        file.errorText.push('duplicate file uploaded');
       }
     }
 
@@ -316,7 +300,6 @@ function checkErrorText() {
         file.errorText.push('this file is too large');
       }
     }
-
   });
   fileLoading.value = false;
 }
@@ -389,7 +372,7 @@ const openPreview = (file) => {
   <div class="h-[50rem] w-full bg-white rounded-md flex flex-col overflow-scroll" v-if="loading === false">
     <!-- ? HEADER -->
     <div class="sticky top-0 flex flex-row p-4 bg-white z-50" :class="isHeaderSticky ? 'shadow-lg' : ''">
-      <div class="flex-1 text-2xl">Create Task / Issue</div>
+      <div class="flex-1 text-2xl">Edit Task / Issue</div>
       <div class="flex-1 flex flex-row-reverse">
         <svg @click="sendCloseModal" xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" viewBox="0 0 24 24">
           <path fill="currentColor" d="M6.4 19L5 17.6l5.6-5.6L5 6.4L6.4 5l5.6 5.6L17.6 5L19 6.4L13.4 12l5.6 5.6l-1.4 1.4l-5.6-5.6z" />
@@ -407,7 +390,13 @@ const openPreview = (file) => {
               <!-- ? Head -->
               <span class="label-text">Title</span>
             </div>
-            <input v-model="taskDetail.title" type="text" placeholder="Type here" class="itbkk-title input input-bordered w-full bg-white dark:bg-base-300 dark:text-slate-400" :disabled="!isOwnerOrNot"/>
+            <input
+              v-model="taskDetail.title"
+              type="text"
+              placeholder="Type here"
+              class="itbkk-title input input-bordered w-full bg-white dark:bg-base-300 dark:text-slate-400"
+              :disabled="!isOwnerOrNot"
+            />
             <div class="label">
               <!-- ? Error Text -->
               <span v-if="Errortext.title !== ''" class="label-text-alt text-error">{{ Errortext.title }}</span>
@@ -475,7 +464,11 @@ const openPreview = (file) => {
               <!-- ? Head -->
               <span class="label-text">Assignees</span>
             </div>
-            <textarea v-model="taskDetail.assignees" class="itbkk-assignees textarea textarea-bordered h-24 bg-white dark:bg-base-300 dark:text-slate-400 min-h-[18.625rem]" placeholder="Bio"></textarea>
+            <textarea
+              v-model="taskDetail.assignees"
+              class="itbkk-assignees textarea textarea-bordered h-24 bg-white dark:bg-base-300 dark:text-slate-400 min-h-[18.625rem]"
+              placeholder="Bio"
+            ></textarea>
             <div class="label">
               <!-- ? Error Text -->
               <span v-if="Errortext.assignees !== ''" class="label-text-alt text-error"> {{ Errortext.assignees }}</span>
@@ -491,7 +484,7 @@ const openPreview = (file) => {
           <div class="label pt-0">
             <span class="label-text pt-0">File attachment</span>
           </div>
-          <input type="file" class="file-input file-input-sm file-input-bordered w-full" multiple @change="handleFileUpload" ref="fileInput" :disabled="!isOwnerOrNot"/>
+          <input type="file" class="file-input file-input-sm file-input-bordered w-full" multiple @change="handleFileUpload" ref="fileInput" :disabled="!isOwnerOrNot" />
           <div class="label">
             <span class="label-text-alt">can upload only 10 file per task and 20MB per file</span>
           </div>

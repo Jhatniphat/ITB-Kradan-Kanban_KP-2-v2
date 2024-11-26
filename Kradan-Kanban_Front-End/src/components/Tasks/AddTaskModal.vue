@@ -111,26 +111,30 @@ async function handleFileUpload(e) {
       useToastStore().createToast(`"${file.name}" file size is too large`, error);
       error.push('this file is too large');
     }
-    if (uploadedFiles.value.some((uploadedFile) => uploadedFile.name === file.name)) {
-      error.push('dulpicate file uploaded');
+    if (uploadedFiles.value.length + index + 1 > 10) {
+      error.push('can upload only 10 file per task');
     }
-    // if (uploadedFiles.value.length >= 10) {
-    //   error.push('can upload only 10 file per task');
-    // }
 
-    const reader = new FileReader();
+    if (uploadedFiles.value.some((updatedFile) => updatedFile.name === file.name)) {
+      useToastStore().createToast(`"${file.name}" file is already uploaded`, 'danger', 5000);
+    } else {
+      const reader = new FileReader();
 
-    reader.onload = async (e) => {
-      // error handling
-      uploadedFiles.value.push({
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        previewUrl: file.type.startsWith('application/msword') ? `https://docs.google.com/viewer?url=${encodeURIComponent(URL.createObjectURL(file))}&embedded=true` : URL.createObjectURL(file),
-        thumbnail: file.type.startsWith('image/') ? URL.createObjectURL(file) : file.type === 'application/pdf' ? await generatePDFThumbnail(file) : null,
-        errorText: error,
-      });
-    };
+      reader.onload = async (e) => {
+        // error handling
+        uploadedFiles.value.push({
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          previewUrl: file.type.startsWith('application/msword') ? `https://docs.google.com/viewer?url=${encodeURIComponent(URL.createObjectURL(file))}&embedded=true` : URL.createObjectURL(file),
+          thumbnail: file.type.startsWith('image/') ? URL.createObjectURL(file) : file.type === 'application/pdf' ? await generatePDFThumbnail(file) : null,
+          errorText: error,
+        });
+      };
+
+      reader.readAsDataURL(file);
+    }
+    checkErrorText();
 
     reader.readAsDataURL(file);
   });
@@ -211,16 +215,9 @@ function checkErrorText() {
     file.errorText = [];
 
     console.log(file.name);
-    if (uploadedFiles.value.length >= 10) {
+    if (uploadedFiles.value.length > 10) {
       if (!file.errorText.includes('can upload only 10 file per task')) {
         file.errorText.push('can upload only 10 file per task');
-      }
-    }
-
-    const duplicateFiles = uploadedFiles.value.filter((uploadedFile) => uploadedFile.name === file.name);
-    if (duplicateFiles.length > 1) {
-      if (!file.errorText.includes('duplicate file uploaded')) {
-        file.errorText.push('duplicate file uploaded');
       }
     }
 

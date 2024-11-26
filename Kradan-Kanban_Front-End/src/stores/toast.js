@@ -13,7 +13,6 @@ export const useToastStore = defineStore('toast', {
                 timeout: timeout,
                 copy: copy,
             });
-            console.trace('show toast', message);
         },
         reduceTime(time = 10) {
             this.toasts.forEach((toast, index) => {
