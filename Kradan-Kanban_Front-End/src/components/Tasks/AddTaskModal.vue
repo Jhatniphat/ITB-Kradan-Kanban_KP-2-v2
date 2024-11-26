@@ -1,15 +1,18 @@
 <script setup>
-import { addTask } from '@/lib/fetchUtils';
-import { onMounted, ref, watch } from 'vue';
+import { addTask, uploadAttachments } from '@/lib/fetchUtils';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useStatusStore } from '@/stores/status.js';
+import { useBoardStore } from '@/stores/board';
+import { useAccountStore } from '@/stores/account';
 import { useToastStore } from '@/stores/toast.js';
-import * as pdfjsLib from "pdfjs-dist/webpack"; // ใช้ Webpack version ของ PDF.js
+import * as pdfjsLib from 'pdfjs-dist/webpack'; // ใช้ Webpack version ของ PDF.js
 import { marked } from 'marked';
 const emit = defineEmits(['closeModal']);
 const statusStore = useStatusStore();
+const boardStore = useBoardStore();
 
 const statusList = ref([]);
-const canSave = ref(false);
+// const canSave = ref(false);
 const taskData = ref({
   title: '',
   description: '',
@@ -28,11 +31,15 @@ const descriptionTab = ref('write');
 const uploadedFiles = ref([]);
 const fileInput = ref(null);
 const previewFile = ref(null);
+const filesToUpload = ref([]);
 
 // style
 const isHeaderSticky = ref(false);
 const isFooterSticky = ref(false);
 const content = ref();
+const createAnotherTask = ref(false);
+const hoveredFileIndex = ref(null);
+const fileLoading = ref(false);
 
 watch(taskData.value, () => {
   if (taskData.value.title.trim().length > 100) Errortext.value.title = `Title can't long more than 100 character`;
@@ -43,16 +50,20 @@ watch(taskData.value, () => {
   if (taskData.value.assignees.trim().length > 30) Errortext.value.assignees = `Assignees can't long more than 30 character`;
   else Errortext.value.assignees = '';
   // ? disabled or enabled save btn
-  canSave.value = Errortext.value.title === '' && Errortext.value.description === '' && Errortext.value.assignees === '';
+  // canSave.value = Errortext.value.title === '' && Errortext.value.description === '' && Errortext.value.assignees === '';
+});
+
+const canSave = computed(() => {
+  return (
+    Errortext.value.title === '' &&
+    Errortext.value.description === '' &&
+    Errortext.value.assignees === '' &&
+    taskData.value.title.trim().length > 0 &&
+    !uploadedFiles.value.some((file) => file.errorText.length > 0)
+  );
 });
 
 onMounted(async () => {
-  // try {
-  //   const fetchStatus = await getAllStatus();
-  //   statusList.value = fetchStatus.map((item) => item.name);
-  // }catch (err){
-  //   console.log(err)
-  // }
   statusList.value = statusStore.getAllStatusWithLimit();
 });
 
@@ -68,13 +79,19 @@ async function fetchData() {
   taskData.value.assignees = taskData.value.assignees.trim();
   loading.value = true;
   let res;
+  let resUp;
   try {
     res = await addTask(taskData.value);
+
+    if (filesToUpload.value.length > 0) {
+      resUp = await uploadAttachments(boardStore.currentBoardId, res.id, filesToUpload.value);
+      console.log('File upload response:', resUp);
+    }
   } catch (error) {
     console.log(error);
   } finally {
     loading.value = false;
-    emit('closeModal', res);
+    emit('closeModal', { ...res, createAnotherTask: createAnotherTask.value });
   }
 }
 
@@ -82,51 +99,43 @@ function sendCloseModal() {
   emit('closeModal', null);
 }
 
-function handleFileUpload(e) {
+async function handleFileUpload(e) {
   let files = Array.from(e.target.files);
-  // console.log(files);
-  files.forEach(async (file) => {
-    // files.forEach((file) => {
-    //   const blobURL = URL.createObjectURL(file); // สร้าง Blob URL
-    //   console.log('Blob URL:', blobURL);
-    // });
-    let blobURL;
-    // if (file.type.startsWith('image/')){
-    //   blobURL = URL.createObjectURL(file);
-    // } else if (file.type === 'application/pdf'){ 
-    //   blobURL = await generatePDFThumbnail(file);
-    // } else {
-    //   blobURL = null;
+  console.log(files);
+  filesToUpload.value.push(...files);
+  console.log('Raw files:', filesToUpload.value);
+
+  files.forEach(async (file, index) => {
+    let error = [];
+    if (file.size > 20 * 1024 * 1024) {
+      useToastStore().createToast(`"${file.name}" file size is too large`, error);
+      error.push('this file is too large');
+    }
+    if (uploadedFiles.value.some((uploadedFile) => uploadedFile.name === file.name)) {
+      error.push('dulpicate file uploaded');
+    }
+    // if (uploadedFiles.value.length >= 10) {
+    //   error.push('can upload only 10 file per task');
     // }
-    console.log('Blob URL:', blobURL);
+
     const reader = new FileReader();
+
     reader.onload = async (e) => {
-      console.log('file type ...', file.type);
+      // error handling
       uploadedFiles.value.push({
         name: file.name,
         size: file.size,
-        // preview: e.target.result, // เก็บ URL ของไฟล์สำหรับการแสดง Preview
         type: file.type,
-        // preview: file.type.startsWith('image/')
-        //   ? e.target.result // ใช้ Data URL สำหรับรูปภาพ
-        //   : file.type === 'application/pdf'
-        //     ? URL.createObjectURL(file) // ใช้ URL สำหรับ PDF
-        //     : null,
-        previewUrl : file.type.startsWith('application/msword') ? `https://docs.google.com/viewer?url=${encodeURIComponent(URL.createObjectURL(file))}&embedded=true` : URL.createObjectURL(file) ,
+        previewUrl: file.type.startsWith('application/msword') ? `https://docs.google.com/viewer?url=${encodeURIComponent(URL.createObjectURL(file))}&embedded=true` : URL.createObjectURL(file),
         thumbnail: file.type.startsWith('image/') ? URL.createObjectURL(file) : file.type === 'application/pdf' ? await generatePDFThumbnail(file) : null,
-        // preview : blobURL,
-        errorText: file.size > 20 * 1024 * 1024 ? 'File size is too large' : '',
+        errorText: error,
       });
     };
 
-    if (file.size > 20 * 1024 * 1024) {
-      useToastStore().createToast(`"${file.name}" file size is too large`, error);
-    } else {
-      reader.readAsDataURL(file); // อ่านไฟล์เมื่อขนาดผ่านข้อกำหนด
-    }
+    reader.readAsDataURL(file);
   });
 
-  console.log(uploadedFiles.value);
+  checkErrorText();
 }
 
 const generatePDFThumbnail = async (file) => {
@@ -155,16 +164,9 @@ const generatePDFThumbnail = async (file) => {
   });
 };
 
-// เปิด Preview Modal
 const openPreview = (file) => {
   // previewFile.value = file;
-  window.open(file.previewUrl, "_blank");
-
-};
-
-// ปิด Preview Modal
-const closePreview = () => {
-  previewFile.value = null;
+  window.open(file.previewUrl, '_blank');
 };
 
 function handelScroll() {
@@ -178,7 +180,58 @@ function handelScroll() {
   } else {
     isFooterSticky.value = false;
   }
-  // console.log(isHeaderSticky.value, isFooterSticky.value);
+}
+
+function showErrorTooltip(index) {
+  hoveredFileIndex.value = index; // กำหนด index ของไฟล์ที่ชี้เมาส์
+}
+function hideErrorTooltip() {
+  hoveredFileIndex.value = null; // ซ่อน tooltip เมื่อเมาส์ออก
+}
+function removeFile(index) {
+  uploadedFiles.value.splice(index, 1); // ลบไฟล์ที่คลิก
+  if (uploadedFiles.value.length >= 10) {
+    uploadedFiles.value[9].errorText.splice(
+      uploadedFiles.value[9].errorText.findIndex((e) => e === 'can upload only 10 file per task'),
+      1
+    );
+  }
+  filesToUpload.value.splice(index, 1);
+  checkErrorText();
+}
+
+// watch(uploadedFiles, () => {
+//   checkErrorText();
+// });
+
+function checkErrorText() {
+  fileLoading.value = true;
+
+  uploadedFiles.value.forEach((file, index) => {
+    file.errorText = [];
+
+    console.log(file.name);
+    if (uploadedFiles.value.length >= 10) {
+      if (!file.errorText.includes('can upload only 10 file per task')) {
+        file.errorText.push('can upload only 10 file per task');
+      }
+    }
+
+    const duplicateFiles = uploadedFiles.value.filter((uploadedFile) => uploadedFile.name === file.name);
+    if (duplicateFiles.length > 1) {
+      if (!file.errorText.includes('duplicate file uploaded')) {
+        file.errorText.push('duplicate file uploaded');
+      }
+    }
+
+    if (file.size > 20 * 1024 * 1024) {
+      if (!file.errorText.includes('this file is too large')) {
+        file.errorText.push('this file is too large');
+      }
+    }
+
+  });
+  fileLoading.value = false;
 }
 </script>
 
@@ -248,11 +301,19 @@ function handelScroll() {
                 </button>
               </div>
               <div v-if="descriptionTab === 'write'" class="w-full">
-                <textarea id="{{ $id }}" class="textarea prose rounded-t-none rounded-b-md shadow-sm border border-gray-300 p-1 bg-white overflow-y-auto w-full min-h-64" name="content" v-model="taskData.description"></textarea>
+                <textarea
+                  id="{{ $id }}"
+                  class="textarea prose rounded-t-none rounded-b-md shadow-sm border border-gray-300 p-1 bg-white overflow-y-auto w-full min-h-64"
+                  name="content"
+                  v-model="taskData.description"
+                ></textarea>
               </div>
 
               <div v-if="descriptionTab === 'preview'">
-                <div class="markdown-preview w-full prose max-w-none prose-indigo leading-6 rounded-b-md shadow-sm border border-gray-300 p-5 bg-white overflow-y-auto min-h-64" v-html="marked(taskData.description)"></div>
+                <div
+                  class="markdown-preview w-full prose max-w-none prose-indigo leading-6 rounded-b-md shadow-sm border border-gray-300 p-5 bg-white overflow-y-auto min-h-64"
+                  v-html="marked(taskData.description)"
+                ></div>
               </div>
             </div>
           </label>
@@ -285,30 +346,72 @@ function handelScroll() {
           </div>
         </label>
       </div>
-      <div class="flex flex-wrap flex-row">
-        <div v-for="(file, index) in uploadedFiles" :key="index">
-          <div @click="openPreview(file)" class="thumbnail-container">
-            <img :src="file.thumbnail" class="thumbnail" alt="Image Preview" />
+      <!-- ? Uploaded Files -->
+      <div class="flex flex-row flex-wrap gap-2">
+        <div
+          v-for="(file, index) in uploadedFiles"
+          :key="index"
+          class="relative w-48 h-32 bg-white border rounded-md flex flex-col items-center justify-between shadow-sm overflow-hidden"
+          :class="file.errorText.length !== 0 ? 'border-red-500' : 'border-gray-300'"
+          @mouseover="showErrorTooltip(index)"
+          @mouseleave="hideErrorTooltip"
+        >
+          <!-- Preview Button -->
+          <div class="absolute top-2 left-2 z-50">
+            <svg
+              @click="openPreview(file)"
+              xmlns="http://www.w3.org/2000/svg"
+              width="1.5em"
+              height="1.5em"
+              viewBox="0 0 24 24"
+              class="cursor-pointer text-gray-400 hover:text-blue-500 transition-colors"
+            >
+              <path
+                fill="currentColor"
+                d="M6 23H3q-.825 0-1.412-.587T1 21v-3h2v3h3zm12 0v-2h3v-3h2v3q0 .825-.587 1.413T21 23zm-6-4.5q-3 0-5.437-1.775T3 12q1.125-2.95 3.563-4.725T12 5.5t5.438 1.775T21 12q-1.125 2.95-3.562 4.725T12 18.5m0-2q2.2 0 4.025-1.2t2.8-3.3q-.975-2.1-2.8-3.3T12 7.5T7.975 8.7t-2.8 3.3q.975 2.1 2.8 3.3T12 16.5m0-1q1.45 0 2.475-1.025T15.5 12t-1.025-2.475T12 8.5T9.525 9.525T8.5 12t1.025 2.475T12 15.5m0-2q-.625 0-1.063-.437T10.5 12t.438-1.062T12 10.5t1.063.438T13.5 12t-.437 1.063T12 13.5M1 6V3q0-.825.588-1.412T3 1h3v2H3v3zm20 0V3h-3V1h3q.825 0 1.413.588T23 3v3zm-9 6"
+              />
+            </svg>
           </div>
-          <p>{{ file.name }}</p>
+
+          <!-- Close Button -->
+          <div class="absolute top-2 right-2 z-50">
+            <svg
+              @click="removeFile(index)"
+              xmlns="http://www.w3.org/2000/svg"
+              width="1.5em"
+              height="1.5em"
+              class="cursor-pointer text-gray-400 hover:text-red-500 transition-colors"
+              viewBox="0 0 24 24"
+            >
+              <path fill="currentColor" d="M6.4 19L5 17.6l5.6-5.6L5 6.4L6.4 5l5.6 5.6L17.6 5L19 6.4L13.4 12l5.6 5.6l-1.4 1.4l-5.6-5.6z" />
+            </svg>
+          </div>
+
+          <!-- Thumbnail -->
+          <div class="absolute z-10 w-full h-full flex-shrink-0">
+            <img v-if="file.thumbnail" :src="file.thumbnail" alt="Thumbnail" class="absolute inset-0 w-full h-full object-contain" />
+            <span v-else class="w-full h-full flex items-center justify-center text-gray-500 text-sm bg-gray-100">
+              {{ file.icon }}
+            </span>
+          </div>
+
+          <!-- File Name -->
+          <div class="absolute z-20 bg-white text-sm text-gray-800 w-full h-10 px-2 py-1 bottom-0">
+            {{ file.name }}
+          </div>
+
+          <!-- v-if="file.showError" -->
+          <!-- Error Tooltip -->
+          <!-- todo : transition don't work -->
+          <div
+            v-if="hoveredFileIndex === index && file.errorText.length !== 0"
+            class="absolute top-2 left-1/2 transform -translate-x-1/2 transition-all bg-red-500 text-white text-xs px-2 py-1 rounded-md shadow-md z-30"
+          >
+            {{ file.errorText.join(',') }}
+          </div>
         </div>
       </div>
     </div>
-
-    <!-- <div v-if="previewFile" class="preview-modal">
-      <div class="modal-content">
-        <button @click="closePreview">Close</button>
-        <div v-if="previewFile.type.startsWith('image/')">
-          <img :src="previewFile.preview" class="full-preview" />
-        </div>
-        <div v-else-if="previewFile.type === 'application/pdf'">
-          <iframe :src="previewFile.preview" class="full-preview" />
-        </div>
-        <div v-else-if="previewFile.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'">
-          <p>DOCX Preview Not Supported Yet</p>
-        </div>
-      </div>
-    </div> -->
 
     <!-- ? FOOTER -->
     <div class="sticky bottom-0 w-full z-50 gap-4 p-2" :class="isFooterSticky ? 'shadow-top' : ''">
@@ -318,6 +421,12 @@ function handelScroll() {
           {{ loading ? '' : 'Save' }}
           <span class="loading loading-spinner text-success" v-if="loading"></span>
         </button>
+        <div class="form-control">
+          <label class="label cursor-pointer">
+            <input type="checkbox" checked="false" v-model="createAnotherTask" class="toggle" />
+            <span class="label-text p-3">Create Another Task</span>
+          </label>
+        </div>
       </div>
     </div>
   </div>
@@ -342,6 +451,16 @@ function handelScroll() {
 </template>
 
 <style scoped>
+.tooltip {
+  transition:
+    opacity 1s ease,
+    transform 1s ease;
+}
+
+svg {
+  transition: all 0.2s ease-in-out;
+}
+
 .shadow-top {
   box-shadow:
     0 -10px 15px -3px rgb(0 0 0 / 0.1),

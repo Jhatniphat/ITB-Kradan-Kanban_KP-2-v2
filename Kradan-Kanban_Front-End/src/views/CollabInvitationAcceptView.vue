@@ -31,8 +31,10 @@ onBeforeMount(async () => {
     loading.value = false;
     invitedBoard.value = useBoardStore().getPendingBoardById(route.params.boardId);
     if (invitedBoard.value !== undefined && invitedBoard.value !== null) {
-      const collaborator = invitedBoard.value.collaborators.find((collaborator) => collaborator.id === accountStore.tokenDetail.oid);
+      console.log(invitedBoard.value);
+      const collaborator = invitedBoard.value.collaborators.find((collaborator) => collaborator.oid === accountStore.tokenDetail.oid);
       if (collaborator) {
+        console.log(collaborator);
         invitedBoard.value.accessRightUserGot = collaborator.accessRight;
       }
     }
@@ -58,6 +60,7 @@ async function handleAcceptInvitation() {
       } catch (error) {
       } finally {
         router.push({ name: 'task-list', params: { boardId: invitedBoard.value.id } });
+        
       }
       // boardStore.boards.find((board) => board.id = invitedBoard.value.id).collaborators.find((collaborator) => collaborator.id === accountStore.tokenDetail.oid).status = 'ACCEPTED';
     } else {
@@ -87,7 +90,7 @@ async function handleRejectInvitation() {
   <transition>
     <div class="h-[90vh] w-full flex flex-col items-center justify-center p-8 rounded-lg" v-if="!loading && invitedBoard">
       <p class="text-lg font-semibold text-gray-800 text-center mb-4">
-        {{ invitedBoard?.owner.name }} has invited you to collaborate with <span class="font-bold">{{ invitedBoard?.accessRightUserGot }}</span> access right on
+        {{ invitedBoard?.owner.name }} has invited you to collaborate with <span class="font-bold">{{ invitedBoard.accessRightUserGot }}</span> access right on
         <span class="font-bold">{{ invitedBoard?.name }}</span> board
       </p>
       <div class="flex space-x-4">
