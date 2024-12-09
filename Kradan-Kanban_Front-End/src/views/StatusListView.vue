@@ -46,8 +46,6 @@ onMounted(async () => {
   loading.value = true;
   try {
     await fetchStatusData();
-    console.log(statusStore.status);
-
     const currentBoards = boardStore.currentBoard;
     const userOid = accountStore.tokenDetail.oid;
     // if (currentBoards && currentBoards.owner?.oid) {

@@ -61,7 +61,7 @@ const closeAddModal = (res) => {
   if (res === null) return 0;
   if (typeof res === 'object') {
     toastStore.createToast('Add task successfully');
-    router.push({ name: 'task-list', params: { boardId: currentBoardId } , hash : '#task-' + res.id });
+    router.push({ name: 'task-list', params: { boardId: currentBoardId }, hash: '#task-' + res.id });
     taskStore.addStoreTask(res);
     console.log(res.createAnotherTask);
     showAddModal.value = res.createAnotherTask;
@@ -78,7 +78,7 @@ const closeEditModal = (res) => {
   if (res === 200) {
     toastStore.createToast('Edit task successfully');
     taskStore.editStoreTask(res);
-  } else if (res === 400){
+  } else if (res === 400) {
     toastStore.createToast('The error occurred, the task does not exist', 'danger');
   } else {
     console.log(res);
@@ -138,9 +138,9 @@ async function fetchData([boardId, taskId]) {
   try {
     filterData([filterBy.value, sortBy.value]);
 
-    addLoading('Loading Tasks')
-    addLoading('Loading Statuses')
-    addLoading('Loading Limit Status')
+    addLoading('Loading Tasks');
+    addLoading('Loading Statuses');
+    addLoading('Loading Limit Status');
     if (boardStore.currentBoard.visibility === 'PUBLIC' && accountStore.tokenRaw === '') {
       await getAllStatusForGuest().then(() => removeLoading('Loading Statuses'));
       await getAllTasksForGuest().then(() => removeLoading('Loading Tasks'));
@@ -174,7 +174,7 @@ watch(
 
 async function setCurrentBoard(boardId) {
   try {
-    addLoading('Loading Board')
+    addLoading('Loading Board');
     await boardStore.setCurrentBoardId(boardId);
     isPublic.value = boardStore.currentBoard.visibility === 'PUBLIC';
     originalPublicState.value = isPublic.value;
@@ -182,7 +182,7 @@ async function setCurrentBoard(boardId) {
     console.error('Error fetching board:', err);
     error.value = err;
   } finally {
-    removeLoading('Loading Board')
+    removeLoading('Loading Board');
   }
 }
 
@@ -286,9 +286,9 @@ onBeforeMount(async () => {
 
       const currentBoard = boardStore.currentBoard;
       isOwner.value = currentBoard.owner.oid === accountStore.tokenDetail.oid;
-      
+
       if (isOwner.value) {
-        canWrite.value = true
+        canWrite.value = true;
       }
 
       if (!isOwner.value) {
@@ -352,6 +352,34 @@ function addLoading(load) {
 function removeLoading(load) {
   loading.value = loading.value.filter((l) => l !== load);
 }
+
+// ! ================= Binding Color ========================
+const getStatusColor = (statusName) => {
+  const status = statusStore.status.find((s) => s.name === statusName);
+  return status ? `#${status.color}` : ''; // Default to no color if not found
+};
+
+const getFontColor = (statusName) => {
+  const status = statusStore.status.find((s) => s.name === statusName);
+  if (!status) return ''; // Default
+  return isDarkColor(status.color) ? 'white' : ''; // Contrast font color
+};
+
+const isDarkColor = (hex) => {
+  const { r, g, b } = hexToRgb(hex);
+  // Calculate luminance based on the perceived brightness formula
+  const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+  return luminance < 128; // Threshold for determining light/dark
+};
+
+const hexToRgb = (hex) => {
+  const bigint = parseInt(hex, 16);
+  return {
+    r: (bigint >> 16) & 255,
+    g: (bigint >> 8) & 255,
+    b: bigint & 255,
+  };
+};
 </script>
 
 <template>
@@ -456,7 +484,7 @@ function removeLoading(load) {
               <tr v-if="allTasks === null">
                 <td colspan="4">Waiting For Data</td>
               </tr>
-              <tr v-if="allTasks !== null" v-for="(task, index) in filteredTasks" :key="task.id" :id="`task-${task.id}`"class="itbkk-item hover">
+              <tr v-if="allTasks !== null" v-for="(task, index) in filteredTasks" :key="task.id" :id="`task-${task.id}`" class="itbkk-item hover">
                 <th>{{ index + 1 }}</th>
                 <td class="itbkk-title">
                   <!-- <RouterLink :to="`/task/${task.id}`"> -->
@@ -474,7 +502,13 @@ function removeLoading(load) {
                 >
                   {{ task.assignees === null || task.assignees == '' ? 'Unassigned' : task.assignees }}
                 </td>
-                <td class="itbkk-status itbkk-status-name">
+                <td
+                  class="itbkk-status itbkk-status-name"
+                  :style="{
+                    backgroundColor: getStatusColor(task.status),
+                    color: getFontColor(task.status),
+                  }"
+                >
                   {{ task.status }}
                 </td>
                 <td>
@@ -506,6 +540,8 @@ function removeLoading(load) {
               class="kanban-status-card"
               :style="{
                 'border-top': status.isLimit ? 'red 0.5rem solid' : 'green 0.5rem solid',
+                backgroundColor: getStatusColor(task.status),
+                color: getFontColor(task.status),
               }"
             >
               <h5 class="kanban-status-name">{{ status.name }}</h5>
@@ -805,7 +841,9 @@ function removeLoading(load) {
         //display: block;*/
         max-height: 0;
         /* ตั้ง max-height มากพอให้ครอบคลุมความสูงทั้งหมดของเมนู */
-        transition: max-height 1.25s ease, opacity 1s ease;
+        transition:
+          max-height 1.25s ease,
+          opacity 1s ease;
       }
     }
 
