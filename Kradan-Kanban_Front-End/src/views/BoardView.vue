@@ -81,13 +81,14 @@ async function prepareData([filterBy]) {
   }
   personalBoard.value = boardStore.boards.filter((board) => board.owner.oid === useAccountStore().tokenDetail.oid);
   collabBoard.value = boardStore.boards.filter((board) => {
-    return board.owner.oid !== useAccountStore().tokenDetail.oid && board.collaborators.findIndex((collab) => collab.oid === useAccountStore().tokenDetail.oid && collab.status !== 'PENDING') !== -1;
+    return board.owner.oid !== useAccountStore().tokenDetail.oid && board.collaborators.findIndex((collab) => collab.oid === useAccountStore().tokenDetail.oid ) !== -1;
   });
 }
 
 watch([filterBy, boardStore.boards], (newValue) => {
   prepareData(newValue);
-});
+  console.log('watch');
+},{ deep: true });
 
 prepareData(['']);
 
@@ -152,8 +153,12 @@ const leaveBoard = async () => {
   const oid = useAccountStore().tokenDetail.oid;
   try {
     res = await deleteCollaborator(selectedBoardId.value, oid);
+    console.log(res);
     if (typeof res === 'object') {
       toastStore.createToast('Leave Board successfully');
+      boardStore.deleteBoard(res.id); // remove board from store
+      prepareData(['']);
+      router.go(0)
     } else if (res === 403 || 404) {
       router.push(`/board`);
     } else {
@@ -206,7 +211,7 @@ function removeLoading(load) {
   </Modal>
 
   <loadingComponent :loading="loading" v-if="loading.length > 0" />
-    
+
   <div class="w-3/4 mx-auto mt-10 relative" v-if="loading.length === 0">
     <div class="flex flex-col">
       <div class="flex">
@@ -263,7 +268,7 @@ function removeLoading(load) {
             </thead>
             <tbody>
               <tr v-for="board in collabBoard">
-                <td class="text-center font-normal link link-primary" @click="router.push(`/board/${board.id}`)">
+                <td class="text-center font-normal link link-primary" @click="router.push({ name : board.collaborators.find((collab) => collab.oid === useAccountStore().tokenDetail.oid)['status'] !== 'PENDING' ? 'task-list':'collab-invitations' , params : { boardId : board.id}})">
                   {{ board.name }}
                 </td>
                 <td class="text-center font-normal">{{ board.visibility }}</td>
@@ -273,8 +278,11 @@ function removeLoading(load) {
                 <td class="text-center font-normal">
                   {{ board.collaborators.find((collab) => collab.oid === useAccountStore().tokenDetail.oid)['accessRight'] }}
                 </td>
-                <td class="text-center font-normal">
+                <td class="text-center font-normal" v-if="board.collaborators.find((collab) => collab.oid === useAccountStore().tokenDetail.oid)['status'] !== 'PENDING'">
                   <button class="btn btn-outline btn-error" @click="openLeaveModal(board.id, board.name)">Leave</button>
+                </td>
+                <td class="text-center font-normal" v-else>
+                  <button class="btn btn-outline btn-primary" @click="router.push({ name : 'collab-invitations' , params : { boardId : board.id}})">Go To Invitation</button>
                 </td>
               </tr>
             </tbody>
