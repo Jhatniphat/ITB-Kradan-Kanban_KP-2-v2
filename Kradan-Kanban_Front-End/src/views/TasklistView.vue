@@ -34,7 +34,7 @@ const toast = ref({ status: '', msg: '' });
 const showEditLimit = ref(false); // * show modal edit limit of task status
 
 // ? ----------------- Common -------------------------
-const loading = ref(false);
+const loading = ref([]);
 const allTasks = ref(null);
 const filteredTasks = ref(null); // * allTasks that filter ready to show!
 const error = ref(null);
@@ -135,18 +135,20 @@ async function fetchData([boardId, taskId]) {
     openModal(taskId);
   }
   error.value = allTasks.value = null;
-  loading.value = true;
   try {
     filterData([filterBy.value, sortBy.value]);
 
+    addLoading('Loading Tasks')
+    addLoading('Loading Statuses')
+    addLoading('Loading Limit Status')
     if (boardStore.currentBoard.visibility === 'PUBLIC' && accountStore.tokenRaw === '') {
-      await getAllStatusForGuest();
-      await getAllTasksForGuest();
-      await getLimitStatusForGuest();
+      await getAllStatusForGuest().then(() => removeLoading('Loading Statuses'));
+      await getAllTasksForGuest().then(() => removeLoading('Loading Tasks'));
+      await getLimitStatusForGuest().then(() => removeLoading('Loading Limit Status'));
     } else {
-      await getAllStatus();
-      await getAllTasks();
-      await getLimitStatus();
+      await getAllStatus().then(() => removeLoading('Loading Statuses'));
+      await getAllTasks().then(() => removeLoading('Loading Tasks'));
+      await getLimitStatus().then(() => removeLoading('Loading Limit Status'));
     }
 
     allTasks.value = taskStore.tasks;
@@ -158,7 +160,6 @@ async function fetchData([boardId, taskId]) {
   } catch (err) {
     error.value = err.toString();
   } finally {
-    loading.value = false;
   }
 }
 
@@ -173,7 +174,7 @@ watch(
 
 async function setCurrentBoard(boardId) {
   try {
-    loading.value = true;
+    addLoading('Loading Board')
     await boardStore.setCurrentBoardId(boardId);
     isPublic.value = boardStore.currentBoard.visibility === 'PUBLIC';
     originalPublicState.value = isPublic.value;
@@ -181,7 +182,7 @@ async function setCurrentBoard(boardId) {
     console.error('Error fetching board:', err);
     error.value = err;
   } finally {
-    loading.value = false;
+    removeLoading('Loading Board')
   }
 }
 
@@ -266,7 +267,7 @@ async function updateVisibility() {
 
 onBeforeMount(async () => {
   // Initialize loading state
-  loading.value = true;
+  addLoading('Preparing Data');
 
   // ? With Auth
   if (accountStore.tokenRaw !== '') {
@@ -280,11 +281,6 @@ onBeforeMount(async () => {
       if (statusStore.status.length === 0) {
         await statusStore.getAllStatus();
       }
-
-      // Ensure limit status is updated
-      // statusStore.getLimitEnable();
-      // const res = await getLimitStatus();
-      // statusStore.setLimitEnable(res);
 
       await setCurrentBoard(route.params.boardId);
 
@@ -323,12 +319,12 @@ onBeforeMount(async () => {
       error.value = err;
     } finally {
       // Set loading to false once all operations are complete
-      loading.value = false;
+      removeLoading('Preparing Data');
     }
   } else {
     // ? Without Auth
     await setCurrentBoard(route.params.boardId);
-    loading.value = false;
+    removeLoading('Preparing Data');
   }
 });
 
@@ -348,13 +344,19 @@ function makekanbanData() {
     kanbanData.value?.push(status);
   }
 }
+
+function addLoading(load) {
+  loading.value.push(load);
+}
+
+function removeLoading(load) {
+  loading.value = loading.value.filter((l) => l !== load);
+}
 </script>
 
 <template>
   <transition>
-
-    
-    <div class="h-full w-full" v-if="!loading">
+    <div class="h-full w-full" v-if="loading.length === 0">
       <!-- dropdowns status -->
       <div class="w-3/4 mx-auto mt-10 relative" v-if="!loading">
         <h1 class="w-full text-center text-2xl">
@@ -652,7 +654,7 @@ function makekanbanData() {
     </div>
   </transition>
   <transition>
-    <loading-component v-if="loading" class="absolute top-1/2"></loading-component>
+    <loadingComponent :loading="loading" v-if="loading.length > 0" />
   </transition>
 </template>
 

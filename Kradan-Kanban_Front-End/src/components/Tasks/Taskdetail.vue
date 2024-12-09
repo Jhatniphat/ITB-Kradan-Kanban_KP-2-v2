@@ -25,11 +25,8 @@ const props = defineProps({
     required: true,
   },
 });
-console.log(props.isOwnerOrNot);
-// const editMode = ref(false);
 const statusList = ref([]);
-// const canSave = ref(false);
-const loading = ref(false);
+const loading = ref([]);
 const taskDetail = ref({});
 const originalTask = ref(null);
 const error = ref(null);
@@ -52,8 +49,6 @@ const editTaskAssigneesLength = computed(() => {
 const isHeaderSticky = ref(false);
 const isFooterSticky = ref(false);
 const content = ref();
-const createAnotherTask = ref(false);
-// const hoveredFileIndex = ref(null);
 const fileLoading = ref(false);
 const descriptionTab = ref('write');
 
@@ -96,15 +91,16 @@ watch(
 
 const canSave = computed(() => {
   return (
-    (Errortext.value.title === '' &&
+    loading.value.length === 0 &&
+    ((Errortext.value.title === '' &&
       Errortext.value.description === '' &&
       Errortext.value.assignees === '' &&
       (originalTask.value.title !== taskDetail.value.title ||
         originalTask.value.description !== taskDetail.value.description ||
         originalTask.value.assignees !== taskDetail.value.assignees ||
         originalTask.value.status !== taskDetail.value.status)) ||
-    filesToUpload.value.length > 0 ||
-    filesToRemove.value.length > 0
+      filesToUpload.value.length > 0 ||
+      filesToRemove.value.length > 0)
   );
 });
 
@@ -119,11 +115,10 @@ watch(
 
 async function fetchTask(id) {
   if (id === 0) {
-    loading.value = true;
     return 0;
   }
   error.value = null;
-  loading.value = true;
+  addLoading('Loading task');
   statusList.value = statusStore.getAllStatusWithLimit();
   try {
     let originalTaskDetails;
@@ -179,12 +174,12 @@ async function fetchTask(id) {
   } catch (err) {
     error.value = err.toString();
   } finally {
-    loading.value = false;
+    removeLoading('Loading task');
   }
 }
 
 async function saveTask() {
-  loading.value = true;
+  addLoading('saving task');
   let res, editTaskResponse;
   let deleteAttachmentResponses = [];
   let uploadAttachmentsResponses = [];
@@ -232,7 +227,7 @@ async function saveTask() {
       res = editTaskResponse;
     }
     console.log('res', res);
-    loading.value = false;
+    removeLoading('saving task');
     router.push(`/board/${currentBoardId}`);
     emit('closeModal', res);
   }
@@ -247,7 +242,7 @@ function sendCloseModal() {
 async function handleFileUpload(e) {
   let files = Array.from(e.target.files);
   filesToUpload.value.push(...files);
-  console.log('File to Upload:', filesToUpload.value);
+  addLoading('Uploading files');
 
   files.forEach(async (file, index) => {
     let error = [];
@@ -280,7 +275,17 @@ async function handleFileUpload(e) {
     }
   });
 
+  removeLoading('Uploading files');
   checkErrorText();
+}
+
+
+function addLoading(load) {
+  loading.value.push(load);
+}
+
+function removeLoading(load) {
+  loading.value = loading.value.filter((l) => l !== load);
 }
 
 function checkErrorText() {
@@ -364,12 +369,9 @@ const openPreview = (file) => {
 </script>
 
 <template>
-  <div class="flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 rounded-lg w-full min-h-96" v-if="loading === true">
-    <loading-component class="absolute top-1/2" />
-  </div>
 
   <!-- Title -->
-  <div class="h-[50rem] w-full bg-white rounded-md flex flex-col overflow-scroll" v-if="loading === false">
+  <div class="h-[50rem] w-full bg-white rounded-md flex flex-col overflow-scroll">
     <!-- ? HEADER -->
     <div class="sticky top-0 flex flex-row p-4 bg-white z-50" :class="isHeaderSticky ? 'shadow-lg' : ''">
       <div class="flex-1 text-2xl">Edit Task / Issue</div>
@@ -380,8 +382,10 @@ const openPreview = (file) => {
       </div>
     </div>
 
+    <loading-component :loading="loading" v-if="loading.length > 0" />
+
     <!-- ? BODY -->
-    <div class="flex flex-col overflow-scroll p-2 grow" ref="content" @scroll="handelScroll">
+    <div class="flex flex-col overflow-scroll p-2 grow" ref="content" @scroll="handelScroll" v-if="loading.length === 0">
       <div class="w-full flex flex-row">
         <div class="basis-2/3 px-2">
           <!-- ? Title -->
@@ -556,24 +560,38 @@ const openPreview = (file) => {
         </div>
       </div>
     </div>
-
     <!-- ? FOOTER -->
     <div class="sticky bottom-0 w-full z-50 gap-4 p-2" :class="isFooterSticky ? 'shadow-top' : ''">
       <div class="float-right flex flex-row-reverse gap-3">
         <button class="itbkk-button-cancel btn btn-outline btn-error basis-1/6" @click="sendCloseModal()">Cancel</button>
         <button class="itbkk-button-confirm btn btn-outline btn-success basis-1/6" :disabled="!canSave" :class="!canSave ? 'disabled' : ''" @click="saveTask()">
-          {{ loading ? '' : 'Save' }}
-          <span class="loading loading-spinner text-success" v-if="loading"></span>
+          {{ loading.length > 0 ? '' : 'Save' }}
+          <span class="loading loading-spinner text-success" v-if="loading.length > 0"></span>
         </button>
-        <!-- <div class="form-control">
-          <label class="label cursor-pointer">
-            <input type="checkbox" checked="false" v-model="createAnotherTask" class="toggle" />
-            <span class="label-text p-3">Create Another Task</span>
-          </label>
-        </div> -->
       </div>
     </div>
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+/* .fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  z-index: -1;
+} */
+
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(500px);
+}
+
+.fade-enter-from {
+  opacity: 0;
+  transform: translateY(-500px);
+}
+</style>

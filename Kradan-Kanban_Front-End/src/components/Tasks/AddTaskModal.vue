@@ -7,6 +7,7 @@ import { useAccountStore } from '@/stores/account';
 import { useToastStore } from '@/stores/toast.js';
 import * as pdfjsLib from 'pdfjs-dist/webpack'; // ใช้ Webpack version ของ PDF.js
 import { marked } from 'marked';
+import loadingComponent from '../loadingComponent.vue';
 const emit = defineEmits(['closeModal']);
 const statusStore = useStatusStore();
 const boardStore = useBoardStore();
@@ -40,6 +41,7 @@ const content = ref();
 const createAnotherTask = ref(false);
 const hoveredFileIndex = ref(null);
 const fileLoading = ref(false);
+const loading = ref([]);
 
 watch(taskData.value, () => {
   if (taskData.value.title.trim().length > 100) Errortext.value.title = `Title can't long more than 100 character`;
@@ -49,8 +51,6 @@ watch(taskData.value, () => {
   else Errortext.value.description = '';
   if (taskData.value.assignees.trim().length > 30) Errortext.value.assignees = `Assignees can't long more than 30 character`;
   else Errortext.value.assignees = '';
-  // ? disabled or enabled save btn
-  // canSave.value = Errortext.value.title === '' && Errortext.value.description === '' && Errortext.value.assignees === '';
 });
 
 const canSave = computed(() => {
@@ -71,26 +71,29 @@ watch(statusStore.status, () => {
   statusList.value = statusStore.getAllStatusWithLimit();
 });
 
-const loading = ref(false);
+
 
 async function fetchData() {
   taskData.value.title = taskData.value.title.trim();
   taskData.value.description = taskData.value.description.trim();
   taskData.value.assignees = taskData.value.assignees.trim();
-  loading.value = true;
+  addLoading('Saving task');
   let res;
   let resUp;
   try {
     res = await addTask(taskData.value);
-
+    removeLoading('Saving task');
     if (filesToUpload.value.length > 0) {
-      resUp = await uploadAttachments(boardStore.currentBoardId, res.id, filesToUpload.value);
+      addLoading('Uploading files');
+      resUp = await uploadAttachments(boardStore.currentBoardId, res.id, filesToUpload.value).then(() => {
+        removeLoading('Uploading files');
+      });
       console.log('File upload response:', resUp);
     }
   } catch (error) {
     console.log(error);
   } finally {
-    loading.value = false;
+    removeLoading('Saving task');
     emit('closeModal', { ...res, createAnotherTask: createAnotherTask.value });
   }
 }
@@ -136,7 +139,7 @@ async function handleFileUpload(e) {
     }
     checkErrorText();
 
-    reader.readAsDataURL(file);
+    // reader.readAsDataURL(file);
   });
 
   checkErrorText();
@@ -204,10 +207,6 @@ function removeFile(index) {
   checkErrorText();
 }
 
-// watch(uploadedFiles, () => {
-//   checkErrorText();
-// });
-
 function checkErrorText() {
   fileLoading.value = true;
 
@@ -230,6 +229,14 @@ function checkErrorText() {
   });
   fileLoading.value = false;
 }
+
+function addLoading(load) {
+  loading.value.push(load);
+}
+
+function removeLoading(load) {
+  loading.value = loading.value.filter((l) => l !== load);
+}
 </script>
 
 <template>
@@ -244,8 +251,10 @@ function checkErrorText() {
       </div>
     </div>
 
+    <loadingComponent :loading="loading" v-if="loading.length > 0" />
+
     <!-- ? BODY -->
-    <div v-if="!previewFile" class="flex flex-col overflow-scroll p-2 grow" ref="content" @scroll="handelScroll">
+    <div class="flex flex-col overflow-scroll p-2 grow" ref="content" @scroll="handelScroll" v-if="loading.length === 0">
       <div class="w-full flex flex-row">
         <div class="basis-2/3 px-2">
           <!-- ? Title -->
@@ -415,8 +424,8 @@ function checkErrorText() {
       <div class="float-right flex flex-row-reverse gap-3">
         <button class="itbkk-button-cancel btn btn-outline btn-error basis-1/6" @click="sendCloseModal()">Cancel</button>
         <button class="itbkk-button-confirm btn btn-outline btn-success basis-1/6" :disabled="!canSave" :class="!canSave ? 'disabled' : ''" @click="fetchData()">
-          {{ loading ? '' : 'Save' }}
-          <span class="loading loading-spinner text-success" v-if="loading"></span>
+          {{ loading.length > 0 ? '' : 'Save' }}
+          <span class="loading loading-spinner text-success" v-if="loading.length > 0"></span>
         </button>
         <div class="form-control">
           <label class="label cursor-pointer">
@@ -428,23 +437,6 @@ function checkErrorText() {
     </div>
   </div>
 
-  <!-- ? Preview Modal
-  <Modal class="z-[100]">
-    <div v-if="previewFile" class="preview-modal">
-      <div class="modal-content">
-        <button @click="closePreview">Close</button>
-        <div v-if="previewFile.type.startsWith('image/')">
-          <img :src="previewFile.preview" class="full-preview" />
-        </div>
-        <div v-else-if="previewFile.type === 'application/pdf'">
-          <iframe :src="previewFile.preview" class="full-preview" />
-        </div>
-        <div v-else-if="previewFile.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'">
-          <p>DOCX Preview Not Supported Yet</p>
-        </div>
-      </div>
-    </div>
-  </Modal> -->
 </template>
 
 <style scoped>

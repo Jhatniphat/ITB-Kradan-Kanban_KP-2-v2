@@ -218,8 +218,9 @@ export async function getAllStatus() {
       router.push('/login');
       return;
     } else if (res.status === 200) {
-      useStatusStore().status = await res.json();
-      return await res.json();
+      let statusess = await res.json();
+      useStatusStore().status = statusess
+      return await statusess;
     }
   } catch (error) {}
 }
@@ -469,8 +470,9 @@ export async function getLimitStatus() {
       return;
     }
     if (res.status === 200) {
-      statusStore.setLimitEnable(await res.json());
-      return await res.json();
+      let limitEnable = await res.json();
+      statusStore.setLimitEnable(limitEnable);
+      return await limitEnable;
     }
   } catch (e) {
     console.log(e.toString());
