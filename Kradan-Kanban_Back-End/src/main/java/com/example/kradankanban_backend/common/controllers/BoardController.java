@@ -203,7 +203,7 @@ public class BoardController {
 
     @GetMapping("/{boardId}/statuses/maximum-task")
     public ResponseEntity<Object> getAllLimitSettings(@PathVariable String boardId, HttpServletRequest request) {
-        return new ResponseEntity<>(statusService.getLimitData(boardId) , HttpStatus.OK);
+        return new ResponseEntity<>(statusService.getLimit(boardId) , HttpStatus.OK);
     }
 
     @PatchMapping("/{boardId}/statuses/maximum-task")

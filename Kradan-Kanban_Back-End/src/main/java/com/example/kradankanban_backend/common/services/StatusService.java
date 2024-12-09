@@ -1,12 +1,11 @@
 package com.example.kradankanban_backend.common.services;
 
+import com.example.kradankanban_backend.common.dtos.LimitDTO;
 import com.example.kradankanban_backend.common.entities.BoardEntity;
 import com.example.kradankanban_backend.common.entities.CollabEntity;
+import com.example.kradankanban_backend.common.entities.LimitSettings;
 import com.example.kradankanban_backend.common.entities.StatusEntity;
-import com.example.kradankanban_backend.common.repositories.BoardRepository;
-import com.example.kradankanban_backend.common.repositories.CollabRepository;
-import com.example.kradankanban_backend.common.repositories.StatusRepository;
-import com.example.kradankanban_backend.common.repositories.TaskRepository;
+import com.example.kradankanban_backend.common.repositories.*;
 import com.example.kradankanban_backend.exceptions.BadRequestException;
 import com.example.kradankanban_backend.exceptions.ForbiddenException;
 import com.example.kradankanban_backend.exceptions.ItemNotFoundException;
@@ -30,7 +29,7 @@ public class StatusService {
     BoardRepository boardRepository;
 
     @Autowired
-    CollabRepository collabRepository;
+    LimitRepository limitRepository;
 
     public List<StatusEntity> getAll(String boardId) {
         if (!boardRepository.existsById(boardId)) {
@@ -143,6 +142,10 @@ public class StatusService {
 
     public Object getLimitData(String boardId) {
         return repository.findIsEnable(boardId);
+    }
+
+    public LimitSettings getLimit(String boardId) {
+        return limitRepository.findAllByLsBoard(boardId);
     }
 
     public void validateStatusLimitToDeleteTransfer(String boardId, String statusName) {
