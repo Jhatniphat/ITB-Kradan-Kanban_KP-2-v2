@@ -1,30 +1,36 @@
 <script setup>
-import { ref, watch, computed } from "vue";
-import {getStatusById, editStatus, getAllTasks, getStatusByIdForGuest} from "@/lib/fetchUtils";
-import router from "@/router";
-import { useStatusStore } from "@/stores/status";
-import {useBoardStore} from "@/stores/board.js";
-import {useAccountStore} from "@/stores/account.js";
-import LoadingComponent from "@/components/loadingComponent.vue";
-const currentBoardId = useBoardStore().currentBoardId
+import { ref, watch, computed } from 'vue';
+import { getStatusById, editStatus, getAllTasks, getStatusByIdForGuest } from '@/lib/fetchUtils';
+import router from '@/router';
+import { useStatusStore } from '@/stores/status';
+import { useBoardStore } from '@/stores/board.js';
+import { useAccountStore } from '@/stores/account.js';
+import LoadingComponent from '@/components/loadingComponent.vue';
+const currentBoardId = useBoardStore().currentBoardId;
 const statusStore = useStatusStore();
 const canSave = ref(false);
 const loading = ref(false);
 const statusDetail = ref({});
 const Errortext = ref({
-  name: "",
-  description: "",
+  name: '',
+  description: '',
 });
 
 const originalsDetail = ref(null);
 const error = ref(null);
-const emit = defineEmits(["closeModal"]);
+const emit = defineEmits(['closeModal']);
 const props = defineProps({
   statusId: {
     type: Number,
     require: true,
   },
+  statusColor: {
+    type: String,
+    require: true,
+  },
 });
+
+const colorPicking = ref(`#${props.statusColor}`);
 
 const editStatusTitleLength = computed(() => {
   return statusDetail.value?.name?.trim().length;
@@ -38,30 +44,17 @@ watch(() => props.statusId, fetchData, { immediate: true });
 watch(
   statusDetail,
   (newVal) => {
-    if (editStatusTitleLength.value > 50)
-      Errortext.value.name = "Status Name can't long more 50 character";
-    else if (editStatusTitleLength.value === 0)
-      Errortext.value.name = "Status Name can't be empty";
+    if (editStatusTitleLength.value > 50) Errortext.value.name = "Status Name can't long more 50 character";
+    else if (editStatusTitleLength.value === 0) Errortext.value.name = "Status Name can't be empty";
     else if (
-      statusDetail.value.name?.trim().toLowerCase() !==
-        originalsDetail.value.name?.trim().toLowerCase() &&
-      statusStore.status.some(
-        (status) =>
-          status.name?.trim().toLowerCase() ===
-          statusDetail.value.name?.trim().toLowerCase()
-      )
+      statusDetail.value.name?.trim().toLowerCase() !== originalsDetail.value.name?.trim().toLowerCase() &&
+      statusStore.status.some((status) => status.name?.trim().toLowerCase() === statusDetail.value.name?.trim().toLowerCase())
     )
-      Errortext.value.name =
-        "Status name must be uniques, please choose another name.";
-    else Errortext.value.name = "";
-    if (editStatusDescriptionLength.value > 200)
-      Errortext.value.description =
-        "Status Description can't long more 200 character";
-    else Errortext.value.description = "";
-    canSave.value =
-      Errortext.value.name === "" &&
-      Errortext.value.description === "" &&
-        newVal.value?.toString() !== originalsDetail.value?.toString();
+      Errortext.value.name = 'Status name must be uniques, please choose another name.';
+    else Errortext.value.name = '';
+    if (editStatusDescriptionLength.value > 200) Errortext.value.description = "Status Description can't long more 200 character";
+    else Errortext.value.description = '';
+    canSave.value = Errortext.value.name === '' && Errortext.value.description === '' && newVal.value?.toString() !== originalsDetail.value?.toString();
     // JSON.stringify(newVal) !== JSON.stringify(originalsDetail.value);
   },
   { deep: true }
@@ -71,19 +64,15 @@ async function fetchData(id) {
   error.value = statusDetail.value = null;
   loading.value = true;
   try {
-    let originalstatusDetails
-    if (useAccountStore().tokenRaw === "") {
+    let originalstatusDetails;
+    if (useAccountStore().tokenRaw === '') {
       originalstatusDetails = await getStatusByIdForGuest(id);
     } else {
       originalstatusDetails = await getStatusById(id);
     }
     // const originalstatusDetails = await getStatusById(id);
-    if (
-      originalstatusDetails === 404 ||
-      originalstatusDetails === 400 ||
-      originalstatusDetails === 500
-    ) {
-      emit("closeModal", 404);
+    if (originalstatusDetails === 404 || originalstatusDetails === 400 || originalstatusDetails === 500) {
+      emit('closeModal', 404);
       router.push(`/board/${currentBoardId}/status`);
     }
     originalsDetail.value = { ...originalstatusDetails };
@@ -102,6 +91,7 @@ async function saveStatus() {
     delete statusDetail.value.id;
     delete statusDetail.value.createdOn;
     delete statusDetail.value.updatedOn;
+    statusDetail.value.color = colorPicking.value.slice(1);
     res = await editStatus(props.statusId, statusDetail.value);
     statusDetail.value = res;
   } catch (error) {
@@ -109,79 +99,46 @@ async function saveStatus() {
   } finally {
     loading.value = false;
     router.push(`/board/${currentBoardId}/status`);
-    emit("closeModal", res);
-    await getAllTasks()
+    emit('closeModal', res);
+    await getAllTasks();
   }
 }
 
 function sendCloseModal() {
   router.push(`/board/${currentBoardId}/status`);
-  emit("closeModal", null);
+  emit('closeModal', null);
 }
 </script>
 
 <template>
-  <div
-      class="flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 rounded-lg w-full min-h-96"
-      v-if="loading === true"
-  >
-    <loading-component class="absolute top-1/2"/>
+  <div class="flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 rounded-lg w-full min-h-96" v-if="loading === true">
+    <loading-component class="absolute top-1/2" />
   </div>
 
-  <div
-    class="itbkk-modal-status flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 dark:text-slate-400 rounded-lg w-full"
-    v-if="loading === false"
-  >
+  <div class="itbkk-modal-status flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 dark:text-slate-400 rounded-lg w-full" v-if="loading === false">
     <label class="form-control w-full">
       <div class="label">
-        <h1 class="m-2 text-3xl font-bold" v-if="loading === true">
-          Loading Data For StatusId = {{ props.statusId }}
-        </h1>
+        <h1 class="m-2 text-3xl font-bold" v-if="loading === true">Loading Data For StatusId = {{ props.statusId }}</h1>
         <div v-if="loading === false && error === null">
-          <h1 class="m-2 mt-0 text-2xl font-bold text-wrap break-all">
-            Edit Status
-          </h1>
+          <h1 class="m-2 mt-0 text-2xl font-bold text-wrap break-all">Edit Status</h1>
           <hr />
           <span class="label-text">Title</span>
         </div>
         <hr />
       </div>
-      <input
-        v-if="loading === false"
-        v-model="statusDetail.name"
-        type="text"
-        placeholder="Type here"
-        class="itbkk-status-name input input-bordered w-full bg-white dark:bg-base-300"
-      />
+      <input v-if="loading === false" v-model="statusDetail.name" type="text" placeholder="Type here" class="itbkk-status-name input input-bordered w-full bg-white dark:bg-base-300" />
       <div class="label">
         <!-- ? Error Text -->
-        <span v-if="Errortext.name !== ''" class="label-text-alt text-error">{{
-          Errortext.name
-        }}</span>
+        <span v-if="Errortext.name !== ''" class="label-text-alt text-error">{{ Errortext.name }}</span>
         <!-- count input name -->
-        <span
-          v-if="editStatusTitleLength <= 50 && editStatusTitleLength > 0"
-          class="justify-end text-gray-400 label-text-alt"
-          >{{ editStatusTitleLength }} / 50</span
-        >
-        <span
-          v-if="editStatusTitleLength === 0 && Errortext.name !== ''"
-          class="flex justify-end text-red-400 label-text-alt"
-          >{{ editStatusTitleLength }} / 50</span
-        >
-        <span
-          v-if="editStatusTitleLength > 50"
-          class="flex justify-end text-red-400 label-text-alt"
-          >{{ editStatusTitleLength }} / 50</span
-        >
+        <span v-if="editStatusTitleLength <= 50 && editStatusTitleLength > 0" class="justify-end text-gray-400 label-text-alt">{{ editStatusTitleLength }} / 50</span>
+        <span v-if="editStatusTitleLength === 0 && Errortext.name !== ''" class="flex justify-end text-red-400 label-text-alt">{{ editStatusTitleLength }} / 50</span>
+        <span v-if="editStatusTitleLength > 50" class="flex justify-end text-red-400 label-text-alt">{{ editStatusTitleLength }} / 50</span>
       </div>
     </label>
 
     <!-- * description -->
-    <div
-      class="flex mb-5 mx-auto flex-col w-full"
-      v-if="loading === false && error === null"
-    >
+    <div class="flex mb-5 mx-auto flex-col w-full" v-if="loading === false && error === null">
       <div class="flex flex-col gap-3">
         <label class="form-control basis-3/4">
           <div class="label">
@@ -193,39 +150,17 @@ function sendCloseModal() {
             v-model="statusDetail.description"
             class="itbkk-status-description textarea textarea-bordered h-72 bg-white dark:bg-base-300"
             placeholder="No Description Provided"
-            :class="
-              statusDetail.description === '' ? 'italic text-gray-600' : ''
-            "
-            >{{
-              statusDetail.description == "" ||
-              statusDetail.description === null
-                ? "No Description Provided"
-                : statusDetail.description
-            }}</textarea
+            :class="statusDetail.description === '' ? 'italic text-gray-600' : ''"
+            >{{ statusDetail.description == '' || statusDetail.description === null ? 'No Description Provided' : statusDetail.description }}</textarea
           >
           <div class="label">
             <!-- ? Error Text -->
-            <span
-              v-if="Errortext.description !== ''"
-              class="label-text-alt text-error"
-            >
-              {{ Errortext.description }}</span
-            >
-            <span
-              v-if="editStatusDescriptionLength <= 200"
-              class="flex justify-end text-gray-400 label-text-alt"
-              >{{ editStatusDescriptionLength }} / 200</span
-            >
-            <span
-              v-if="editStatusDescriptionLength > 200"
-              class="flex justify-end text-red-400 label-text-alt"
-              >{{ editStatusDescriptionLength }} / 200</span
-            >
+            <span v-if="Errortext.description !== ''" class="label-text-alt text-error"> {{ Errortext.description }}</span>
+            <span v-if="editStatusDescriptionLength <= 200" class="flex justify-end text-gray-400 label-text-alt">{{ editStatusDescriptionLength }} / 200</span>
+            <span v-if="editStatusDescriptionLength > 200" class="flex justify-end text-red-400 label-text-alt">{{ editStatusDescriptionLength }} / 200</span>
           </div>
         </label>
-        <div
-          class="mt-2 text-sm text-black flex flex-col justify-between mb-5 lg:flex-row dark:text-slate-400"
-        >
+        <div class="mt-2 text-sm text-black flex flex-col justify-between mb-5 lg:flex-row dark:text-slate-400">
           <div class="flex flex-row mx-2">
             <h1 class="font-bold pr-5">TimeZone:</h1>
             <h1 class="itbkk-timezone font-semibold">
@@ -245,6 +180,14 @@ function sendCloseModal() {
             </h1>
           </div>
         </div>
+        <label for="hs-color-input" class="block text-sm font-medium mb-2 dark:text-white">Color picker</label>
+        <input
+          type="color"
+          class="p-1 h-10 w-14 block bg-white border border-gray-200 cursor-pointer rounded-lg disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700"
+          id="hs-color-input"
+          v-model="colorPicking"
+          title="Choose your color"
+        />
       </div>
       <div class="flex my-5 mx-auto" v-if="error !== null">
         <div>
@@ -255,23 +198,11 @@ function sendCloseModal() {
       <hr />
       <div class="flex flex-row-reverse gap-4 mt-5">
         <!-- Cancel button -->
-        <button
-          class="itbkk-button-cancel btn btn-outline btn-error basis-1/6"
-          @click="sendCloseModal()"
-        >
-          Cancel
-        </button>
+        <button class="itbkk-button-cancel btn btn-outline btn-error basis-1/6" @click="sendCloseModal()">Cancel</button>
 
-        <button
-          class="itbkk-button-confirm btn btn-outline btn-success basis-1/6"
-          :disabled="!canSave"
-          @click="saveStatus"
-        >
-          {{ loading ? "" : "Save" }}
-          <span
-            class="loading loading-spinner text-success"
-            v-if="loading"
-          ></span>
+        <button class="itbkk-button-confirm btn btn-outline btn-success basis-1/6" :disabled="!canSave" @click="saveStatus">
+          {{ loading ? '' : 'Save' }}
+          <span class="loading loading-spinner text-success" v-if="loading"></span>
         </button>
       </div>
     </div>
