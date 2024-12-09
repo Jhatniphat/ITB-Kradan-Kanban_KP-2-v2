@@ -3,6 +3,7 @@ package com.example.kradankanban_backend.common.services;
 
 import com.example.kradankanban_backend.common.dtos.CollabDTO;
 import com.example.kradankanban_backend.common.dtos.DetailBoardDTO;
+import com.example.kradankanban_backend.common.dtos.LimitDTO;
 import com.example.kradankanban_backend.common.dtos.VisibilityDTO;
 import com.example.kradankanban_backend.common.entities.*;
 import com.example.kradankanban_backend.common.repositories.BoardRepository;
@@ -159,6 +160,26 @@ public class BoardService {
 
             throw new InternalError("Cannot add board");
         }
+    }
+
+    @Transactional
+    public LimitDTO updateLimitAndToggle(String boardId, LimitDTO limit) {
+        BoardEntity board = repository.findById(boardId).orElseThrow(() -> new WrongBoardException(boardId + "does not exist'"));
+        LimitSettings limitSettings = limitRepository.findByLsBoard(board.getBoardId());
+        if (limit.getToggleEnable() != null) {
+            limitSettings.setIsEnable(limit.getToggleEnable());
+        }
+        if (limit.getLimit() != null) {
+            if (!Boolean.TRUE.equals(limitSettings.getIsEnable())){
+                throw new BadRequestException("Cannot edit limit when limit is not enabled");
+            }
+            if (limit.getLimit() > 10) {
+                throw new BadRequestException("Limit cannot be more than 10");
+            }
+            limitSettings.setLimit(limit.getLimit());
+            limitRepository.save(limitSettings);
+        }
+        return limit;
     }
 
     @Transactional

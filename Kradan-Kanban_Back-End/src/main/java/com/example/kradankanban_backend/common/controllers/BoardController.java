@@ -207,9 +207,9 @@ public class BoardController {
     }
 
     @PatchMapping("/{boardId}/statuses/maximum-task")
-    public ResponseEntity<Void> toggleMaximumTask(@PathVariable String boardId, HttpServletRequest request) {
-        statusService.toggleIsEnable(boardId);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Object> updateLimitAndToggle (@PathVariable String boardId, @RequestBody LimitDTO limitDTO) {
+        service.updateLimitAndToggle(boardId, limitDTO);
+        return ResponseEntity.ok(limitDTO);
     }
 
     //  ! ============================================== COLLAB ==============================================

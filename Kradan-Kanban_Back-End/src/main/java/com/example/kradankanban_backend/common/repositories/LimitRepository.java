@@ -6,5 +6,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface LimitRepository extends JpaRepository<LimitSettings, String> {
+    LimitSettings findByLsBoard(String boardId);
 
 }
