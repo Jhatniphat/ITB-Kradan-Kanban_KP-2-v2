@@ -47,13 +47,8 @@ public class StatusEntity {
     private LocalDateTime updatedOn;
 
     @Column(name = "color")
-    private String color;
-//    @JsonIgnore
-//    @OneToMany(fetch = FetchType.LAZY, mappedBy = "status" , cascade = CascadeType.ALL)
-//    private Set<TaskEntity> recordings = new HashSet<>();
+    private String color = "b2b2b2";
 
-//    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-//    @JoinColumn(name = "st_boardId", nullable = false)
     @Column(name = "st_boardId" , nullable = false)
     private String stBoard;
 

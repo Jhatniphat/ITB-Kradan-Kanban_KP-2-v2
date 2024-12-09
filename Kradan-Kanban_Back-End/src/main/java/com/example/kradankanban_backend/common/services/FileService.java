@@ -33,26 +33,23 @@ public class FileService {
         TaskEntity task = taskRepository.findById(taskId).orElseThrow(() -> new RuntimeException("No Task found"));
         return task.getAttachments().stream()
                 .map(entity -> new AttachmentDTO(
-                        entity.getId(), // Assuming attachmentId is convertible to int
+                        entity.getId(),
                         entity.getFileName(),
                         entity.getFileType(),
                         entity.getFileData(),
-                        entity.getUploadedOn().atOffset(ZoneOffset.UTC) // Convert LocalDateTime to OffsetDateTime
+                        entity.getUploadedOn().atOffset(ZoneOffset.UTC)
                 ))
                 .toList();
     }
 
     public List<AttachmentResponseDTO> uploadAttachments(Integer taskId, List<MultipartFile> files) {
-        // Response structure
         AttachmentResponseDTO responseDTO = new AttachmentResponseDTO();
         List<AttachmentDTO> successfulUploads = new ArrayList<>();
         List<ErrorResponse.ValidationError> errors = new ArrayList<>();
 
-        // Retrieve TaskEntity
         TaskEntity task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new IllegalArgumentException("Task not found for ID: " + taskId));
 
-        // Validate total attachments for the task
         if (task.getAttachments().size() + files.size() > 10) {
             errors.add(new ErrorResponse.ValidationError(
                     "attachments",
@@ -60,12 +57,11 @@ public class FileService {
             ));
             responseDTO.setMessage("Validation failed.");
             responseDTO.setErrors(errors);
-            return List.of(responseDTO); // Early return for task-level validation failure
+            return List.of(responseDTO);
         }
 
         for (MultipartFile file : files) {
             try {
-                // Validate file size (20 MB limit)
                 if (file.getSize() > 20 * 1024 * 1024) {
                     errors.add(new ErrorResponse.ValidationError(
                             file.getOriginalFilename(),
@@ -74,7 +70,6 @@ public class FileService {
                     continue;
                 }
 
-                // Check for duplicate files in the task's attachments
                 boolean isDuplicate = task.getAttachments().stream()
                         .anyMatch(existingAttachment -> existingAttachment.getFileName().equals(file.getOriginalFilename()));
                 if (isDuplicate) {
@@ -85,7 +80,6 @@ public class FileService {
                     continue;
                 }
 
-                // Save attachment to database
                 AttachmentEntity entity = new AttachmentEntity();
                 entity.setFileName(file.getOriginalFilename());
                 entity.setFileType(file.getContentType());
@@ -95,9 +89,8 @@ public class FileService {
 
                 attachmentRepository.save(entity);
 
-                // Convert to DTO for response
                 successfulUploads.add(new AttachmentDTO(
-                        entity.getId(), // Assuming attachmentId can be converted
+                        entity.getId(),
                         entity.getFileName(),
                         entity.getFileType(),
                         entity.getFileData(),
@@ -105,12 +98,10 @@ public class FileService {
                 ));
 
             } catch (Exception ex) {
-                // Log error and add it to the response
                 errors.add(new ErrorResponse.ValidationError(file.getOriginalFilename(), ex.getMessage()));
             }
         }
 
-        // Set response
         responseDTO.setMessage("File upload completed with results.");
         responseDTO.setSuccessUpload(successfulUploads);
         responseDTO.setErrors(errors);
@@ -123,7 +114,7 @@ public class FileService {
                 .orElseThrow(() -> new IllegalArgumentException("Attachment not found for ID: " + attachmentId));
 
         AttachmentDTO dto = new AttachmentDTO(
-                entity.getId(), // Assuming attachmentId can be converted
+                entity.getId(),
                 entity.getFileName(),
                 entity.getFileType(),
                 entity.getFileData(),

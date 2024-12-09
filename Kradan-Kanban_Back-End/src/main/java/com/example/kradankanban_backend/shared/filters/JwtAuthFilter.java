@@ -163,7 +163,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             status = HttpStatus.UNAUTHORIZED;
             message = "An unexpected error occurred";
         }
-
         response.setStatus(status.value());
         response.setContentType("application/json");
         ErrorResponse errorResponse = new ErrorResponse(status.value(), message, uri);

@@ -80,23 +80,6 @@ public class BoardService {
 
 
     public List<DetailBoardDTO> getBoardByUserId(String userId) {
-//        List<BoardEntity> privateBoards = repository.findAllByUserIdAndVisibility(userId, BoardEntity.Visibility.PRIVATE);
-//        List<BoardEntity> publicBoards = repository.findAllByVisibility(BoardEntity.Visibility.PUBLIC);
-//
-//        List<DetailBoardDTO> result = new ArrayList<>();
-//
-//        for (BoardEntity board : privateBoards) {
-//            DetailBoardDTO dto = convertToDetailBoardDTO(board);
-//            result.add(dto);
-//        }
-//
-//        for (BoardEntity board : publicBoards) {
-//            DetailBoardDTO dto = convertToDetailBoardDTO(board);
-//            result.add(dto);
-//        }
-//
-//        return result;
-
         List<DetailBoardDTO> result = new ArrayList<>();
 
         List<BoardEntity> ownerBoard = repository.findAllByUserId(userId);
@@ -107,29 +90,6 @@ public class BoardService {
 
         return result;
     }
-
-//    public DetailBoardDTO getBoardByUserId(String userId) {
-//        BoardEntity board = repository.findByUserId(userId);
-////        if (board == null) {
-////            throw new ItemNotFoundException("Board not found");
-////        }
-//
-//
-//        if (board != null) {
-//            DetailBoardDTO.OwnerDTO owner = new DetailBoardDTO.OwnerDTO();
-//            owner.setOid(board.getUserId());
-//            owner.setName(userRepository.findById(board.getUserId()).orElseThrow(() -> new ItemNotFoundException(board.getUserId() + "does not exist'")).getName());
-//
-//            DetailBoardDTO dto = new DetailBoardDTO();
-//            dto.setId(board.getBoardId());
-//            dto.setName(board.getBoardName());
-//            dto.setVisibility(board.getVisibility());
-//            dto.setOwner(owner);
-//
-//            return dto;
-//        }
-//        return modelMapper.map(repository.findAll(), DetailBoardDTO.class);
-//    }
 
     public DetailBoardDTO getBoardById(String boardId) {
         BoardEntity board = repository.findById(boardId).orElseThrow(() -> new WrongBoardException(boardId + "does not exist'"));
@@ -196,7 +156,7 @@ public class BoardService {
 
             return dto;
         } catch (Exception e) {
-            System.out.println(e);
+
             throw new InternalError("Cannot add board");
         }
     }
@@ -247,7 +207,6 @@ public class BoardService {
         if (boardId == null) {
             throw new BadRequestException("No Board Found");
         }
-        System.out.println(repository.existsById(boardId));
         return repository.existsById(boardId);
     }
 }

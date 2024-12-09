@@ -15,8 +15,6 @@ import java.util.List;
 @Getter
 @Setter
 public class DetailBoardDTO {
-//    ! This is a DTO class for Response Body of Add Board API
-
     private String id;
     private String name;
     private BoardEntity.Visibility visibility;

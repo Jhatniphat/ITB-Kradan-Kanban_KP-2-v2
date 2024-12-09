@@ -49,20 +49,6 @@ public class StatusService {
     // * addStatus
     @Transactional
     public StatusEntity addStatus(String boardId, StatusEntity status) {
-
-//        if (status.getName().trim().isEmpty() || status.getName() == null) {
-//            throw new BadRequestException( "Status Name is null !!!");
-//        }
-//        if (status.getName().trim().length() > 50) {
-//            throw new BadRequestException("Status Name length should be less than 20 !!!");
-//        }
-//        if (status.getDescription() != null && status.getDescription().trim().length() > 200) {
-//            throw new BadRequestException("Status Description length should be less than 200 !!!");
-//        }
-//        // ? เช็คว่ามี Name นั้นหรือยัง
-//        if (repository.existsByName(status.getName())) {
-//            throw new BadRequestException("Status Name already exists !!!");
-//        }
         if (!boardRepository.existsById(boardId)) {
             throw new WrongBoardException("No board found with id: " + boardId);
         }
@@ -87,18 +73,6 @@ public class StatusService {
         if (!oldStatus.getName().equals(status.getName()) && repository.existsByName(status.getName())) {
             throw new BadRequestException("Name must be unique");
         }
-//        if (status.getName().equals("Done")) {
-//            throw new BadRequestException("The status name 'Done' will not changed");
-//        }
-//        if (status.getName().trim().isEmpty() || status.getName() == null) {
-//            throw new BadRequestException("Status Name is null !!!");
-//        }
-//        if (status.getName().trim().length() > 50) {
-//            throw new BadRequestException("Status Name length should be less than 20 !!!");
-//        }
-//        if (status.getDescription() != null && status.getDescription().trim().length() > 200) {
-//            throw new BadRequestException("Status Description length should be less than 200 !!!");
-//        }
         try {
             status.setStBoard(boardId);
             status.setId(id);

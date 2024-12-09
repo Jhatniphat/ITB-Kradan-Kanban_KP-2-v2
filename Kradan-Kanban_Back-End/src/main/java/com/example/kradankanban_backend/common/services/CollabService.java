@@ -120,10 +120,6 @@ public class CollabService {
         return collabRepository.existsByBoardIdAndUserIdAndAccessRight(boardId, userId, CollabEntity.AccessRight.WRITE);
     }
 
-//    public boolean isStatusAccepted(String boardId, String userId) {
-//        return collabRepository.existsByBoardIdAndUserIdAndStatus(boardId, userId, CollabEntity.Status.ACCEPTED);
-//    }
-
     public boolean isStatusPending(String boardId, String userId) {
         CollabEntity collab = collabRepository.findByBoardIdAndUserId(boardId, userId).orElseThrow(() -> new ItemNotFoundException("No Collaborator found"));
         return collab.getStatus().equals(CollabEntity.Status.PENDING);

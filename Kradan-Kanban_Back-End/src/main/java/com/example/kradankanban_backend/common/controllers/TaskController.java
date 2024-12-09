@@ -30,34 +30,4 @@ public class TaskController {
         List<SimpleTaskDTO> simpleTaskDTOS = tasks.stream().map(p -> modelMapper.map(p, SimpleTaskDTO.class)).collect(Collectors.toList());
         return ResponseEntity.ok(simpleTaskDTOS);
     }
-
-//    @GetMapping("/{id}") //Get Task By ID
-//    public TaskEntity getTaskById(@PathVariable int id) {
-//        return service.findById(id);
-//    }
-//
-//    @PostMapping("")
-//    public ResponseEntity<Object> addTask(@Valid @RequestBody TaskEntity task) {
-//        TaskEntity createdTask = service.addTask(task);
-//        DetailTaskDTO createdTaskDTO = modelMapper.map(createdTask, DetailTaskDTO.class);
-//        return new ResponseEntity<>(createdTaskDTO, HttpStatus.CREATED);
-//    }
-////    @PostMapping("")
-////    public NewTaskDTO addTask(@RequestBody NewTaskDTO task) {
-////        return service.addTask(task);
-////    }
-//
-//    @PutMapping("/{id}")
-//    public ResponseEntity<Object> editTask(@PathVariable int id,@Valid @RequestBody TaskEntity task) {
-//        TaskEntity updatedTask = service.editTask(id, task);
-//        DetailTaskDTO updatedTaskDTO = modelMapper.map(updatedTask, DetailTaskDTO.class);
-//        return new ResponseEntity<>(updatedTaskDTO, HttpStatus.OK);
-//    }
-//
-//    @DeleteMapping("/{id}")
-//    public ResponseEntity<SimpleTaskDTO> deleteTaskById(@PathVariable int id) {
-//        SimpleTaskDTO simpleTaskDTO = modelMapper.map(service.deleteTask(id), SimpleTaskDTO.class);
-//        return ResponseEntity.ok().body(simpleTaskDTO);
-//    }
-
 }
