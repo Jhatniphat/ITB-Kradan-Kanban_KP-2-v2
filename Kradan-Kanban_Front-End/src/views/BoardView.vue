@@ -9,12 +9,12 @@ import Modal from '../components/Modal.vue';
 import { useBoardStore } from '@/stores/board.js';
 import { useAccountStore } from '@/stores/account.js';
 import { useToastStore } from '@/stores/toast.js';
-
+import loadingComponent from '@/components/loadingComponent.vue';
 // ! ================= Variable ======================
 // ? ----------------- Store and Route ---------------
 const boardStore = useBoardStore();
 const route = useRoute();
-const loading = ref(false);
+const loading = ref([]);
 const toastStore = useToastStore();
 // ? ----------------- Modal ---------------
 const toast = ref({ status: '', msg: '' });
@@ -47,7 +47,7 @@ onBeforeMount(() => {
 // ! ================= Function ======================
 // todo : refactor this function
 async function fetchBoardData() {
-  loading.value = true;
+  addLoading('Loading Boards');
   try {
     await getAllBoard();
   } catch (err) {
@@ -61,15 +61,12 @@ async function fetchBoardData() {
     if (allBoard.value !== null && allBoard.value !== undefined) {
       if (allBoard.value?.payload !== 'No board found') {
         allBoard.value = boardStore.boards;
-        // if (allBoard.value.length === 1) {
-        //   router.push(`/board/${allBoard.value[0].id}`);
-        // }
       } else {
         allBoard.value = [];
       }
     }
-    prepareData([''])
-    loading.value = false;
+    prepareData(['']);
+    removeLoading('Loading Boards');
   }
 }
 
@@ -83,10 +80,9 @@ async function prepareData([filterBy]) {
     allBoard.value = boardStore.boards;
   }
   personalBoard.value = boardStore.boards.filter((board) => board.owner.oid === useAccountStore().tokenDetail.oid);
-  collabBoard.value =  boardStore.boards.filter((board) => {
-    return board.owner.oid !== useAccountStore().tokenDetail.oid && 
-    ( board.collaborators.findIndex((collab) => ( collab.oid === useAccountStore().tokenDetail.oid  && collab.status !== "PENDING" ) ) !== -1 ) 
-  }) 
+  collabBoard.value = boardStore.boards.filter((board) => {
+    return board.owner.oid !== useAccountStore().tokenDetail.oid && board.collaborators.findIndex((collab) => collab.oid === useAccountStore().tokenDetail.oid && collab.status !== 'PENDING') !== -1;
+  });
 }
 
 watch([filterBy, boardStore.boards], (newValue) => {
@@ -95,9 +91,13 @@ watch([filterBy, boardStore.boards], (newValue) => {
 
 prepareData(['']);
 
-watch(boardStore.boards, () => {
-  prepareData(['']);
-} , { deep: true });
+watch(
+  boardStore.boards,
+  () => {
+    prepareData(['']);
+  },
+  { deep: true }
+);
 
 // todo : Move this add Modal component
 function openAdd() {
@@ -165,6 +165,14 @@ const leaveBoard = async () => {
     showLeaveModal.value = false;
   }
 };
+
+function addLoading(load) {
+  loading.value.push(load);
+}
+
+function removeLoading(load) {
+  loading.value = loading.value.filter((l) => l !== load);
+}
 </script>
 
 <template>
@@ -197,7 +205,9 @@ const leaveBoard = async () => {
     </div>
   </Modal>
 
-  <div class="w-3/4 mx-auto mt-10 relative">
+  <loadingComponent :loading="loading" v-if="loading.length > 0" />
+    
+  <div class="w-3/4 mx-auto mt-10 relative" v-if="loading.length === 0">
     <div class="flex flex-col">
       <div class="flex">
         <div class="flex-1">filter</div>
@@ -271,37 +281,19 @@ const leaveBoard = async () => {
           </table>
         </div>
       </div>
-
-      <!--      <table-->
-      <!--          class="table table-lg table-pin-rows table-pin-cols w-3/4 font-semibold mx-auto my-5 text-center text-base rounded-lg border-2 border-slate-500 border-separate border-spacing-1">-->
-      <!--        <thead>-->
-      <!--        <tr>-->
-      <!--          <th>Board Name</th>-->
-      <!--        </tr>-->
-      <!--        </thead>-->
-      <!--        <tbody>-->
-      <!--        <tr v-for="board in allboard">-->
-      <!--          <td>{{ board.name }}</td>-->
-      <!--        </tr>-->
-      <!--        </tbody>-->
-      <!--      </table>-->
     </div>
-    <!--    <div v-if="loading" class="loader"></div>-->
     <!-- DeleteModal -->
     <Modal :showModal="showLeaveModal">
       <div class="flex flex-col p-5 bg-slate-50 dark:bg-base-100 rounded-lg w-full">
         <h1 class="m-2 pb-4 text-2xl font-bold">Leave Board</h1>
         <hr />
-        <h1 class="itbkk-message font-semibold text-xl p-8">
-          <!-- Do you want to delete the task "{{ deleteTaskTitle }}" -->
-          Do you want to leave this "{{ collabBoardName }}" board?
-        </h1>
+        <h1 class="itbkk-message font-semibold text-xl p-8">Do you want to leave this "{{ collabBoardName }}" board?</h1>
         <hr />
         <div class="flex flex-row-reverse gap-4 mt-5">
           <button @click="showLeaveModal = false" class="itbkk-button-cancel btn btn-outline btn-error basis-1/6">Close</button>
           <button @click="leaveBoard()" class="itbkk-button-confirm btn btn-outline btn-success basis-1/6">
-            {{ loading ? '' : 'Confirm' }}
-            <span class="loading loading-spinner text-success" v-if="loading"></span>
+            {{ loading.length === 0 ? '' : 'Confirm' }}
+            <span class="loading loading-spinner text-success" v-if="loading.length === 0"></span>
           </button>
         </div>
       </div>
@@ -322,48 +314,20 @@ const leaveBoard = async () => {
 </template>
 
 <style scoped>
+.v-enter-active,
+.v-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.v-enter-from,
+.v-leave-to {
+  opacity: 0;
+  z-index: -1;
+}
+
 ::backdrop {
   background-image: linear-gradient(45deg, magenta, rebeccapurple, dodgerblue, green);
   opacity: 0.75;
-}
-
-/* HTML: <div class="loader"></div> */
-.loader {
-  width: 22px;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: #f10c49;
-  animation: l10 1.5s infinite linear;
-}
-
-@keyframes l10 {
-  0% {
-    box-shadow: 0 -30px #f4dd51, calc(30px * 0.707) calc(-30px * 0.707) #e3aad6, 30px 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6;
-  }
-  12.5% {
-    box-shadow: 0 0 #f4dd51, calc(30px * 0.707) calc(-30px * 0.707) #e3aad6, 30px 0 #f4dd51, calc(30px * 0.707) calc(30px * 0.707) #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6;
-  }
-  25% {
-    box-shadow: 0 0 #f4dd51, 0 0 #e3aad6, 30px 0 #f4dd51, calc(30px * 0.707) calc(30px * 0.707) #e3aad6, 0 30px #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6;
-  }
-  37.5% {
-    box-shadow: 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, calc(30px * 0.707) calc(30px * 0.707) #e3aad6, 0 30px #f4dd51, calc(-30px * 0.707) calc(30px * 0.707) #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6;
-  }
-  50% {
-    box-shadow: 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 30px #f4dd51, calc(-30px * 0.707) calc(30px * 0.707) #e3aad6, -30px 0 #f4dd51, 0 0 #e3aad6;
-  }
-  62.5% {
-    box-shadow: 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, calc(-30px * 0.707) calc(30px * 0.707) #e3aad6, -30px 0 #f4dd51, calc(-30px * 0.707) calc(-30px * 0.707) #e3aad6;
-  }
-  75% {
-    box-shadow: 0 -30px #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, -30px 0 #f4dd51, calc(-30px * 0.707) calc(-30px * 0.707) #e3aad6;
-  }
-  87.5% {
-    box-shadow: 0 -30px #f4dd51, calc(30px * 0.707) calc(-30px * 0.707) #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, calc(-30px * 0.707) calc(-30px * 0.707) #e3aad6;
-  }
-  100% {
-    box-shadow: 0 -30px #f4dd51, calc(30px * 0.707) calc(-30px * 0.707) #e3aad6, 30px 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6;
-  }
 }
 
 .board-list-card {
