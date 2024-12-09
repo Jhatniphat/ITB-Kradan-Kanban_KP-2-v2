@@ -144,10 +144,4 @@ public class TaskService {
         return true;
     }
 
-    public void checkAccessRight (String boardId) {
-        CollabEntity collab = collabRepository.findByBoardIdAndUserId(boardId, JwtUserDetailsService.getCurrentUser().getOid()).orElseThrow(() -> new ForbiddenException("You do not have access this board."));
-        if (collab.getAccessRight().equals(CollabEntity.AccessRight.READ)) {
-            throw new ForbiddenException("You do not have permission to perform this action.");
-        }
-    }
 }
