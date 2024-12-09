@@ -175,9 +175,13 @@ public class BoardService {
             BoardEntity newBoard = repository.save(board);
             List<StatusEntity> statusEntity = new ArrayList<>();
             StatusEntity status1 = new StatusEntity("No Status", "", newBoard.getBoardId());
+            status1.setColor("ffffff");
             StatusEntity status2 = new StatusEntity("To Do", "", newBoard.getBoardId());
+            status2.setColor("33e3ff");
             StatusEntity status3 = new StatusEntity("Doing", "", newBoard.getBoardId());
+            status3.setColor("fcff41");
             StatusEntity status4 = new StatusEntity("Done", "", newBoard.getBoardId());
+            status4.setColor("4aff41");
             statusEntity.add(status1);
             statusEntity.add(status2);
             statusEntity.add(status3);

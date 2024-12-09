@@ -11,4 +11,5 @@ public class SimpleStatusDTO {
     private int id;
     private String name;
     private String description;
+    private String color;
 }
