@@ -244,13 +244,15 @@ async function handleFileUpload(e) {
     } else {
       previewFiles.value.push(await generateFileData(file, error));
     }
-
-
   });
 
   if (dulpicateFileError.length > 0) {
-      useToastStore().createToast(`File with the same filename cannot be added or updated to the attachments. Please delete the attachment and add again to update the file. The following files are not added:<span class="underline"> ${dulpicateFileError.join(' , ')} </span>`, 'danger', 10000);
-    }
+    useToastStore().createToast(
+      `File with the same filename cannot be added or updated to the attachments. Please delete the attachment and add again to update the file. The following files are not added:<span class="underline"> ${dulpicateFileError.join(' , ')} </span>`,
+      'danger',
+      10000
+    );
+  }
   removeLoading('Uploading files');
   checkErrorText();
 }
@@ -542,6 +544,18 @@ function hideErrorTooltip() {
           {{ loading.length > 0 ? '' : 'Save' }}
           <span class="loading loading-spinner text-success" v-if="loading.length > 0"></span>
         </button>
+        <div class="flex flex-col">
+          <div class="bold">updated On</div>
+          <div>{{ taskDetail.updatedOn }}</div>
+        </div>
+        <div class="flex flex-col">
+          <div class="bold">created On</div>
+          <div>{{ taskDetail.createdOn }}</div>
+        </div>
+        <div class="flex flex-col">
+          <div class="bold">Time Zone</div>
+          <div>{{ Intl.DateTimeFormat().resolvedOptions().timeZone }}</div>
+        </div>
       </div>
     </div>
   </div>

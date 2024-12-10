@@ -112,7 +112,7 @@ const hexToRgb = (hex) => {
   <div class="h-[50rem] w-full bg-white rounded-md flex flex-col overflow-scroll">
     <!-- ? HEADER -->
     <div class="sticky top-0 flex flex-row p-4 bg-white z-50" :class="isHeaderSticky ? 'shadow-lg' : ''">
-      <div class="flex-1 text-2xl">Create Task / Issue</div>
+      <div class="flex-1 text-2xl">Create Status</div>
       <div class="flex-1 flex flex-row-reverse">
         <svg @click="sendCloseModal" xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" viewBox="0 0 24 24">
           <path fill="currentColor" d="M6.4 19L5 17.6l5.6-5.6L5 6.4L6.4 5l5.6 5.6L17.6 5L19 6.4L13.4 12l5.6 5.6l-1.4 1.4l-5.6-5.6z" />
