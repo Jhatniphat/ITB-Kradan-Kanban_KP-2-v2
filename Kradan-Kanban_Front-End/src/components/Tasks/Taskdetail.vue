@@ -222,6 +222,7 @@ function sendCloseModal() {
 
 // Handle New Files
 async function handleFileUpload(e) {
+  let dulpicateFileError = [];
   let files = Array.from(e.target.files);
   filesToUpload.value.push(...files);
   addLoading('Uploading files');
@@ -230,20 +231,26 @@ async function handleFileUpload(e) {
     let error = [];
     if (file.size > 20 * 1024 * 1024) {
       useToastStore().createToast(`"${file.name}" file size is too large`, 'danger');
-      error.push('this file is too large');
+      error.push('Each file cannot be larger than 20 MB');
     }
 
     if (previewFiles.value.length + index + 1 > 10) {
-      error.push('can upload only 10 file per task');
+      error.push('Each task can have at most 10 files.');
     }
 
     if (previewFiles.value.some((previewFile) => previewFile.name === file.name)) {
-      useToastStore().createToast(`"${file.name}" file is already uploaded`, 'danger', 5000);
+      dulpicateFileError.push(file.name);
+      // useToastStore().createToast(`"${file.name}" file is already uploaded`, 'danger', 5000);
     } else {
       previewFiles.value.push(await generateFileData(file, error));
     }
+
+
   });
 
+  if (dulpicateFileError.length > 0) {
+      useToastStore().createToast(`File with the same filename cannot be added or updated to the attachments. Please delete the attachment and add again to update the file. The following files are not added:<span class="underline"> ${dulpicateFileError.join(' , ')} </span>`, 'danger', 10000);
+    }
   removeLoading('Uploading files');
   checkErrorText();
 }
@@ -261,14 +268,14 @@ function checkErrorText() {
     file.errorText = [];
 
     if (previewFiles.value.length > 10) {
-      if (!file.errorText.includes('can upload only 10 file per task')) {
-        file.errorText.push('can upload only 10 file per task');
+      if (!file.errorText.includes('Each task can have at most 10 files')) {
+        file.errorText.push('Each task can have at most 10 files');
       }
     }
 
     if (file.size > 20 * 1024 * 1024) {
-      if (!file.errorText.includes('this file is too large')) {
-        file.errorText.push('this file is too large');
+      if (!file.errorText.includes('Each file cannot be larger than 20 MB')) {
+        file.errorText.push('Each file cannot be larger than 20 MB');
       }
     }
   });
