@@ -44,11 +44,9 @@ const showErrorModal = ref(false); // * show Error from Edit Limit modal
 const overStatuses = ref([]);
 const currentBoardId = useBoardStore().currentBoardId;
 // const currentBoardId = ref(route.params.boardId);
-const kanbanData = ref([]);
 const isOwner = ref(false);
 const canRead = ref(false);
 const canWrite = ref(false);
-const taskListType = ref(taskStore.taskListType);
 // ! ================= Modal ======================
 
 const openEditMode = (id) => {
@@ -329,22 +327,6 @@ onBeforeMount(async () => {
 });
 
 // ! ================= KanBanData ========================
-watch(() => [filterBy.value, sortBy.value, loading.value, allTasks.value], makekanbanData, {
-  immediate: true,
-  deep: true,
-});
-
-function makekanbanData() {
-  if (loading.value || allTasks.value === null) return;
-  kanbanData.value = [];
-  for (let i = 0; i < statusStore.getAllStatusWithLimit().length; i++) {
-    const status = statusStore.getAllStatusWithLimit()[i];
-    const tasks = allTasks.value?.filter((task) => task.status === status.name);
-    status.tasks = tasks;
-    kanbanData.value?.push(status);
-  }
-}
-
 function addLoading(load) {
   loading.value.push(load);
 }
@@ -407,10 +389,6 @@ const hexToRgb = (hex) => {
 
         <!-- reset button -->
         <button class="itbkk-filter-clear btn" @click="filterBy = []">Reset</button>
-        <button class="btn ml-1" @click="taskStore.taskListType === 'Table' ? (taskStore.taskListType = 'Kanban') : (taskStore.taskListType = 'Table')">
-          Change View To
-          {{ taskStore.taskListType === 'Table' ? 'Kanban' : 'Table' }}
-        </button>
 
         <!-- show edit limit modal -->
         <div class="float-right flex flex-row">
@@ -446,12 +424,7 @@ const hexToRgb = (hex) => {
       <!-- Content -->
       <div class="opacity">
         <div class="flex flex-col">
-          <!--           Table-->
-
-          <table
-            v-if="taskStore.taskListType === 'Table'"
-            class="table table-lg table-pin-rows table-pin-cols w-3/4 font-semibold mx-auto my-5 text-center text-base rounded-lg border-2 border-slate-500 border-separate border-spacing-1"
-          >
+          <table class="table table-lg table-pin-rows table-pin-cols w-3/4 font-semibold mx-auto my-5 text-center text-base rounded-lg border-2 border-slate-500 border-separate border-spacing-1">
             <!-- head -->
             <thead>
               <tr>
@@ -533,75 +506,6 @@ const hexToRgb = (hex) => {
               </tr>
             </tbody>
           </table>
-
-          <div v-if="taskStore.taskListType === 'Kanban'" class="flex flex-row flex-nowrap gap-5 w-3/4 mx-auto overflow-x-scroll mt-3">
-            <div
-              v-for="status in kanbanData"
-              class="kanban-status-card"
-              :style="{
-                'border-top': status.isLimit ? 'red 0.5rem solid' : 'green 0.5rem solid',
-                backgroundColor: getStatusColor(task.status),
-                color: getFontColor(task.status),
-              }"
-            >
-              <h5 class="kanban-status-name">{{ status.name }}</h5>
-              <div class="kanban-task-list">
-                <div v-for="task in status.tasks" class="kanban-task-card">
-                  <div>
-                    <p class="kanban-task-title">{{ task.title }}</p>
-                    <div class="kanban-task-action">
-                      <div :class="canWrite ? '' : 'lg:tooltip'" data-tip="You need to be board owner or has write access to perform this action.">
-                        <input :disabled="!canWrite" type="checkbox" :id="`kanban-task-action-${task.id}`" />
-
-                        <label :for="`kanban-task-action-${task.id}`">
-                          <svg width="1rem" height="1rem" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-                            <title>Kebab-Menu</title>
-                            <g id="Kebab-Menu" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                              <rect id="Container" x="0" y="0" width="24" height="24"></rect>
-                              <path
-                                d="M12,6 C12.5522847,6 13,5.55228475 13,5 C13,4.44771525 12.5522847,4 12,4 C11.4477153,4 11,4.44771525 11,5 C11,5.55228475 11.4477153,6 12,6 Z"
-                                id="shape-03"
-                                stroke="#030819"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-dasharray="0,0"
-                              ></path>
-                              <path
-                                d="M12,13 C12.5522847,13 13,12.5522847 13,12 C13,11.4477153 12.5522847,11 12,11 C11.4477153,11 11,11.4477153 11,12 C11,12.5522847 11.4477153,13 12,13 Z"
-                                id="shape-03"
-                                stroke="#030819"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-dasharray="0,0"
-                              ></path>
-                              <path
-                                d="M12,20 C12.5522847,20 13,19.5522847 13,19 C13,18.4477153 12.5522847,18 12,18 C11.4477153,18 11,18.4477153 11,19 C11,19.5522847 11.4477153,20 12,20 Z"
-                                id="shape-03"
-                                stroke="#030819"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-dasharray="0,0"
-                              ></path>
-                            </g>
-                          </svg>
-                        </label>
-                        <div class="kanban-task-action-menu">
-                          <a @click="openEditMode(task.id)">Edit</a>
-                          <a @click="openDeleteModal(task.title, task.id)">Delete</a>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="kanban-task-assignee">
-                    <img src="../assets/people.png" height="32" width="32" />
-                    <p v-if="task.assignees === null || task.assignees === ''" class="italic text-gray-500">Unassigned</p>
-                    <p v-else>{{ task.assignees }}</p>
-                  </div>
-                  <!--              action btn    -->
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         <!-- Modal -->
@@ -709,147 +613,5 @@ const hexToRgb = (hex) => {
 .v-leave-to {
   opacity: 0;
   z-index: -1;
-}
-
-.kanban-status-card {
-  flex: 0 0 20%;
-  border-top: solid 1rem;
-  background-color: #f7f7f7;
-  color: #000000;
-  border-radius: 10px;
-  min-height: 40rem;
-  width: 20rem;
-  font-weight: bold;
-  padding: 0.5rem;
-  text-wrap: wrap;
-
-  .kanban-status-name {
-    font-size: 1rem;
-    text-align: center;
-    margin: 0.5rem;
-  }
-
-  .kanban-task-list {
-    display: flex;
-    flex-direction: column;
-    background-color: #f7f7f7;
-
-    .kanban-task-card {
-      font-weight: normal;
-      border-radius: 5px;
-      margin: 5px;
-      box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      transition: box-shadow 0.5s;
-
-      .kanban-task-title {
-        overflow-wrap: break-word;
-        float: left;
-      }
-
-      .kanban-task-assignee {
-        padding-top: 0.25rem;
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-
-        img {
-          border-radius: 50%;
-        }
-      }
-
-      .kanban-task-action {
-        position: relative;
-        /*display: inline-block;*/
-        float: right;
-      }
-
-      .kanban-task-action input[type='checkbox'] {
-        display: none;
-      }
-
-      .kanban-task-action label {
-        background-color: #e3e3e3;
-        color: white;
-        padding: 10px;
-        cursor: pointer;
-        border-radius: 4px;
-        float: right;
-      }
-
-      .kanban-task-action label:hover {
-        background-color: #ccc;
-      }
-
-      .kanban-task-action-menu {
-        /* display: none;
-        //position: absolute;
-        //top: 100%;
-        //right: 0;
-        //background-color: #f1f1f1;
-        //min-width: 160px;
-        //box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
-        //z-index: 1;
-        //float: right; *
-        display: block; /* ใช้ block เพื่อทำ transition */
-        position: absolute;
-        top: 100%;
-        right: 0;
-        background-color: #f1f1f1;
-        min-width: 160px;
-        max-height: 0;
-        overflow: hidden;
-        opacity: 0;
-        box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
-        z-index: 1;
-      }
-
-      .kanban-task-action-menu a {
-        color: black;
-        padding: 12px 16px;
-        text-decoration: none;
-        display: block;
-      }
-
-      .kanban-task-action-menu a:hover {
-        background-color: #ddd;
-      }
-
-      /* เมื่อ checkbox ถูกเช็คจะแสดง dropdown */
-
-      .kanban-task-action-menu {
-        opacity: 1;
-      }
-
-      .kanban-task-action input[type='checkbox']:checked ~ .kanban-task-action-menu {
-        /*opacity: 100%;
-        //transition: opacity 1s ease;
-        //display: block;*/
-        max-height: 500px;
-        /* ตั้ง max-height มากพอให้ครอบคลุมความสูงทั้งหมดของเมนู */
-        opacity: 1;
-        transition: max-height 1.5s ease;
-      }
-
-      .kanban-task-action input[type='checkbox'] ~ .kanban-task-action-menu {
-        /*opacity: 100%;
-        //transition: opacity 1s ease;
-        //display: block;*/
-        max-height: 0;
-        /* ตั้ง max-height มากพอให้ครอบคลุมความสูงทั้งหมดของเมนู */
-        transition:
-          max-height 1.25s ease,
-          opacity 1s ease;
-      }
-    }
-
-    .kanban-task-card:hover {
-      box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-    }
-  }
 }
 </style>

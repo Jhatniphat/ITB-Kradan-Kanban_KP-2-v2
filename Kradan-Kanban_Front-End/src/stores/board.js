@@ -28,7 +28,6 @@ export const useBoardStore = defineStore('Board', {
     },
     getPendingBoardById(id) {
       // let userId = useAccountStore().tokenDetail.oid;
-      // todo : fix bug cannot get oid from tokenDetail
       let userId = VueJwtDecode.decode(useAccountStore().tokenRaw).oid;
       return this.boards.find((board) => board.id === id && board.collaborators.some((collab) => collab.oid === userId && collab.status === 'PENDING'));
     },

@@ -4,7 +4,6 @@ import { getAllTasks } from "@/lib/fetchUtils";
 export const useTaskStore = defineStore("tasks", {
   state: () => ({
     tasks: [],
-    taskListType : "Table"
   }),
   actions: {
     async getAllTasks() {
@@ -38,6 +37,8 @@ export const useTaskStore = defineStore("tasks", {
         this.tasks.splice(index, 1, updatedTask)
       }
       }
+      console.log(updatedTask);
+      console.trace();
     },
     transferStatus(oldStatus , newStatus) {
       this.tasks.forEach((task) => {

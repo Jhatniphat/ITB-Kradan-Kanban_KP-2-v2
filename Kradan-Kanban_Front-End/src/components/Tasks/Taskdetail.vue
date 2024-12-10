@@ -28,7 +28,7 @@ const props = defineProps({
 const statusList = ref([]);
 const loading = ref([]);
 const taskDetail = ref({});
-const originalTask = ref(null);
+const originalTask = ref({ title : '', description : '', assignees : '', status : '' });
 const error = ref(null);
 const Errortext = ref({
   title: '',
@@ -127,8 +127,6 @@ async function fetchTask(id) {
     } else {
       originalTaskDetails = await getTaskById(id);
     }
-
-    console.table(await originalTaskDetails);
     if (originalTaskDetails === 404 || originalTaskDetails === 400 || originalTaskDetails === 500) {
       emit('closeModal', 404);
       router.push(`/board/${currentBoardId}`);
@@ -184,8 +182,6 @@ async function saveTask() {
   let deleteAttachmentResponses = [];
   let uploadAttachmentsResponses = [];
   try {
-    console.log('Attachment Only Working!!!');
-
     if (filesToUpload.value.length > 0) {
       const resUp = await uploadAttachments(currentBoardId, props.taskId, filesToUpload.value);
       console.log('File upload response:', resUp);
@@ -207,15 +203,14 @@ async function saveTask() {
       originalTask.value.status === taskDetail.value.status
     ) {
       editTaskResponse = 200;
-      console.log(editTaskResponse);
     } else {
       delete taskDetail.value.id;
       delete taskDetail.value.createdOn;
       delete taskDetail.value.updatedOn;
       let editRes = await editTask(props.taskId, taskDetail.value);
-      taskDetail.value = editRes;
-      taskStore.editStoreTask(editRes.payload);
-      editTaskResponse = editRes.status;
+      taskDetail.value = await editRes;
+      taskStore.editStoreTask(await editRes.payload);
+      editTaskResponse = await editRes.status;
     }
   } catch (error) {
     console.log(error);
@@ -289,8 +284,6 @@ function removeLoading(load) {
 }
 
 function checkErrorText() {
-  // fileLoading.value = true;
-
   previewFiles.value.forEach((file, index) => {
     file.errorText = [];
 
@@ -306,7 +299,6 @@ function checkErrorText() {
       }
     }
   });
-  fileLoading.value = false;
 }
 
 const generatePDFThumbnail = async (file) => {
@@ -351,8 +343,6 @@ function removeFile(index) {
 
   // Remove from preview list
   previewFiles.value.splice(index, 1);
-  // console.log('Files to Upload:', filesToUpload.value);
-  // console.log('Files to Remove:', filesToRemove.value);
   checkErrorText();
 }
 
@@ -471,7 +461,8 @@ const openPreview = (file) => {
             <textarea
               v-model="taskDetail.assignees"
               class="itbkk-assignees textarea textarea-bordered h-24 bg-white dark:bg-base-300 dark:text-slate-400 min-h-[18.625rem]"
-              placeholder="Bio"
+              placeholder="No Assignees"
+              :disabled="!isOwnerOrNot"
             ></textarea>
             <div class="label">
               <!-- ? Error Text -->
