@@ -1,6 +1,7 @@
 package com.example.kradankanban_backend.common.services;
 
 import com.example.kradankanban_backend.common.dtos.DetailBoardDTO;
+import com.example.kradankanban_backend.common.dtos.DetailTaskWithTimeOnDTO;
 import com.example.kradankanban_backend.common.dtos.SimpleTaskDTO;
 import com.example.kradankanban_backend.common.entities.BoardEntity;
 import com.example.kradankanban_backend.common.entities.CollabEntity;
@@ -22,6 +23,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class TaskService {
@@ -39,21 +41,29 @@ public class TaskService {
     @Autowired
     private CollabRepository collabRepository;
 
-    public List<TaskEntity> findAllTasksByBoardId(String userId, String boardId) {
+    public List<SimpleTaskDTO> findAllTasksByBoardId(String userId, String boardId) {
         if (!boardRepository.existsById(boardId)) {
             throw new WrongBoardException("Board not found");
         }
         BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
-        return repository.findByTkBoard_BoardId(boardId);
+        List<TaskEntity> tasks = repository.findByTkBoard_BoardId(boardId);
+        return tasks.stream().map(task -> {
+            SimpleTaskDTO dto = modelMapper.map(task, SimpleTaskDTO.class);
+            dto.setTotal_attachment(task.getAttachments().size());
+            return dto;
+        }).collect(Collectors.toList());
     }
 
 
-    public TaskEntity findTaskByBoardIdAndTaskId(String userId, String boardId, int taskId) {
+    public DetailTaskWithTimeOnDTO findTaskByBoardIdAndTaskId(String boardId, int taskId) {
         if (!repository.existsByIdAndTkBoard(taskId, boardRepository.findByBoardId(boardId).orElseThrow(() -> new WrongBoardException("Board not found")))) {
             throw new WrongBoardException("Board not found");
         }
         BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
-        return repository.findByTkBoardAndId(board, taskId).orElseThrow(() -> new ItemNotFoundException("Task ID " + taskId + " does not exist !!!"));
+        TaskEntity tasks = repository.findByTkBoardAndId(board, taskId).orElseThrow(() -> new ItemNotFoundException("Task ID " + taskId + " not found in this board!!"));
+        DetailTaskWithTimeOnDTO dto = modelMapper.map(tasks, DetailTaskWithTimeOnDTO.class);
+        dto.setTotal_attachment(tasks.getAttachments().size());
+        return dto;
     }
 
     public TaskEntity addTaskForBoard(String userId, String boardId, TaskEntity task) {

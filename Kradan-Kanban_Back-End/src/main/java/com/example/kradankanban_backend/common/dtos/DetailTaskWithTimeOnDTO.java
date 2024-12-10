@@ -15,4 +15,5 @@ public class DetailTaskWithTimeOnDTO {
     private Object status;
     private String createdOn;
     private String updatedOn;
+    private Integer total_attachment;
 }

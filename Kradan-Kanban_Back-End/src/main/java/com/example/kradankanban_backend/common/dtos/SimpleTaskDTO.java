@@ -12,4 +12,5 @@ public class SimpleTaskDTO {
     private String title;
     private String assignees;
     private Object status;
+    private Integer total_attachment;
 }

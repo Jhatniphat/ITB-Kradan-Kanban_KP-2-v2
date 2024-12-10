@@ -112,9 +112,7 @@ public class BoardController {
         if (board == null) {
             return new ResponseEntity<>("Board not found", HttpStatus.NOT_FOUND);
         }
-        List<TaskEntity> tasks = taskService.findAllTasksByBoardId(userId,boardId);
-        List<SimpleTaskDTO> simpleTaskDTOS = tasks.stream().map(task -> modelMapper.map(task, SimpleTaskDTO.class)).collect(Collectors.toList());
-
+        List<SimpleTaskDTO> simpleTaskDTOS = taskService.findAllTasksByBoardId(userId, boardId);
         return new ResponseEntity<>(simpleTaskDTOS, HttpStatus.OK);
     }
 
@@ -134,10 +132,8 @@ public class BoardController {
 
     @GetMapping("/{boardId}/tasks/{taskId}")
     public ResponseEntity<DetailTaskWithTimeOnDTO> getTaskByBoardIdAndTaskId(@PathVariable String boardId, @PathVariable int taskId,HttpServletRequest request) {
-        String userId = getUserId(request);
-        TaskEntity task = taskService.findTaskByBoardIdAndTaskId(userId,boardId, taskId);
-        DetailTaskWithTimeOnDTO DetailTask = modelMapper.map(task, DetailTaskWithTimeOnDTO.class);
-        return ResponseEntity.ok(DetailTask);
+        DetailTaskWithTimeOnDTO task = taskService.findTaskByBoardIdAndTaskId(boardId, taskId);
+        return ResponseEntity.ok(task);
     }
 
     @PutMapping("/{boardId}/tasks/{taskId}")
