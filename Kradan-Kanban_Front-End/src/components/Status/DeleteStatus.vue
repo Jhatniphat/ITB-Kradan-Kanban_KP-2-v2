@@ -137,6 +137,7 @@ const transferTheStatus = async (newId) => {
         </button>
       </div>
     </div>
+
     <!-- Transfers Modal -->
     <div v-if="transfer">
       <h1 class="m-2 pb-4 text-2xl font-bold">Transfer a Satus</h1>
@@ -154,7 +155,7 @@ const transferTheStatus = async (newId) => {
             >
               <!-- <option value="No Status" selected>No Status</option> -->
               <option
-                v-for="status in statusList"
+                v-for="status in statusList.filter((status) => status.id !== props.deleteId)"
                 :key="status.id"
                 :value="status.id"
               >

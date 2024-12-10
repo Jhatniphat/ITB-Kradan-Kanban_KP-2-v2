@@ -39,7 +39,7 @@ export async function getAllTasks() {
       return item;
     }
     return await res.json();
-  } catch (error) {}
+  } catch (error) { }
 }
 
 /**
@@ -144,14 +144,14 @@ export async function editTask(taskId, Task) {
     }
     if (res.ok) {
       // return await res.json();
-      return { status : res.status , payload : res.json() }
+      return { status: res.status, payload: res.json() }
     } else {
       // throw new Error(`Failed to update task: ${res.status}`);
-      return { status : res.status , payload : res.json() }
+      return { status: res.status, payload: res.json() }
     }
   } catch (error) {
     // throw new Error(`Error updating task: ${error.message}`);
-    return { status : res.status , payload : res.json() }
+    return { status: res.status, payload: res.json() }
   }
 }
 
@@ -222,7 +222,7 @@ export async function getAllStatus() {
       useStatusStore().status = statusess
       return await statusess;
     }
-  } catch (error) {}
+  } catch (error) { }
 }
 
 /**
@@ -413,13 +413,15 @@ export async function transferStatus(oldId, newId) {
 }
 
 /**
- * ? This function will send a request to change limitStatus to opposite Then return status code of response
+ * ? This function will send a request to change limitStatus Then return status code of response
  * * Automatically redirect to login when get 401
  * @function toggleLimitStatus
  * @returns {Promise<Number>} A promise that resolves to response.status code
  * @throws {Error} Throws an error if the fetch operation fails.
  */
-export async function toggleLimitStatus() {
+export async function toggleLimitStatus(limitStatus) {
+  console.table(limitStatus);
+  console.log(limitStatus);
   const boardId = useBoardStore().currentBoardId;
   let res, item;
   try {
@@ -427,8 +429,16 @@ export async function toggleLimitStatus() {
     res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses/maximum-task`, {
       method: 'PATCH',
       headers: {
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${accountStore.tokenRaw}`,
-      },
+
+      }, 
+      body: JSON.stringify( limitStatus.isEnable ? {
+        limit: limitStatus.limit,
+        toggleEnable: limitStatus.isEnable
+      }:{
+        toggleEnable: limitStatus.isEnable
+      } )
     });
     if (res.status === 401) {
       accountStore.clearTokenDetail();
@@ -471,7 +481,8 @@ export async function getLimitStatus() {
     }
     if (res.status === 200) {
       let limitEnable = await res.json();
-      statusStore.setLimitEnable(limitEnable);
+      statusStore.setLimitEnable(limitEnable.isEnable);
+      statusStore.setLimit(limitEnable.limit);
       return await limitEnable;
     }
   } catch (e) {
@@ -726,7 +737,7 @@ export async function getAllStatusForGuest() {
       useStatusStore().status = await res.json();
       return await res.json();
     }
-  } catch (error) {}
+  } catch (error) { }
 }
 
 /**
@@ -784,7 +795,7 @@ export async function getAllTasksForGuest() {
       return item;
     }
     return await res.json();
-  } catch (error) {}
+  } catch (error) { }
 }
 
 /**
@@ -841,7 +852,9 @@ export async function getLimitStatusForGuest() {
       return;
     }
     if (res.status === 200) {
-      statusStore.setLimitEnable(await res.json());
+      let limitEnable = await res.json();
+      statusStore.setLimitEnable(limitEnable.isEnable);
+      statusStore.setLimit(limitEnable.limit);
       return await res.json();
     }
   } catch (e) {
@@ -1132,14 +1145,14 @@ export async function uploadAttachments(boardId, taskId, files) {
 
     if (res.ok) {
       // const uploadedAttachments = await res.json();
-      return { status : res.status , payload : res.json() }
+      return { status: res.status, payload: res.json() }
     }
     if (res.status === 401) {
       accountStore.clearTokenDetail();
       router.push('/login');
-      return { status : res.status , payload : res.json() }
+      return { status: res.status, payload: res.json() }
     } else {
-      return { status : res.status , payload : res.json() }
+      return { status: res.status, payload: res.json() }
     }
   } catch (error) {
     console.log(error.toString());
@@ -1160,14 +1173,14 @@ export async function deleteAttachment(boardId, taskId, attachmentId) {
     if (res.ok) {
       // const deletedAttachment = await res.json();
       // return deletedAttachment;
-      return { status : res.status , payload : res.json() }
+      return { status: res.status, payload: res.json() }
     }
     if (res.status === 401) {
       accountStore.clearTokenDetail();
       router.push('/login');
-      return { status : res.status , payload : res.json() }
+      return { status: res.status, payload: res.json() }
     } else {
-      return { status : res.status , payload : res.json() }
+      return { status: res.status, payload: res.json() }
     }
   } catch (error) {
     console.log(error.toString());
@@ -1213,7 +1226,7 @@ export async function login(username, password) {
         status: res.status,
         payload: 'There is a problem. Please try again later',
       };
-  } catch (error) {}
+  } catch (error) { }
 }
 
 export async function validateToken() {

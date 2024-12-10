@@ -86,7 +86,11 @@ const closeEditModal = (res) => {
 
 function closeEditLimit(overStatus) {
   showEditLimit.value = false;
-  toastStore.createToast(`The Kanban now limit ${statusStore.getLimit()} tasks in each status`);
+  if (statusStore.limitEnable) {
+    toastStore.createToast(`The Kanban now limit <span class="font-bold"> ${statusStore.getLimit()} </span>tasks in each status`);
+  } else {
+    toastStore.createToast('The Kanban now does not limit the number of tasks in each status');
+  }
   if (overStatus === null || overStatus === undefined) return 0;
   if (typeof overStatus === 'object') {
     showErrorModal.value = true;
