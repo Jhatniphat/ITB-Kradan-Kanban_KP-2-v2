@@ -14,12 +14,13 @@ const userName = computed(() => accountStore.userName);
 const handleLogout = () => {
   // accountStore.clearTokenDetail();
   accountStore.clearToken();
-  router.push('/login');
+  router.push({ name: 'login' });
 };
 
 const route = useRoute();
 
 let showTaskStatusCollabMenu = ref(false);
+let showBoardInvatation = ref(true);
 
 function routeChange(to) {
   const currentBoardId = useBoardStore().currentBoardId;
@@ -43,6 +44,8 @@ function checkrouteName(value) {
     showTaskStatusCollabMenu.value = false;
   }
 
+  showBoardInvatation.value = !useAccountStore().isRefreshTokenExpired()
+
   if (value.toString().includes('task')) {
     return `Board : ${useBoardStore().currentBoard.name}`;
   } else if (value.toString().includes('status')) {
@@ -58,6 +61,7 @@ function checkrouteName(value) {
   } else {
     return value;
   }
+
 }
 
 let currentRouteName = ref(checkrouteName(route.name));
@@ -75,7 +79,7 @@ const menus = computed(() => [
     label: 'Board Management',
     icon: '<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" viewBox="0 0 24 24"><path fill="currentColor" d="M5 21q-.825 0-1.412-.587T3 19V5q0-.825.588-1.412T5 3h14q.825 0 1.413.588T21 5v14q0 .825-.587 1.413T19 21zm2-4h2V7H7zm8-2h2V7h-2zm-4-3h2V7h-2z"/></svg>',
     action: () => routeChange('board'),
-    visble: true,
+    visble: showBoardInvatation.value,
   },
   {
     label: 'Task / Issues',
@@ -99,7 +103,7 @@ const menus = computed(() => [
     label: 'Invitation',
     icon: '<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" viewBox="0 0 24 24"><path fill="currentColor" d="M4 20q-.825 0-1.412-.587T2 18V6q0-.825.588-1.412T4 4h16q.825 0 1.413.588T22 6v12q0 .825-.587 1.413T20 20zm8-7l8-5V6l-8 5l-8-5v2z"/></svg>',
     action: () => routeChange('invitation'),
-    visble: true,
+    visble: showBoardInvatation.value,
   },
 ]);
 
@@ -151,14 +155,6 @@ const toggleSidebar = () => {
       <div class="h-16 bg-white flex items-center justify-between px-4 shadow-sm">
         <span class="text-lg font-bold">{{ currentRouteName }}</span>
         <div class="flex items-center gap-4">
-          <button class="text-gray-500 hover:text-gray-700">
-            <svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" viewBox="0 0 24 24">
-              <path
-                fill="currentColor"
-                d="M4 20q-.825 0-1.412-.587T2 18V6q0-.825.588-1.412T4 4h16q.825 0 1.413.588T22 6v12q0 .825-.587 1.413T20 20zM20 8l-7.475 4.675q-.125.075-.262.113t-.263.037t-.262-.037t-.263-.113L4 8v10h16zm-8 3l8-5H4zM4 8v.25v-1.475v.025V6v.8v-.012V8.25zv10z"
-              />
-            </svg>
-          </button>
           <div class="flex items-center gap-2">
             <span class="rounded-full bg-gray-300 w-8 h-8 flex items-center justify-center text-gray-700">
               <i class="fas fa-user"></i>
@@ -175,7 +171,7 @@ const toggleSidebar = () => {
           </div>
         </div>
       </div>
-      <div class="overflow-scroll">
+      <div class="h-full overflow-scroll">
         <slot> </slot>
       </div>
       <!-- Content Area -->

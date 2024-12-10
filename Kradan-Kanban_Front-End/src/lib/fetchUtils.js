@@ -677,7 +677,6 @@ export async function changeVisibility(mode) {
  * ? This function is same at getBoardById But don't require login
  */
 export async function getBoardByIdForGuest(boardId) {
-  console.log('FOR GUEST');
   if (useBoardStore().isBoardExist(boardId)) {
     return useBoardStore().findBoardById(boardId);
   }
@@ -691,16 +690,13 @@ export async function getBoardByIdForGuest(boardId) {
     });
 
     if (res.status === 401) {
-      console.log('401');
       accountStore.clearTokenDetail();
       router.push('/login');
       return null;
     } else if (res.status === 200) {
-      console.log('200');
       let item = await res.json();
       return { status: 200, payload: item };
     } else if (res.status === 400) {
-      console.log('400');
       return { status: 400, payload: 'No board found' };
     }
   } catch (error) {
@@ -853,6 +849,57 @@ export async function getLimitStatusForGuest() {
   }
 }
 
+/**
+ * ? This function is same at getAllAttachments But don't require login
+ */
+export async function getAllAttachmentsForGuest(boardId, taskId) {
+  const accountStore = useAccountStore();
+  let res;
+  try {
+    res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks/${taskId}/attachments`, {
+      method: 'GET',
+    });
+
+    if (res.ok) {
+      const attachments = await res.json();
+      return attachments;
+    }
+    if (res.status === 401) {
+      accountStore.clearTokenDetail();
+      router.push('/login');
+      return res.status;
+    } else {
+      return res.status;
+    }
+  } catch (error) {
+    console.log(error.toString());
+  }
+}
+
+/**
+ * ? This function is same at getAllCollabs But don't require login
+ */
+export async function getAllCollabsForGuest() {
+  const boardId = useBoardStore().currentBoardId;
+  try {
+    const accountStore = useAccountStore();
+    const res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/collabs`, {
+      method: 'GET',
+    });
+    if (res.status === 401) {
+      accountStore.clearTokenDetail();
+      router.push('/login');
+      return null;
+    } else if (res.status === 200) {
+      return await res.json();
+    } else {
+      return { status: res.status, error: true };
+    }
+  } catch (error) {
+    console.error('Failed to fetch collaborators:', error);
+    return null;
+  }
+}
 // ! -------------------------- COLLABORATOR ----------------------------
 export async function getAllCollabs() {
   const boardId = useBoardStore().currentBoardId;
@@ -1054,8 +1101,6 @@ export async function getAllAttachments(boardId, taskId) {
 
     if (res.ok) {
       const attachments = await res.json();
-      console.log(attachments);
-
       return attachments;
     }
     if (res.status === 401) {

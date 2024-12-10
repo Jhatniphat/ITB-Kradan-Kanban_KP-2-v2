@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
-import { getTaskById, editTask, getTaskByIdForGuest, getAllAttachments, deleteAttachment, uploadAttachments } from '@/lib/fetchUtils.js';
+import { getTaskById, editTask, getTaskByIdForGuest, getAllAttachments, deleteAttachment, uploadAttachments, getAllAttachmentsForGuest } from '@/lib/fetchUtils.js';
 import router from '@/router';
 import { useTaskStore } from '@/stores/task';
 import { useStatusStore } from '@/stores/status.js';
@@ -10,6 +10,7 @@ import { useToastStore } from '@/stores/toast.js';
 import * as pdfjsLib from 'pdfjs-dist/webpack'; // ใช้ Webpack version ของ PDF.js
 import LoadingComponent from '@/components/loadingComponent.vue';
 import { marked } from 'marked';
+import { generateFileData, openPreview } from '@/lib/fileUtils';
 
 const currentBoardId = useBoardStore().currentBoardId;
 const taskStore = useTaskStore();
@@ -28,7 +29,7 @@ const props = defineProps({
 const statusList = ref([]);
 const loading = ref([]);
 const taskDetail = ref({});
-const originalTask = ref({ title : '', description : '', assignees : '', status : '' });
+const originalTask = ref({ title: '', description: '', assignees: '', status: '' });
 const error = ref(null);
 const Errortext = ref({
   title: '',
@@ -58,6 +59,8 @@ const previewFiles = ref([]);
 const filesToUpload = ref([]);
 const filesToRemove = ref([]);
 const hoveredFileIndex = ref(null);
+const showIframePreview = ref(false);
+const iframePreviewURL = ref('');
 
 function handelScroll() {
   if (content.value.scrollTop > 0) {
@@ -100,7 +103,8 @@ const canSave = computed(() => {
         originalTask.value.assignees !== taskDetail.value.assignees ||
         originalTask.value.status !== taskDetail.value.status)) ||
       filesToUpload.value.length > 0 ||
-      filesToRemove.value.length > 0)
+      filesToRemove.value.length > 0) &&
+    !previewFiles.value.some((file) => file.errorText.length === 0)
   );
 });
 
@@ -108,7 +112,6 @@ watch(
   statusStore.status,
   () => {
     statusList.value = statusStore.getAllStatusWithLimit();
-    console.table(statusList.value);
   },
   { deep: true }
 );
@@ -140,31 +143,19 @@ async function fetchTask(id) {
 
     //Fetch Uploaded Files
     let uploadedFilesDetail;
-    uploadedFilesDetail = await getAllAttachments(currentBoardId, id);
+    if (useBoardStore().currentBoard.visibility === 'PUBLIC' && useAccountStore().tokenRaw === '') {
+      uploadedFilesDetail = await getAllAttachmentsForGuest(currentBoardId, id);
+    } else {
+      uploadedFilesDetail = await getAllAttachments(currentBoardId, id);
+    }
+    // uploadedFilesDetail = await getAllAttachments(currentBoardId, id);
 
     uploadedFiles.value = [...uploadedFilesDetail];
 
     // Process Uploaded Files
     uploadedFilesDetail.forEach(async (file) => {
       try {
-        // Convert base64 to Blob
-        const byteCharacters = atob(file.fileData);
-        const byteNumbers = Array.from(byteCharacters, (char) => char.charCodeAt(0));
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: file.fileType });
-
-        // Create preview file details
-        const previewUrl = URL.createObjectURL(blob);
-
-        previewFiles.value.push({
-          id: file.id,
-          name: file.fileName,
-          size: blob.size,
-          type: file.fileType,
-          previewUrl: file.fileType.startsWith('application/msword') ? `https://docs.google.com/viewer?url=${encodeURIComponent(previewUrl)}&embedded=true` : previewUrl,
-          thumbnail: file.fileType.startsWith('image/') ? previewUrl : file.fileType === 'application/pdf' ? await generatePDFThumbnail(blob) : null,
-          errorText: [],
-        });
+        previewFiles.value.push(await generateFileData(file, [])); // Generate file data
       } catch (fileProcessingError) {
         console.error('Error processing file:', file, fileProcessingError);
       }
@@ -184,14 +175,12 @@ async function saveTask() {
   try {
     if (filesToUpload.value.length > 0) {
       const resUp = await uploadAttachments(currentBoardId, props.taskId, filesToUpload.value);
-      console.log('File upload response:', resUp);
       uploadAttachmentsResponses.push(resUp);
     }
 
     if (filesToRemove.value.length > 0) {
       for (const file of filesToRemove.value) {
         const resRemove = await deleteAttachment(currentBoardId, props.taskId, file.id);
-        console.log(`Removed file ID: ${file.id}, Response:`, resRemove);
         deleteAttachmentResponses.push(resRemove);
       }
     }
@@ -215,13 +204,11 @@ async function saveTask() {
   } catch (error) {
     console.log(error);
   } finally {
-    console.log(res);
     if (editTaskResponse === 200 && !deleteAttachmentResponses.some((res) => res.status !== 200) && !uploadAttachmentsResponses.some((res) => res.status !== 200)) {
       res = 200;
     } else {
       res = editTaskResponse;
     }
-    console.log('res', res);
     removeLoading('saving task');
     router.push(`/board/${currentBoardId}`);
     emit('closeModal', res);
@@ -253,27 +240,13 @@ async function handleFileUpload(e) {
     if (previewFiles.value.some((previewFile) => previewFile.name === file.name)) {
       useToastStore().createToast(`"${file.name}" file is already uploaded`, 'danger', 5000);
     } else {
-      const reader = new FileReader();
-
-      reader.onload = async (e) => {
-        // error handling
-        previewFiles.value.push({
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          previewUrl: file.type.startsWith('application/msword') ? `https://docs.google.com/viewer?url=${encodeURIComponent(URL.createObjectURL(file))}&embedded=true` : URL.createObjectURL(file),
-          thumbnail: file.type.startsWith('image/') ? URL.createObjectURL(file) : file.type === 'application/pdf' ? await generatePDFThumbnail(file) : null,
-          errorText: error,
-        });
-      };
-      reader.readAsDataURL(file);
+      previewFiles.value.push(await generateFileData(file, error));
     }
   });
 
   removeLoading('Uploading files');
   checkErrorText();
 }
-
 
 function addLoading(load) {
   loading.value.push(load);
@@ -352,14 +325,9 @@ function showErrorTooltip(index) {
 function hideErrorTooltip() {
   hoveredFileIndex.value = null; // ซ่อน tooltip เมื่อเมาส์ออก
 }
-const openPreview = (file) => {
-  // previewFile.value = file;
-  window.open(file.previewUrl, '_blank');
-};
 </script>
 
 <template>
-
   <!-- Title -->
   <div class="h-[50rem] w-full bg-white rounded-md flex flex-col overflow-scroll">
     <!-- ? HEADER -->
@@ -375,7 +343,15 @@ const openPreview = (file) => {
     <loading-component :loading="loading" v-if="loading.length > 0" />
 
     <!-- ? BODY -->
-    <div class="flex flex-col overflow-scroll p-2 grow" ref="content" @scroll="handelScroll" v-if="loading.length === 0">
+    <div class="flex flex-col overflow-scroll p-2 grow" ref="content" @scroll="handelScroll" v-if="loading.length === 0 && showIframePreview">
+      <div class="flex-1 flex flex-row-reverse">
+        <svg @click="showIframePreview = false" xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M6.4 19L5 17.6l5.6-5.6L5 6.4L6.4 5l5.6 5.6L17.6 5L19 6.4L13.4 12l5.6 5.6l-1.4 1.4l-5.6-5.6z" />
+        </svg>
+      </div>
+      <iframe :src="iframePreviewURL" class="h-full w-full" />
+    </div>
+    <div class="flex flex-col overflow-scroll p-2 grow" ref="content" @scroll="handelScroll" v-if="loading.length === 0 && !showIframePreview">
       <div class="w-full flex flex-row">
         <div class="basis-2/3 px-2">
           <!-- ? Title -->
@@ -446,7 +422,7 @@ const openPreview = (file) => {
               <div v-if="descriptionTab === 'preview'">
                 <div
                   class="markdown-preview w-full prose max-w-none prose-indigo leading-6 rounded-b-md shadow-sm border border-gray-300 p-5 bg-white overflow-y-auto min-h-64"
-                  v-html="!!taskDetail ? marked(taskDetail.description) : ''"
+                  v-html="marked(taskDetail.description === null ? '' : statusDetail.description)"
                 ></div>
               </div>
             </div>
@@ -498,7 +474,7 @@ const openPreview = (file) => {
           <!-- Preview Button -->
           <div class="absolute top-2 left-2 z-50">
             <svg
-              @click="openPreview(file)"
+              @click="file.type !== 'text/plain' ? openPreview(file) : (showIframePreview = true), (iframePreviewURL = file.previewUrl)"
               xmlns="http://www.w3.org/2000/svg"
               width="1.5em"
               height="1.5em"

@@ -8,6 +8,7 @@ import { useToastStore } from '@/stores/toast.js';
 import * as pdfjsLib from 'pdfjs-dist/webpack'; // ใช้ Webpack version ของ PDF.js
 import { marked } from 'marked';
 import loadingComponent from '../loadingComponent.vue';
+import { generateFileData, openPreview } from '@/lib/fileUtils';
 const emit = defineEmits(['closeModal']);
 const statusStore = useStatusStore();
 const boardStore = useBoardStore();
@@ -33,6 +34,8 @@ const uploadedFiles = ref([]);
 const fileInput = ref(null);
 const previewFile = ref(null);
 const filesToUpload = ref([]);
+const showIframePreview = ref(false);
+const iframePreviewURL = ref('');
 
 // style
 const isHeaderSticky = ref(false);
@@ -86,7 +89,6 @@ async function fetchData() {
       resUp = await uploadAttachments(boardStore.currentBoardId, res.id, filesToUpload.value).then(() => {
         removeLoading('Uploading files');
       });
-      console.log('File upload response:', resUp);
     }
   } catch (error) {
     console.log(error);
@@ -102,9 +104,7 @@ function sendCloseModal() {
 
 async function handleFileUpload(e) {
   let files = Array.from(e.target.files);
-  console.log(files);
   filesToUpload.value.push(...files);
-  console.log('Raw files:', filesToUpload.value);
 
   files.forEach(async (file, index) => {
     let error = [];
@@ -119,60 +119,13 @@ async function handleFileUpload(e) {
     if (uploadedFiles.value.some((updatedFile) => updatedFile.name === file.name)) {
       useToastStore().createToast(`"${file.name}" file is already uploaded`, 'danger', 5000);
     } else {
-      const reader = new FileReader();
-
-      reader.onload = async (e) => {
-        // error handling
-        uploadedFiles.value.push({
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          previewUrl: file.type.startsWith('application/msword') ? `https://docs.google.com/viewer?url=${encodeURIComponent(URL.createObjectURL(file))}&embedded=true` : URL.createObjectURL(file),
-          thumbnail: file.type.startsWith('image/') ? URL.createObjectURL(file) : file.type === 'application/pdf' ? await generatePDFThumbnail(file) : null,
-          errorText: error,
-        });
-      };
-
-      reader.readAsDataURL(file);
+      uploadedFiles.value.push(await generateFileData(file, error));
     }
     checkErrorText();
-
-    // reader.readAsDataURL(file);
   });
 
   checkErrorText();
 }
-
-const generatePDFThumbnail = async (file) => {
-  const pdf = await pdfjsLib.getDocument(URL.createObjectURL(file)).promise; // โหลด PDF
-  const page = await pdf.getPage(1); // ดึงหน้าแรกของ PDF
-  const viewport = page.getViewport({ scale: 1 }); // ตั้งค่า scale
-  const canvas = document.createElement('canvas'); // สร้าง canvas
-  const context = canvas.getContext('2d');
-
-  // ตั้งขนาด canvas
-  canvas.width = viewport.width;
-  canvas.height = viewport.height;
-
-  // เรนเดอร์ PDF บน canvas
-  await page.render({
-    canvasContext: context,
-    viewport,
-  }).promise;
-
-  // แปลง canvas เป็น Blob URL
-  return new Promise((resolve) => {
-    canvas.toBlob((blob) => {
-      const blobURL = URL.createObjectURL(blob);
-      resolve(blobURL); // ส่ง Blob URL กลับ
-    }, 'image/png'); // ใช้ PNG เป็นฟอร์แมต
-  });
-};
-
-const openPreview = (file) => {
-  // previewFile.value = file;
-  window.open(file.previewUrl, '_blank');
-};
 
 function handelScroll() {
   if (content.value.scrollTop > 0) {
@@ -210,8 +163,6 @@ function checkErrorText() {
 
   uploadedFiles.value.forEach((file, index) => {
     file.errorText = [];
-
-    console.log(file.name);
     if (uploadedFiles.value.length > 10) {
       if (!file.errorText.includes('can upload only 10 file per task')) {
         file.errorText.push('can upload only 10 file per task');
@@ -251,7 +202,15 @@ function removeLoading(load) {
     <loadingComponent :loading="loading" v-if="loading.length > 0" />
 
     <!-- ? BODY -->
-    <div class="flex flex-col overflow-scroll p-2 grow" ref="content" @scroll="handelScroll" v-if="loading.length === 0">
+    <div class="flex flex-col overflow-scroll p-2 grow" ref="content" @scroll="handelScroll" v-if="loading.length === 0 && showIframePreview">
+      <div class="flex-1 flex flex-row-reverse">
+        <svg @click="showIframePreview = false" xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M6.4 19L5 17.6l5.6-5.6L5 6.4L6.4 5l5.6 5.6L17.6 5L19 6.4L13.4 12l5.6 5.6l-1.4 1.4l-5.6-5.6z" />
+        </svg>
+      </div>
+      <iframe :src="iframePreviewURL" class="h-full w-full"/>
+    </div>
+    <div class="flex flex-col overflow-scroll p-2 grow" ref="content" @scroll="handelScroll" v-if="loading.length === 0 && !showIframePreview">
       <div class="w-full flex flex-row">
         <div class="basis-2/3 px-2">
           <!-- ? Title -->
@@ -315,7 +274,7 @@ function removeLoading(load) {
               <div v-if="descriptionTab === 'preview'">
                 <div
                   class="markdown-preview w-full prose max-w-none prose-indigo leading-6 rounded-b-md shadow-sm border border-gray-300 p-5 bg-white overflow-y-auto min-h-64"
-                  v-html="marked(taskData.description)"
+                  v-html="marked(taskData.description === null ? '' : statusDetail.description)"
                 ></div>
               </div>
             </div>
@@ -362,7 +321,7 @@ function removeLoading(load) {
           <!-- Preview Button -->
           <div class="absolute top-2 left-2 z-50">
             <svg
-              @click="openPreview(file)"
+              @click="file.type !== 'text/plain' ? openPreview(file) : showIframePreview = true, iframePreviewURL = file.previewUrl"
               xmlns="http://www.w3.org/2000/svg"
               width="1.5em"
               height="1.5em"
