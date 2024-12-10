@@ -6,10 +6,7 @@ import com.example.kradankanban_backend.common.dtos.DetailBoardDTO;
 import com.example.kradankanban_backend.common.dtos.LimitDTO;
 import com.example.kradankanban_backend.common.dtos.VisibilityDTO;
 import com.example.kradankanban_backend.common.entities.*;
-import com.example.kradankanban_backend.common.repositories.BoardRepository;
-import com.example.kradankanban_backend.common.repositories.CollabRepository;
-import com.example.kradankanban_backend.common.repositories.LimitRepository;
-import com.example.kradankanban_backend.common.repositories.StatusRepository;
+import com.example.kradankanban_backend.common.repositories.*;
 import com.example.kradankanban_backend.exceptions.BadRequestException;
 import com.example.kradankanban_backend.exceptions.ForbiddenException;
 import com.example.kradankanban_backend.exceptions.ItemNotFoundException;
@@ -48,6 +45,8 @@ public class BoardService {
     private BoardRepository boardRepository;
     @Autowired
     private CollabRepository collabRepository;
+    @Autowired
+    private TaskRepository taskRepository;
 
     private DetailBoardDTO convertToDetailBoardDTO(BoardEntity board) {
         DetailBoardDTO.OwnerDTO owner = new DetailBoardDTO.OwnerDTO();
@@ -193,6 +192,8 @@ public class BoardService {
     @Transactional
     public BoardEntity deleteBoard(String boardId) {
         BoardEntity board = repository.findById(boardId).orElseThrow(() -> new WrongBoardException(boardId + "does not exist'"));
+        taskRepository.deleteAllByTkBoard_BoardId(boardId);
+        statusRepository.deleteAllByStBoard(boardId);
         collabRepository.deleteAllByBoardId(boardId);
 
         repository.delete(board);
