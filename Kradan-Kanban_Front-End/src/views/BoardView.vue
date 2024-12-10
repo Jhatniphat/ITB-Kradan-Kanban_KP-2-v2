@@ -2,7 +2,7 @@
 // ? import lib
 import { onBeforeMount, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { addBoard, deleteTask, getAllBoard, deleteCollaborator } from '../lib/fetchUtils.js';
+import { addBoard, getAllBoard, deleteCollaborator , deleteBoard } from '../lib/fetchUtils.js';
 import router from '@/router';
 // ? import component
 import Modal from '../components/Modal.vue';
@@ -139,6 +139,7 @@ async function saveAddBoard() {
 // ! ================= Modal ======================
 
 const showLeaveModal = ref(false);
+const showDeleteModal = ref(false);
 const collabBoardName = ref('');
 const selectedBoardId = ref(0);
 
@@ -146,6 +147,12 @@ const openLeaveModal = (boardId, boardName) => {
   collabBoardName.value = boardName;
   selectedBoardId.value = boardId;
   showLeaveModal.value = true;
+};
+
+const openDeleteModal = (boardId, boardName) => {
+  collabBoardName.value = boardName;
+  selectedBoardId.value = boardId;
+  showDeleteModal.value = true;
 };
 
 const leaveBoard = async () => {
@@ -171,12 +178,35 @@ const leaveBoard = async () => {
   }
 };
 
+const DeleteBoard = async () => {
+  let res;
+  const oid = useAccountStore().tokenDetail.oid;
+  try {
+    res = await deleteBoard(selectedBoardId.value, oid);
+    console.log(res);
+    if (typeof res === 'object') {
+      toastStore.createToast('Leave Board successfully');
+      prepareData(['']);
+      router.go(0)
+    } else if (res === 403 || 404) {
+      router.push(`/board`);
+    } else {
+      toastStore.createToast('There is a problem. Please try again later.', 'danger');
+    }
+  } catch (error) {
+    console.log(error);
+  } finally {
+    showLeaveModal.value = false;
+  }
+};
+
 function addLoading(load) {
   loading.value.push(load);
 }
 
 function removeLoading(load) {
   loading.value = loading.value.filter((l) => l !== load);
+  console.table(loading.value);
 }
 </script>
 
@@ -215,7 +245,7 @@ function removeLoading(load) {
   <div class="w-3/4 mx-auto mt-10 relative" v-if="loading.length === 0">
     <div class="flex flex-col">
       <div class="flex">
-        <div class="flex-1">filter</div>
+        <div class="flex-1"></div>
         <h1 class="text-center text-2xl font-bold flex-1">Personal Board</h1>
         <div class="flex-1">
           <button class="btn btn-primary itbkk-button-create float-right" @click="openAdd()">
@@ -245,7 +275,9 @@ function removeLoading(load) {
               <td class="text-center font-normal">{{ board.visibility }}</td>
               <td class="text-center font-normal">{{ board?.owner?.name }}</td>
               <td class="text-center font-normal">{{ board.id }}</td>
-              <td class="text-center font-normal"></td>
+              <td class="text-center font-normal">
+                  <button class="btn btn-outline btn-error" @click="openDeleteModal(board.id, board.name)">Delete</button>
+                </td>
             </tr>
           </tbody>
         </table>
@@ -300,24 +332,29 @@ function removeLoading(load) {
         <div class="flex flex-row-reverse gap-4 mt-5">
           <button @click="showLeaveModal = false" class="itbkk-button-cancel btn btn-outline btn-error basis-1/6">Close</button>
           <button @click="leaveBoard()" class="itbkk-button-confirm btn btn-outline btn-success basis-1/6">
-            {{ loading.length === 0 ? '' : 'Confirm' }}
-            <span class="loading loading-spinner text-success" v-if="loading.length === 0"></span>
+            {{ loading.length > 0 ? '' : 'Confirm' }}
+            <span class="loading loading-spinner text-success" v-if="loading.length > 0"></span>
           </button>
         </div>
       </div>
     </Modal>
-    <!-- Toast -->
-    <div class="toast">
-      <div role="alert" class="alert" :class="`alert-${toast.status}`" v-if="toast.status !== ''">
-        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24" v-if="toast.status === 'success'">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24" v-if="toast.status === 'error'">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <span>{{ toast.msg }}</span>
+
+    <Modal :showModal="showDeleteModal">
+      <div class="flex flex-col p-5 bg-slate-50 dark:bg-base-100 rounded-lg w-full">
+        <h1 class="m-2 pb-4 text-2xl font-bold">Delete Board</h1>
+        <hr />
+        <h1 class="itbkk-message font-semibold text-xl p-8">Do you want to delete this "{{ collabBoardName }}" board?</h1>
+        <hr />
+        <div class="flex flex-row-reverse gap-4 mt-5">
+          <button @click="showDeleteModal = false" class="itbkk-button-cancel btn btn-outline btn-error basis-1/6">Close</button>
+          <button @click="DeleteBoard()" class="itbkk-button-confirm btn btn-outline btn-success basis-1/6">
+            {{ loading.length > 0 ? '' : 'Confirm' }}
+            <span class="loading loading-spinner text-success" v-if="loading.length > 0"></span>
+          </button>
+        </div>
       </div>
-    </div>
+    </Modal>
+
   </div>
 </template>
 

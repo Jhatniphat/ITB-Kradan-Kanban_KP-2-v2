@@ -23,7 +23,6 @@ let showTaskStatusCollabMenu = ref(false);
 
 function routeChange(to) {
   const currentBoardId = useBoardStore().currentBoardId;
-  console.log(to);
   if (to === 'task') {
     router.push({ name: 'task-list', params: { boardId: currentBoardId } });
   } else if (to === 'status') {
@@ -38,7 +37,6 @@ function routeChange(to) {
 }
 
 function checkrouteName(value) {
-  console.log(value);
   if ((value.toString().includes('collab') || value.toString().includes('task') || value.toString().includes('status')) && value.toString() !== 'collab-invitations') {
     showTaskStatusCollabMenu.value = true;
   } else {
@@ -177,9 +175,10 @@ const toggleSidebar = () => {
           </div>
         </div>
       </div>
-
+      <div class="overflow-scroll">
+        <slot> </slot>
+      </div>
       <!-- Content Area -->
-      <slot> </slot>
     </div>
   </div>
 </template>
@@ -202,4 +201,5 @@ const toggleSidebar = () => {
 .list-leave-active {
   position: absolute;
 }
+
 </style>

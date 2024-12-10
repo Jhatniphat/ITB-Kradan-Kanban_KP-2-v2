@@ -606,6 +606,33 @@ export async function addBoard(newBoard) {
   }
 }
 
+export async function deleteBoard(id) {
+  const boardId = useBoardStore().currentBoardId;
+  try {
+    const accountStore = useAccountStore();
+    let res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${accountStore.tokenRaw}`,
+      },
+    });
+    if (res.status === 401) {
+      accountStore.clearTokenDetail();
+      router.push('/login');
+      return;
+    }
+    if (res.ok) {
+      let item = await res.json();
+      useBoardStore().deleteBoard(item.id);
+      return item;
+    } else {
+      return res.status;
+    }
+  } catch (error) {
+    return error;
+  }
+}
+
 /**
  * ? This function will send a request to change visibility of board Then return new visibility of board
  * * Automatically redirect to login when get 401
