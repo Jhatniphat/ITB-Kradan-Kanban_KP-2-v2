@@ -435,6 +435,7 @@ const hexToRgb = (hex) => {
                 <th>No</th>
                 <th>Title</th>
                 <th>Assignees</th>
+                <th>Attachments</th>
                 <!-- sort button -->
                 <button class="itbkk-status-sort" @click="sortBtn()">
                   <th class="flex justify-center">
@@ -479,6 +480,7 @@ const hexToRgb = (hex) => {
                 >
                   {{ task.assignees === null || task.assignees == '' ? 'Unassigned' : task.assignees }}
                 </td>
+                <td>{{ task.total_attachment > 0 ? task.total_attachment : '-'}}</td>
                 <td
                   class="itbkk-status itbkk-status-name"
                   :style="{
