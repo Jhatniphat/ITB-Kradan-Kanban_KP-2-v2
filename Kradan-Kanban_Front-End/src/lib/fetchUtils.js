@@ -1282,6 +1282,7 @@ export async function checkTokenExpired() {
   if (accountStore.isAccessTokenExpired() && accountStore.isRefreshTokenExpired()) {
     accountStore.clearTokenDetail();
     console.log('Token expired');
+    useToastStore().createToast('Token expired', 'danger');
     router.push('/login');
     return;
   }
