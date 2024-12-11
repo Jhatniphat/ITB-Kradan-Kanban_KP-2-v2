@@ -89,7 +89,7 @@ const closeAlert = () => {
             Login
           </button>
           <!-- microsoft sign in-->
-          <button class="btn w-full bg-white text-black hover:text-white py-2 px-4 mt-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">
+          <!-- <button class="btn w-full bg-white text-black hover:text-white py-2 px-4 mt-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">
             <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 21 21">
               <title>MS-SymbolLockup</title>
               <rect x="1" y="1" width="9" height="9" fill="#f25022" />
@@ -98,7 +98,7 @@ const closeAlert = () => {
               <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
             </svg>
             Sign in with Microsoft
-          </button>
+          </button> -->
         </div>
       </div>
     </div>
