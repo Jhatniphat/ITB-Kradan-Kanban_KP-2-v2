@@ -122,7 +122,6 @@ router.beforeEach(async (to, from, next) => {
     } else {
       board = await getBoardById(boardId);
     }
-    // const board = await getBoardById(boardId);
 
     if (!board) {
       router.push({ name: 'AccessDenied' });
@@ -131,15 +130,6 @@ router.beforeEach(async (to, from, next) => {
 
     if (accountStore.refreshToken !== '') {
       await checkTokenExpired();
-    }
-    // await checkTokenExpired()
-
-    const isOwner = board.ownerId === accountStore.userId;
-    const isBoardPrivate = board.visibility === 'PRIVATE';
-
-    if (isBoardPrivate && !isOwner) {
-      router.push({ name: 'AccessDenied' });
-      return;
     }
   }
 

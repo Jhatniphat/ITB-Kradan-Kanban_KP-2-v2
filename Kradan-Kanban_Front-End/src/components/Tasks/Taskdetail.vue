@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
-import { getTaskById, editTask, getTaskByIdForGuest, getAllAttachments, deleteAttachment, uploadAttachments, getAllAttachmentsForGuest } from '@/lib/fetchUtils.js';
+import { getTaskById, editTask, getTaskByIdForGuest, getAllAttachments, deleteAttachment, uploadAttachments, getAllAttachmentsForGuest, addTask } from '@/lib/fetchUtils.js';
 import router from '@/router';
 import { useTaskStore } from '@/stores/task';
 import { useStatusStore } from '@/stores/status.js';
@@ -104,7 +104,7 @@ const canSave = computed(() => {
         originalTask.value.status !== taskDetail.value.status)) ||
       filesToUpload.value.length > 0 ||
       filesToRemove.value.length > 0) &&
-    !previewFiles.value.some((file) => file.errorText.length === 0)
+    !previewFiles.value.some((file) => file.errorText.length !== 0)
   );
 });
 
@@ -167,23 +167,45 @@ async function fetchTask(id) {
   }
 }
 
+async function handleFiles(currentBoardId, taskId, filesToRemove, filesToUpload) {
+  // Step 1: ลบไฟล์ก่อน
+  addLoading('Deleting Files');
+  if (filesToRemove.value.length > 0) {
+    await deleteFiles(currentBoardId, taskId, filesToRemove.value);
+  }
+  removeLoading('Deleting Files');
+
+  // Step 2: อัปโหลดไฟล์หลังจากลบเสร็จ
+  addLoading('Uploading Files');
+  if (filesToUpload.value.length > 0) {
+    await uploadFiles(currentBoardId, taskId, filesToUpload.value);
+  }
+  removeLoading('Uploading Files');
+}
+
+async function deleteFiles(currentBoardId, taskId, files) {
+  const deleteAttachmentResponses = [];
+  for (const file of files) {
+    const resRemove = await deleteAttachment(currentBoardId, taskId, file.id);
+    deleteAttachmentResponses.push(resRemove);
+  }
+  return deleteAttachmentResponses; // คืนค่าผลลัพธ์ที่ลบได้
+}
+
+async function uploadFiles(currentBoardId, taskId, files) {
+  const uploadAttachmentsResponses = [];
+  const resUp = await uploadAttachments(currentBoardId, taskId, files);
+  uploadAttachmentsResponses.push(resUp);
+  return uploadAttachmentsResponses; // คืนค่าผลลัพธ์ที่อัปโหลดได้
+}
+
 async function saveTask() {
-  addLoading('saving task');
+  addLoading('Saving task');
   let res, editTaskResponse;
   let deleteAttachmentResponses = [];
   let uploadAttachmentsResponses = [];
   try {
-    if (filesToUpload.value.length > 0) {
-      const resUp = await uploadAttachments(currentBoardId, props.taskId, filesToUpload.value);
-      uploadAttachmentsResponses.push(resUp);
-    }
-
-    if (filesToRemove.value.length > 0) {
-      for (const file of filesToRemove.value) {
-        const resRemove = await deleteAttachment(currentBoardId, props.taskId, file.id);
-        deleteAttachmentResponses.push(resRemove);
-      }
-    }
+    await handleFiles(currentBoardId, props.taskId, filesToRemove, filesToUpload)
 
     if (
       originalTask.value.title === taskDetail.value.title &&
@@ -193,10 +215,11 @@ async function saveTask() {
     ) {
       editTaskResponse = 200;
     } else {
+      addLoading('Saving task');
       delete taskDetail.value.id;
       delete taskDetail.value.createdOn;
       delete taskDetail.value.updatedOn;
-      let editRes = await editTask(props.taskId, taskDetail.value);
+      let editRes = await editTask(props.taskId, taskDetail.value).then(removeFile('Saving task'));
       taskDetail.value = await editRes;
       taskStore.editStoreTask(await editRes.payload);
       editTaskResponse = await editRes.status;
@@ -208,6 +231,8 @@ async function saveTask() {
       res = 200;
     } else {
       res = editTaskResponse;
+      console.log(uploadAttachmentsResponses);
+      console.log(deleteAttachmentResponses);
     }
     removeLoading('saving task');
     router.push(`/board/${currentBoardId}`);

@@ -116,6 +116,10 @@ public class CollabService {
         return collab.isPresent();
     }
 
+    public boolean isCollaboratorWithPendingStatus(String boardId, String userId) {
+        return collabRepository.existsByBoardIdAndUserIdAndStatus(boardId, userId, CollabEntity.Status.PENDING);
+    }
+
     public boolean isWriteAccess(String boardId, String userId) {
         return collabRepository.existsByBoardIdAndUserIdAndAccessRight(boardId, userId, CollabEntity.AccessRight.WRITE);
     }
