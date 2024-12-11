@@ -128,8 +128,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         throw new ForbiddenException("Read access not allowed for this request");
                     }
                 }
-            } else if (!isOwner&& (!isPublic || !requestMethod.equals("GET"))) {
-                throw new ForbiddenException("FORBIDDEN");
+            } else if (!isOwner) {
+                if (requestMethod.equals("DELETE") && request.getRequestURI().contains("/collabs/")) {
+                    String collabId = uri[uri.length - 1];
+                    boolean isPending = collabService.isCollaboratorWithPendingStatus(boardId, collabId);
+                    if (isPending && collabId.equals(currentUser.getOid())) {
+                        return;
+                    }
+                }
+                if (!isPublic || !requestMethod.equals("GET")) {
+                    throw new ForbiddenException("Not Owner and Private Board");
+                }
             }
         } else {
             if (!isPublic) {
