@@ -8,6 +8,8 @@ This is a project that focuses on the collaboration of 3 components: Database, F
 | Back-end  | Spring Boot          |
 | Front-end | Vue js               |
 | Proxy     | Nginx                |
+This is My Project - FrontEnd Diagram 
+[CanvaWhiteBoard](https://www.canva.com/design/DAGY_dvv0t8/0B62ZOe7RLKMQ8W03UMEzQ/edit?utm_content=DAGY_dvv0t8&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton) 
 
 ## Contributor
 Our team consists of three people. Actually, everyone is a **full-stack developer**, but their work is more focused on their area of ​​expertise. Therefore, in the following list, we will mostly cover the area where they work.

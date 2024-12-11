@@ -34,7 +34,6 @@ onBeforeMount(async () => {
       console.log(invitedBoard.value);
       const collaborator = invitedBoard.value.collaborators.find((collaborator) => collaborator.oid === accountStore.tokenDetail.oid);
       if (collaborator) {
-        console.log(collaborator);
         invitedBoard.value.accessRightUserGot = collaborator.accessRight;
       }
     }
@@ -73,7 +72,11 @@ async function handleAcceptInvitation() {
 }
 
 async function handleRejectInvitation() {
-  await deleteCollaborator(invitedBoard.value.id, accountStore.tokenDetail.oid);
+  await deleteCollaborator(invitedBoard.value.id, accountStore.tokenDetail.oid).then(() => {
+    toastStore.createToast('Reject invitation successfully', 'success');
+    router.push({ name: 'board-list' });
+    boardStore.deleteBoard(invitedBoard.value.id);
+  });
 }
 </script>
 
