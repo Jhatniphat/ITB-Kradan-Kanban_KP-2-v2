@@ -431,7 +431,7 @@ function hideErrorTooltip() {
               <div v-if="descriptionTab === 'preview'">
                 <div
                   class="markdown-preview w-full prose max-w-none prose-indigo leading-6 rounded-b-md shadow-sm border border-gray-300 p-5 bg-white overflow-y-auto min-h-64"
-                  v-html="marked(taskDetail.description === null ? '' : statusDetail.description)"
+                  v-html="marked(taskDetail.description === null ? '' : taskDetail.description)"
                 ></div>
               </div>
             </div>

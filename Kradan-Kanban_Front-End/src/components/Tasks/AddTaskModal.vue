@@ -283,7 +283,7 @@ function removeLoading(load) {
               <div v-if="descriptionTab === 'preview'">
                 <div
                   class="markdown-preview w-full prose max-w-none prose-indigo leading-6 rounded-b-md shadow-sm border border-gray-300 p-5 bg-white overflow-y-auto min-h-64"
-                  v-html="marked(taskData.description === null ? '' : statusDetail.description)"
+                  v-html="marked(taskData.description === null ? '' : taskData.description)"
                 ></div>
               </div>
             </div>
