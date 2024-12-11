@@ -117,8 +117,8 @@ const closeAlert = () => {
       </section>
 
       <video autoplay="autoplay" loop class="w-full h-full object-cover" muted @canplay="videoloading = false" @error="videoloading = false">
-        <source src="../assets/loginPageVideo.mp4" type="video/mp4" />
         <source src="../assets/loginPageVideo.webm" type="video/webm" />
+        <source src="../assets/loginPageVideo.mp4" type="video/mp4" />
         Your browser does not support the video tag or the file format of this video.
       </video>
     </div>
