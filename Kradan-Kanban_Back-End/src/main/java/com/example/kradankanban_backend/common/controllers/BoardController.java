@@ -16,6 +16,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -264,6 +266,14 @@ public class BoardController {
     public ResponseEntity<List<AttachmentDTO>> getAllAttachments(@PathVariable String boardId, @PathVariable Integer taskId) {
         List<AttachmentDTO> attachments = fileService.getAllAttachments(taskId);
         return ResponseEntity.ok(attachments);
+    }
+
+    @GetMapping("/{boardId}/tasks/{taskId}/attachments/download/{attachmentId}")
+    public ResponseEntity<Object> downloadAttachment(@PathVariable String boardId, @PathVariable Integer taskId, @PathVariable Integer attachmentId) {
+        Resource resource = fileService.downloadAttachment(attachmentId);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                .body(resource);
     }
 
     @PostMapping("/{boardId}/tasks/{taskId}/attachments")
