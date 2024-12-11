@@ -7,6 +7,8 @@ import { useAccountStore } from '@/stores/account';
 import { useToastStore } from '@/stores/toast.js';
 import * as pdfjsLib from 'pdfjs-dist/webpack'; // ใช้ Webpack version ของ PDF.js
 import { marked } from 'marked';
+import loadingComponent from '../loadingComponent.vue';
+import { generateFileData, openPreview } from '@/lib/fileUtils';
 const emit = defineEmits(['closeModal']);
 const statusStore = useStatusStore();
 const boardStore = useBoardStore();
@@ -32,6 +34,8 @@ const uploadedFiles = ref([]);
 const fileInput = ref(null);
 const previewFile = ref(null);
 const filesToUpload = ref([]);
+const showIframePreview = ref(false);
+const iframePreviewURL = ref('');
 
 // style
 const isHeaderSticky = ref(false);
@@ -40,6 +44,7 @@ const content = ref();
 const createAnotherTask = ref(false);
 const hoveredFileIndex = ref(null);
 const fileLoading = ref(false);
+const loading = ref([]);
 
 watch(taskData.value, () => {
   if (taskData.value.title.trim().length > 100) Errortext.value.title = `Title can't long more than 100 character`;
@@ -49,8 +54,6 @@ watch(taskData.value, () => {
   else Errortext.value.description = '';
   if (taskData.value.assignees.trim().length > 30) Errortext.value.assignees = `Assignees can't long more than 30 character`;
   else Errortext.value.assignees = '';
-  // ? disabled or enabled save btn
-  // canSave.value = Errortext.value.title === '' && Errortext.value.description === '' && Errortext.value.assignees === '';
 });
 
 const canSave = computed(() => {
@@ -71,26 +74,26 @@ watch(statusStore.status, () => {
   statusList.value = statusStore.getAllStatusWithLimit();
 });
 
-const loading = ref(false);
-
 async function fetchData() {
   taskData.value.title = taskData.value.title.trim();
   taskData.value.description = taskData.value.description.trim();
   taskData.value.assignees = taskData.value.assignees.trim();
-  loading.value = true;
+  addLoading('Saving task');
   let res;
   let resUp;
   try {
     res = await addTask(taskData.value);
-
+    removeLoading('Saving task');
     if (filesToUpload.value.length > 0) {
-      resUp = await uploadAttachments(boardStore.currentBoardId, res.id, filesToUpload.value);
-      console.log('File upload response:', resUp);
+      addLoading('Uploading files');
+      resUp = await uploadAttachments(boardStore.currentBoardId, res.id, filesToUpload.value).then(() => {
+        removeLoading('Uploading files');
+      });
     }
   } catch (error) {
     console.log(error);
   } finally {
-    loading.value = false;
+    removeLoading('Saving task');
     emit('closeModal', { ...res, createAnotherTask: createAnotherTask.value });
   }
 }
@@ -101,77 +104,37 @@ function sendCloseModal() {
 
 async function handleFileUpload(e) {
   let files = Array.from(e.target.files);
-  console.log(files);
+  let dulpicateFileError = [];
   filesToUpload.value.push(...files);
-  console.log('Raw files:', filesToUpload.value);
 
   files.forEach(async (file, index) => {
     let error = [];
     if (file.size > 20 * 1024 * 1024) {
-      useToastStore().createToast(`"${file.name}" file size is too large`, error);
-      error.push('this file is too large');
+      useToastStore().createToast(`"${file.name}" file size is too large`, 'danger');
+      error.push('Each file cannot be larger than 20 MB');
     }
     if (uploadedFiles.value.length + index + 1 > 10) {
-      error.push('can upload only 10 file per task');
+      error.push('Each task can have at most 10 files.');
     }
 
     if (uploadedFiles.value.some((updatedFile) => updatedFile.name === file.name)) {
-      useToastStore().createToast(`"${file.name}" file is already uploaded`, 'danger', 5000);
+      // useToastStore().createToast(`"${file.name}" file is already uploaded`, 'danger', 5000);
+      dulpicateFileError.push(file.name);
     } else {
-      const reader = new FileReader();
-
-      reader.onload = async (e) => {
-        // error handling
-        uploadedFiles.value.push({
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          previewUrl: file.type.startsWith('application/msword') ? `https://docs.google.com/viewer?url=${encodeURIComponent(URL.createObjectURL(file))}&embedded=true` : URL.createObjectURL(file),
-          thumbnail: file.type.startsWith('image/') ? URL.createObjectURL(file) : file.type === 'application/pdf' ? await generatePDFThumbnail(file) : null,
-          errorText: error,
-        });
-      };
-
-      reader.readAsDataURL(file);
+      uploadedFiles.value.push(await generateFileData(file, error));
     }
     checkErrorText();
-
-    reader.readAsDataURL(file);
   });
 
+  if (dulpicateFileError.length > 0) {
+    useToastStore().createToast(
+      `File with the same filename cannot be added or updated to the attachments. Please delete the attachment and add again to update the file. The following files are not added:<span class="underline"> ${dulpicateFileError.join(' , ')} </span>`,
+      'danger',
+      10000
+    );
+  }
   checkErrorText();
 }
-
-const generatePDFThumbnail = async (file) => {
-  const pdf = await pdfjsLib.getDocument(URL.createObjectURL(file)).promise; // โหลด PDF
-  const page = await pdf.getPage(1); // ดึงหน้าแรกของ PDF
-  const viewport = page.getViewport({ scale: 1 }); // ตั้งค่า scale
-  const canvas = document.createElement('canvas'); // สร้าง canvas
-  const context = canvas.getContext('2d');
-
-  // ตั้งขนาด canvas
-  canvas.width = viewport.width;
-  canvas.height = viewport.height;
-
-  // เรนเดอร์ PDF บน canvas
-  await page.render({
-    canvasContext: context,
-    viewport,
-  }).promise;
-
-  // แปลง canvas เป็น Blob URL
-  return new Promise((resolve) => {
-    canvas.toBlob((blob) => {
-      const blobURL = URL.createObjectURL(blob);
-      resolve(blobURL); // ส่ง Blob URL กลับ
-    }, 'image/png'); // ใช้ PNG เป็นฟอร์แมต
-  });
-};
-
-const openPreview = (file) => {
-  // previewFile.value = file;
-  window.open(file.previewUrl, '_blank');
-};
 
 function handelScroll() {
   if (content.value.scrollTop > 0) {
@@ -196,7 +159,7 @@ function removeFile(index) {
   uploadedFiles.value.splice(index, 1); // ลบไฟล์ที่คลิก
   if (uploadedFiles.value.length >= 10) {
     uploadedFiles.value[9].errorText.splice(
-      uploadedFiles.value[9].errorText.findIndex((e) => e === 'can upload only 10 file per task'),
+      uploadedFiles.value[9].errorText.findIndex((e) => e === 'Each task can have at most 10 files.'),
       1
     );
   }
@@ -204,31 +167,32 @@ function removeFile(index) {
   checkErrorText();
 }
 
-// watch(uploadedFiles, () => {
-//   checkErrorText();
-// });
-
 function checkErrorText() {
   fileLoading.value = true;
 
   uploadedFiles.value.forEach((file, index) => {
     file.errorText = [];
-
-    console.log(file.name);
     if (uploadedFiles.value.length > 10) {
-      if (!file.errorText.includes('can upload only 10 file per task')) {
-        file.errorText.push('can upload only 10 file per task');
+      if (!file.errorText.includes('Each task can have at most 10 files.')) {
+        file.errorText.push('Each task can have at most 10 files.');
       }
     }
 
     if (file.size > 20 * 1024 * 1024) {
-      if (!file.errorText.includes('this file is too large')) {
-        file.errorText.push('this file is too large');
+      if (!file.errorText.includes('Each file cannot be larger than 20 MB')) {
+        file.errorText.push('Each file cannot be larger than 20 MB');
       }
     }
-
   });
   fileLoading.value = false;
+}
+
+function addLoading(load) {
+  loading.value.push(load);
+}
+
+function removeLoading(load) {
+  loading.value = loading.value.filter((l) => l !== load);
 }
 </script>
 
@@ -244,8 +208,18 @@ function checkErrorText() {
       </div>
     </div>
 
+    <loadingComponent :loading="loading" v-if="loading.length > 0" />
+
     <!-- ? BODY -->
-    <div v-if="!previewFile" class="flex flex-col overflow-scroll p-2 grow" ref="content" @scroll="handelScroll">
+    <div class="flex flex-col overflow-scroll p-2 grow" ref="content" @scroll="handelScroll" v-if="loading.length === 0 && showIframePreview">
+      <div class="flex-1 flex flex-row-reverse">
+        <svg @click="showIframePreview = false" xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M6.4 19L5 17.6l5.6-5.6L5 6.4L6.4 5l5.6 5.6L17.6 5L19 6.4L13.4 12l5.6 5.6l-1.4 1.4l-5.6-5.6z" />
+        </svg>
+      </div>
+      <iframe :src="iframePreviewURL" class="h-full w-full" />
+    </div>
+    <div class="flex flex-col overflow-scroll p-2 grow" ref="content" @scroll="handelScroll" v-if="loading.length === 0 && !showIframePreview">
       <div class="w-full flex flex-row">
         <div class="basis-2/3 px-2">
           <!-- ? Title -->
@@ -309,7 +283,7 @@ function checkErrorText() {
               <div v-if="descriptionTab === 'preview'">
                 <div
                   class="markdown-preview w-full prose max-w-none prose-indigo leading-6 rounded-b-md shadow-sm border border-gray-300 p-5 bg-white overflow-y-auto min-h-64"
-                  v-html="marked(taskData.description)"
+                  v-html="marked(taskData.description === null ? '' : statusDetail.description)"
                 ></div>
               </div>
             </div>
@@ -339,7 +313,7 @@ function checkErrorText() {
           </div>
           <input type="file" class="file-input file-input-sm file-input-bordered w-full" multiple @change="handleFileUpload" ref="fileInput" />
           <div class="label">
-            <span class="label-text-alt">can upload only 10 file per task and 20MB per file</span>
+            <span class="label-text-alt">Each task can have at most 10 files. and 20MB per file</span>
           </div>
         </label>
       </div>
@@ -356,7 +330,7 @@ function checkErrorText() {
           <!-- Preview Button -->
           <div class="absolute top-2 left-2 z-50">
             <svg
-              @click="openPreview(file)"
+              @click="file.type !== 'text/plain' ? openPreview(file) : (showIframePreview = true), (iframePreviewURL = file.previewUrl)"
               xmlns="http://www.w3.org/2000/svg"
               width="1.5em"
               height="1.5em"
@@ -415,8 +389,8 @@ function checkErrorText() {
       <div class="float-right flex flex-row-reverse gap-3">
         <button class="itbkk-button-cancel btn btn-outline btn-error basis-1/6" @click="sendCloseModal()">Cancel</button>
         <button class="itbkk-button-confirm btn btn-outline btn-success basis-1/6" :disabled="!canSave" :class="!canSave ? 'disabled' : ''" @click="fetchData()">
-          {{ loading ? '' : 'Save' }}
-          <span class="loading loading-spinner text-success" v-if="loading"></span>
+          {{ loading.length > 0 ? '' : 'Save' }}
+          <span class="loading loading-spinner text-success" v-if="loading.length > 0"></span>
         </button>
         <div class="form-control">
           <label class="label cursor-pointer">
@@ -427,27 +401,20 @@ function checkErrorText() {
       </div>
     </div>
   </div>
-
-  <!-- ? Preview Modal
-  <Modal class="z-[100]">
-    <div v-if="previewFile" class="preview-modal">
-      <div class="modal-content">
-        <button @click="closePreview">Close</button>
-        <div v-if="previewFile.type.startsWith('image/')">
-          <img :src="previewFile.preview" class="full-preview" />
-        </div>
-        <div v-else-if="previewFile.type === 'application/pdf'">
-          <iframe :src="previewFile.preview" class="full-preview" />
-        </div>
-        <div v-else-if="previewFile.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'">
-          <p>DOCX Preview Not Supported Yet</p>
-        </div>
-      </div>
-    </div>
-  </Modal> -->
 </template>
 
 <style scoped>
+.v-enter-active,
+.v-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.v-enter-from,
+.v-leave-to {
+  opacity: 0;
+  z-index: -1;
+}
+
 .tooltip {
   transition:
     opacity 1s ease,

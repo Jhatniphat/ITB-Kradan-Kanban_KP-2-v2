@@ -2,6 +2,7 @@ package com.example.kradankanban_backend.common.repositories;
 
 import com.example.kradankanban_backend.common.entities.BoardEntity;
 import com.example.kradankanban_backend.common.entities.TaskEntity;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -43,4 +44,6 @@ public interface TaskRepository extends JpaRepository<TaskEntity, Integer> {
     Optional<TaskEntity> findByTkBoard_BoardIdAndId(String boardId, int taskId);
 
     boolean existsByIdAndTkBoard(int taskId , BoardEntity board);
+
+    void deleteAllByTkBoard_BoardId(String boardId);
 }

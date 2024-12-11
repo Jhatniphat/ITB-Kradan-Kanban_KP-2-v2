@@ -6,7 +6,7 @@ import { toggleLimitStatus } from '@/lib/fetchUtils.js';
 
 const statusStore = useStatusStore();
 const limitStatusValue = ref({});
-let oldLimitStatusValue = { isEnable: true, limit: 10 };
+let oldLimitStatusValue = { isEnable: statusStore.limitEnable, limit: statusStore.limit };
 const emit = defineEmits(['closeModal']);
 const props = defineProps({
   isOwnerOrNot: {
@@ -21,24 +21,23 @@ const loading = ref(false);
 
 onMounted(() => {
   limitStatusValue.value = {
-    isEnable: statusStore.getLimitEnable(),
-    limit: statusStore.getLimit(),
+    isEnable: statusStore.limitEnable,
+    limit: statusStore.limit,
   };
   oldLimitStatusValue = { ...limitStatusValue.value };
 });
 
 async function confirmEdit() {
-  statusStore.setLimit(limitStatusValue.value.limit);
-  if (limitStatusValue.value.isEnable !== statusStore.getLimitEnable()) {
-    try {
-      let res = await toggleLimitStatus();
-      if (res === 200 || res === 204) {
-        statusStore.setLimitEnable(limitStatusValue.value.isEnable);
-      }
-    } catch (e) {
-      console.log(e);
+  try {
+    let res = await toggleLimitStatus(limitStatusValue.value);
+    if (res === 200 || res === 204) {
+      statusStore.setLimitEnable(limitStatusValue.value.isEnable);
+      statusStore.setLimit(limitStatusValue.value.limit);
     }
+  } catch (e) {
+    console.log(e);
   }
+
   let overStatus = statusStore.getOverStatus();
   if (overStatus.length > 0) {
     let overStatusObj = [];
@@ -53,7 +52,7 @@ async function confirmEdit() {
 }
 
 const limitStatusValueError = computed(() => {
-  return limitStatusValue.value.limit > 30 || limitStatusValue.value.limit < 0 ? `Limit Be only between 0 and 30!!` : '';
+  return limitStatusValue.value.limit > 10 || limitStatusValue.value.limit < 1 ? `Limit Be only between 1 and 10!!` : '';
 });
 
 function closeEdit() {
@@ -69,7 +68,6 @@ function closeEdit() {
     <h1>Limit Status</h1>
     <hr />
     <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You need to be board owner or has write access to perform this action.">
-
       <div class="form-control w-fit">
         <label class="cursor-pointer label">
           <input type="checkbox" class="toggle toggle-primary" v-model="limitStatusValue.isEnable" :disabled="!isOwner" />
@@ -80,7 +78,7 @@ function closeEdit() {
     <div :class="isOwner ? '' : 'lg:tooltip'" data-tip="You need to be board owner or has write access to perform this action.">
       <div class="form-control">
         <label class="label text-error">Limit {{ limitStatusValueError }}</label>
-        <input type="number" class="input text-base dark:bg-base-300" v-model="limitStatusValue.limit" :disabled="!isOwner" />
+        <input type="number" class="input text-base dark:bg-base-300" v-model="limitStatusValue.limit" :disabled="!isOwner" max="10" min="1"/>
       </div>
     </div>
     <div class="flex flex-row-reverse gap-4 mt-5">

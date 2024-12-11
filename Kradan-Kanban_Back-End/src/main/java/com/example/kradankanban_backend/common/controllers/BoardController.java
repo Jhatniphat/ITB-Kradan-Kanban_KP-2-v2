@@ -28,8 +28,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-//@CrossOrigin(origins = {"http://localhost:5174" , "http://localhost:5173"})
-//@CrossOrigin(origins = "http://ip23kp2.sit.kmutt.ac.th:80")
 @CrossOrigin(origins = "${cors.allowed-origins}")
 @RestController
 @RequestMapping("/v3/boards")
@@ -114,9 +112,7 @@ public class BoardController {
         if (board == null) {
             return new ResponseEntity<>("Board not found", HttpStatus.NOT_FOUND);
         }
-        List<TaskEntity> tasks = taskService.findAllTasksByBoardId(userId,boardId);
-        List<SimpleTaskDTO> simpleTaskDTOS = tasks.stream().map(task -> modelMapper.map(task, SimpleTaskDTO.class)).collect(Collectors.toList());
-
+        List<SimpleTaskDTO> simpleTaskDTOS = taskService.findAllTasksByBoardId(userId, boardId);
         return new ResponseEntity<>(simpleTaskDTOS, HttpStatus.OK);
     }
 
@@ -136,10 +132,8 @@ public class BoardController {
 
     @GetMapping("/{boardId}/tasks/{taskId}")
     public ResponseEntity<DetailTaskWithTimeOnDTO> getTaskByBoardIdAndTaskId(@PathVariable String boardId, @PathVariable int taskId,HttpServletRequest request) {
-        String userId = getUserId(request);
-        TaskEntity task = taskService.findTaskByBoardIdAndTaskId(userId,boardId, taskId);
-        DetailTaskWithTimeOnDTO DetailTask = modelMapper.map(task, DetailTaskWithTimeOnDTO.class);
-        return ResponseEntity.ok(DetailTask);
+        DetailTaskWithTimeOnDTO task = taskService.findTaskByBoardIdAndTaskId(boardId, taskId);
+        return ResponseEntity.ok(task);
     }
 
     @PutMapping("/{boardId}/tasks/{taskId}")
@@ -205,13 +199,13 @@ public class BoardController {
 
     @GetMapping("/{boardId}/statuses/maximum-task")
     public ResponseEntity<Object> getAllLimitSettings(@PathVariable String boardId, HttpServletRequest request) {
-        return new ResponseEntity<>(statusService.getLimitData(boardId) , HttpStatus.OK);
+        return new ResponseEntity<>(statusService.getLimit(boardId) , HttpStatus.OK);
     }
 
     @PatchMapping("/{boardId}/statuses/maximum-task")
-    public ResponseEntity<Void> toggleMaximumTask(@PathVariable String boardId, HttpServletRequest request) {
-        statusService.toggleIsEnable(boardId);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Object> updateLimitAndToggle (@PathVariable String boardId, @RequestBody LimitDTO limitDTO) {
+        service.updateLimitAndToggle(boardId, limitDTO);
+        return ResponseEntity.ok(limitDTO);
     }
 
     //  ! ============================================== COLLAB ==============================================

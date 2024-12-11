@@ -33,6 +33,7 @@ const showErrorModal = ref(false);
 // ? ----------------- Common -------------------------
 const selectedId = ref(0);
 const deleteTitle = ref('');
+const colorPicking = ref('');
 const error = ref(null);
 const status = ref(null);
 const loading = ref(false);
@@ -45,7 +46,6 @@ onMounted(async () => {
   loading.value = true;
   try {
     await fetchStatusData();
-
     const currentBoards = boardStore.currentBoard;
     const userOid = accountStore.tokenDetail.oid;
     // if (currentBoards && currentBoards.owner?.oid) {
@@ -112,15 +112,16 @@ const closeAddModal = (res) => {
   if (res === null) return 0;
   if (typeof res === 'object') {
     toastStore.createToast('Add status successfuly');
-    router.push({ name : 'status-list', hash : `#status-${res.id}` });
+    router.push({ name: 'status-list', hash: `#status-${res.id}` });
     statusStore.addStoreStatus(res);
   } else {
     toastStore.createToast('Add status Failed', 'danger');
   }
 };
 
-const openEdit = (id) => {
+const openEdit = (id, color) => {
   selectedId.value = id;
+  colorPicking.value = color;
   showEdit.value = true;
   router.push(`/board/${boardStore.currentBoardId}/status/${id}`);
 };
@@ -218,7 +219,7 @@ function closeEditLimit(overStatus) {
               </td>
               <td v-if="status.name !== 'No Status' && status.name !== 'Done'" class="itbkk-action-button flex flex-row">
                 <div :class="canWrite ? '' : 'lg:tooltip'" data-tip="You need to be board owner or has write access to perform this action.">
-                  <button class="itbkk-button-edit btn m-2" @click="openEdit(status.id)" :disabled="!canWrite">Edit</button>
+                  <button class="itbkk-button-edit btn m-2" @click="openEdit(status.id, status.color)" :disabled="!canWrite">Edit</button>
                 </div>
                 <div :class="canWrite ? '' : 'lg:tooltip'" data-tip="You need to be board owner or has write access to perform this action.">
                   <button class="itbkk-button-delete btn m-2" @click="openDelete(status.id, status.name)" :disabled="!canWrite">Delete</button>
@@ -238,7 +239,7 @@ function closeEditLimit(overStatus) {
   </Modal>
   <!-- Edit Modal -->
   <Modal :show-modal="showEdit">
-    <EditStatus :status-id="parseInt(selectedId)" @close-modal="closeEdit" />
+    <EditStatus :status-id="parseInt(selectedId)" :status-color="colorPicking" @close-modal="closeEdit" />
   </Modal>
   <!-- Delete Modal -->
   <Modal :show-modal="showDelete">

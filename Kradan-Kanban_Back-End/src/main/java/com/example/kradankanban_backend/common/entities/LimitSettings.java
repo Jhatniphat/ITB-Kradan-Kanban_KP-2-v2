@@ -17,11 +17,8 @@ public class LimitSettings {
     @Column(name = "id")
     private Integer id;
 
-    //    @Id
     @NotNull
     @Column(name = "ls_boardId")
-//    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-//    @JoinColumn(name = "ls_boardId", nullable = false)
     private String lsBoard;
 
 

@@ -38,7 +38,6 @@ public class GlobalExceptionHandling {
                     param.getArgument().toString()+ ")");
         }
         return ResponseEntity.badRequest().body(errorResponse);
-//        return buildErrorResponse(null, exception, exception.getMethod().getName(), HttpStatus.valueOf(exception.getStatusCode().value()), request);
     }
 
     @ExceptionHandler(BadCredentialsException.class)

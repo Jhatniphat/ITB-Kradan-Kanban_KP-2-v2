@@ -1,7 +1,7 @@
 <script setup>
 import { onBeforeMount, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { getAllCollabs, changeAccessRight, deleteCollaborator } from '../lib/fetchUtils.js';
+import { getAllCollabs, changeAccessRight, deleteCollaborator, getAllCollabsForGuest } from '../lib/fetchUtils.js';
 
 // ? import component
 import Modal from '../components/Modal.vue';
@@ -42,7 +42,13 @@ const allCollabs = ref([]);
 // Function to fetch collaborators
 const fetchCollaborators = async () => {
   loading.value = true;
-  const response = await getAllCollabs(currentBoardId);
+  let response
+  if (useBoardStore().currentBoard.visibility === 'PUBLIC' && useAccountStore().tokenRaw === '') {
+      response = await getAllCollabsForGuest(currentBoardId);
+    } else {
+      response = await getAllCollabs(currentBoardId);
+    }
+  // const response = await getAllCollabs(currentBoardId);
   if (response.error) {
     error.value = response.message;
     showToast({ status: 'error', msg: response.message });

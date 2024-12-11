@@ -30,4 +30,6 @@ public interface StatusRepository extends JpaRepository<StatusEntity, Integer> {
     Optional<StatusEntity> findByStBoardAndId(String boardId, int id);
 
     boolean existsByIdAndStBoard(int id, String boardId);
+
+    void deleteAllByStBoard(String boardId);
 }

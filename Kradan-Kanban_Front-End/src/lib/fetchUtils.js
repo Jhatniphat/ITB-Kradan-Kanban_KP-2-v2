@@ -39,7 +39,7 @@ export async function getAllTasks() {
       return item;
     }
     return await res.json();
-  } catch (error) {}
+  } catch (error) { }
 }
 
 /**
@@ -144,14 +144,14 @@ export async function editTask(taskId, Task) {
     }
     if (res.ok) {
       // return await res.json();
-      return { status : res.status , payload : res.json() }
+      return { status: res.status, payload: res.json() }
     } else {
       // throw new Error(`Failed to update task: ${res.status}`);
-      return { status : res.status , payload : res.json() }
+      return { status: res.status, payload: res.json() }
     }
   } catch (error) {
     // throw new Error(`Error updating task: ${error.message}`);
-    return { status : res.status , payload : res.json() }
+    return { status: res.status, payload: res.json() }
   }
 }
 
@@ -218,10 +218,11 @@ export async function getAllStatus() {
       router.push('/login');
       return;
     } else if (res.status === 200) {
-      useStatusStore().status = await res.json();
-      return await res.json();
+      let statusess = await res.json();
+      useStatusStore().status = statusess
+      return await statusess;
     }
-  } catch (error) {}
+  } catch (error) { }
 }
 
 /**
@@ -412,13 +413,15 @@ export async function transferStatus(oldId, newId) {
 }
 
 /**
- * ? This function will send a request to change limitStatus to opposite Then return status code of response
+ * ? This function will send a request to change limitStatus Then return status code of response
  * * Automatically redirect to login when get 401
  * @function toggleLimitStatus
  * @returns {Promise<Number>} A promise that resolves to response.status code
  * @throws {Error} Throws an error if the fetch operation fails.
  */
-export async function toggleLimitStatus() {
+export async function toggleLimitStatus(limitStatus) {
+  console.table(limitStatus);
+  console.log(limitStatus);
   const boardId = useBoardStore().currentBoardId;
   let res, item;
   try {
@@ -426,8 +429,16 @@ export async function toggleLimitStatus() {
     res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/statuses/maximum-task`, {
       method: 'PATCH',
       headers: {
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${accountStore.tokenRaw}`,
-      },
+
+      }, 
+      body: JSON.stringify( limitStatus.isEnable ? {
+        limit: limitStatus.limit,
+        toggleEnable: limitStatus.isEnable
+      }:{
+        toggleEnable: limitStatus.isEnable
+      } )
     });
     if (res.status === 401) {
       accountStore.clearTokenDetail();
@@ -469,8 +480,10 @@ export async function getLimitStatus() {
       return;
     }
     if (res.status === 200) {
-      statusStore.setLimitEnable(await res.json());
-      return await res.json();
+      let limitEnable = await res.json();
+      statusStore.setLimitEnable(limitEnable.isEnable);
+      statusStore.setLimit(limitEnable.limit);
+      return await limitEnable;
     }
   } catch (e) {
     console.log(e.toString());
@@ -604,6 +617,33 @@ export async function addBoard(newBoard) {
   }
 }
 
+export async function deleteBoard(id) {
+  const boardId = useBoardStore().currentBoardId;
+  try {
+    const accountStore = useAccountStore();
+    let res = await fetchWithTokenCheck(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${accountStore.tokenRaw}`,
+      },
+    });
+    if (res.status === 401) {
+      accountStore.clearTokenDetail();
+      router.push('/login');
+      return;
+    }
+    if (res.ok) {
+      let item = await res.json();
+      useBoardStore().deleteBoard(item.id);
+      return item;
+    } else {
+      return res.status;
+    }
+  } catch (error) {
+    return error;
+  }
+}
+
 /**
  * ? This function will send a request to change visibility of board Then return new visibility of board
  * * Automatically redirect to login when get 401
@@ -648,7 +688,6 @@ export async function changeVisibility(mode) {
  * ? This function is same at getBoardById But don't require login
  */
 export async function getBoardByIdForGuest(boardId) {
-  console.log('FOR GUEST');
   if (useBoardStore().isBoardExist(boardId)) {
     return useBoardStore().findBoardById(boardId);
   }
@@ -662,16 +701,13 @@ export async function getBoardByIdForGuest(boardId) {
     });
 
     if (res.status === 401) {
-      console.log('401');
       accountStore.clearTokenDetail();
       router.push('/login');
       return null;
     } else if (res.status === 200) {
-      console.log('200');
       let item = await res.json();
       return { status: 200, payload: item };
     } else if (res.status === 400) {
-      console.log('400');
       return { status: 400, payload: 'No board found' };
     }
   } catch (error) {
@@ -701,7 +737,7 @@ export async function getAllStatusForGuest() {
       useStatusStore().status = await res.json();
       return await res.json();
     }
-  } catch (error) {}
+  } catch (error) { }
 }
 
 /**
@@ -759,7 +795,7 @@ export async function getAllTasksForGuest() {
       return item;
     }
     return await res.json();
-  } catch (error) {}
+  } catch (error) { }
 }
 
 /**
@@ -816,7 +852,9 @@ export async function getLimitStatusForGuest() {
       return;
     }
     if (res.status === 200) {
-      statusStore.setLimitEnable(await res.json());
+      let limitEnable = await res.json();
+      statusStore.setLimitEnable(limitEnable.isEnable);
+      statusStore.setLimit(limitEnable.limit);
       return await res.json();
     }
   } catch (e) {
@@ -824,6 +862,57 @@ export async function getLimitStatusForGuest() {
   }
 }
 
+/**
+ * ? This function is same at getAllAttachments But don't require login
+ */
+export async function getAllAttachmentsForGuest(boardId, taskId) {
+  const accountStore = useAccountStore();
+  let res;
+  try {
+    res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/tasks/${taskId}/attachments`, {
+      method: 'GET',
+    });
+
+    if (res.ok) {
+      const attachments = await res.json();
+      return attachments;
+    }
+    if (res.status === 401) {
+      accountStore.clearTokenDetail();
+      router.push('/login');
+      return res.status;
+    } else {
+      return res.status;
+    }
+  } catch (error) {
+    console.log(error.toString());
+  }
+}
+
+/**
+ * ? This function is same at getAllCollabs But don't require login
+ */
+export async function getAllCollabsForGuest() {
+  const boardId = useBoardStore().currentBoardId;
+  try {
+    const accountStore = useAccountStore();
+    const res = await fetch(`${import.meta.env.VITE_API_ROOT}/boards/${boardId}/collabs`, {
+      method: 'GET',
+    });
+    if (res.status === 401) {
+      accountStore.clearTokenDetail();
+      router.push('/login');
+      return null;
+    } else if (res.status === 200) {
+      return await res.json();
+    } else {
+      return { status: res.status, error: true };
+    }
+  } catch (error) {
+    console.error('Failed to fetch collaborators:', error);
+    return null;
+  }
+}
 // ! -------------------------- COLLABORATOR ----------------------------
 export async function getAllCollabs() {
   const boardId = useBoardStore().currentBoardId;
@@ -918,49 +1007,6 @@ export async function addCollaborator(newCollaborator) {
         toastStore.createToast('Unexpected error occurred.', 'danger');
         return res.status;
     }
-    // if (res.status === 201 || res.status === 200) {
-    //   toastStore.createToast("Collaborator added successfully");
-    //   item = await res.json();
-    //   useBoardStore().editCollaborator(item);
-    //   return item;
-    // }
-    // if (res.status === 401) {
-    //   accountStore.clearTokenDetail();
-    //   router.push("/login");
-    //   useBoardStore().removeCollaborator(newCollaborator);
-    //   return;
-    // }
-    // if (res.status === 409) {
-    //   toastStore.createToast("The user is already a collaborator of this board.", "danger");
-    //   useBoardStore().removeCollaborator(newCollaborator);
-    //   return res.status;
-    // }
-    // if (res.status === 403) {
-    //   toastStore.createToast("You do not have permission to add board collaborator.", "danger");
-    //   useBoardStore().removeCollaborator(newCollaborator);
-    //   return res.status;
-    // }
-    // if (res.status === 404) {
-    //   toastStore.createToast("User not found", 'danger');
-    //   useBoardStore().removeCollaborator(newCollaborator);
-    //   return res.status;
-    // }
-    // if (res.status === 503) {
-    //   useBoardStore().clearCollaborator();
-    //   try {
-    //     useBoardStore().currentBoard.collaborators = await getAllCollabs();
-    //   } catch (error) {
-    //   } finally {
-    //     let invitedUsername = useBoardStore().currentBoard.collaborators.find(collab => collab.email === newCollaborator.email).name;
-    //     toastStore.createToast(`We could not send e-mail to <span class="font-bold"> ${invitedUsername} </span>, he/she can accept the invitation at  <span class="underline"> /board/${boardId}/collab/invitations </span>`, "warning" , 15000);
-    //     return res.status;
-    //   }
-    // }
-    // if (res.status === 409){
-    //   toastStore.createToast("The user is already a collaborator of this board.", "danger");
-    //   useBoardStore().removeCollaborator(newCollaborator);
-    // }
-    // return res.status;
   } catch (error) {
     toastStore.createToast('adding collaborator failed', 'danger');
     // useBoardStore().removeCollaborator(newCollaborator);
@@ -1068,8 +1114,6 @@ export async function getAllAttachments(boardId, taskId) {
 
     if (res.ok) {
       const attachments = await res.json();
-      console.log(attachments);
-
       return attachments;
     }
     if (res.status === 401) {
@@ -1101,14 +1145,14 @@ export async function uploadAttachments(boardId, taskId, files) {
 
     if (res.ok) {
       // const uploadedAttachments = await res.json();
-      return { status : res.status , payload : res.json() }
+      return { status: res.status, payload: res.json() }
     }
     if (res.status === 401) {
       accountStore.clearTokenDetail();
       router.push('/login');
-      return { status : res.status , payload : res.json() }
+      return { status: res.status, payload: res.json() }
     } else {
-      return { status : res.status , payload : res.json() }
+      return { status: res.status, payload: res.json() }
     }
   } catch (error) {
     console.log(error.toString());
@@ -1129,14 +1173,14 @@ export async function deleteAttachment(boardId, taskId, attachmentId) {
     if (res.ok) {
       // const deletedAttachment = await res.json();
       // return deletedAttachment;
-      return { status : res.status , payload : res.json() }
+      return { status: res.status, payload: res.json() }
     }
     if (res.status === 401) {
       accountStore.clearTokenDetail();
       router.push('/login');
-      return { status : res.status , payload : res.json() }
+      return { status: res.status, payload: res.json() }
     } else {
-      return { status : res.status , payload : res.json() }
+      return { status: res.status, payload: res.json() }
     }
   } catch (error) {
     console.log(error.toString());
@@ -1182,7 +1226,7 @@ export async function login(username, password) {
         status: res.status,
         payload: 'There is a problem. Please try again later',
       };
-  } catch (error) {}
+  } catch (error) { }
 }
 
 export async function validateToken() {

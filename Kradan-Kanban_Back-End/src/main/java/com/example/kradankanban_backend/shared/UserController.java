@@ -42,15 +42,6 @@ public class UserController {
     @Autowired
     AuthenticationManager authenticationManager;
 
-//    @PostMapping("")
-//    public ResponseEntity login(@RequestBody UserDataDTO userData) {
-//        if (service.Authentication(userData.getUserName(), userData.getPassWord())) {
-//            return new ResponseEntity(HttpStatus.OK);
-//        } else {
-//            return new ResponseEntity(HttpStatus.BAD_REQUEST);
-//        }
-//    }
-
     @PostMapping("/login")
     public ResponseEntity<Object> login(@RequestBody @Valid JwtRequestUser jwtRequestUser) {
         UsernamePasswordAuthenticationToken authenticationToken =
@@ -109,7 +100,6 @@ public class UserController {
             throw new AuthenticationFailedException("Refresh Token has expired");
         }
         UserDetails userDetails = jwtUserDetailsService.loadUserByOid(oid);
-        System.out.println(userDetails);
         String newAccessToken = jwtTokenUtil.generateToken(userDetails);
         Map<String, String> response = new HashMap<>();
         response.put("access_token", newAccessToken);

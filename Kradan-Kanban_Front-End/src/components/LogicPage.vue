@@ -45,8 +45,6 @@ const handleLogin = async () => {
 const closeAlert = () => {
   showAlert.value = false;
 };
-
-
 </script>
 
 <template>
@@ -106,18 +104,21 @@ const closeAlert = () => {
     </div>
     <!-- Right side - Black background -->
     <div class="basis-1/2 h-full">
-
+      <!-- v-if="videoloading === true" -->
       <section v-if="videoloading === true" class="loader w-full h-full object-cover">
-        <div class="slider" style="--i: 0"></div>
-        <div class="slider" style="--i: 1"></div>
-        <div class="slider" style="--i: 2"></div>
-        <div class="slider" style="--i: 3"></div>
-        <div class="slider" style="--i: 4"></div>
+        <div class="slider-wrapper">
+          <div class="slider" style="--i: 0"></div>
+          <div class="slider" style="--i: 1"></div>
+          <div class="slider" style="--i: 2"></div>
+          <div class="slider" style="--i: 3"></div>
+          <div class="slider" style="--i: 4"></div>
+        </div>
+        <div>Loading Video</div>
       </section>
 
-      <video autoplay="autoplay" loop class="w-full h-full object-cover" muted @canplay="videoloading = false;" @error="videoloading = false;">
-        <source src="../assets/loginPageVideo.mp4" type="video/mp4"/>
-        <source src="../assets/loginPageVideo.webm" type="video/webm"/>
+      <video autoplay="autoplay" loop class="w-full h-full object-cover" muted @canplay="videoloading = false" @error="videoloading = false">
+        <source src="../assets/loginPageVideo.webm" type="video/webm" />
+        <source src="../assets/loginPageVideo.mp4" type="video/mp4" />
         Your browser does not support the video tag or the file format of this video.
       </video>
     </div>
@@ -129,7 +130,7 @@ const closeAlert = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-direction: row;
+  flex-direction: column; /* เปลี่ยนเป็น column */
 }
 
 .slider {
@@ -145,6 +146,18 @@ const closeAlert = () => {
     inset -5px -5px 10px rgba(0, 0, 255, 0.1),
     inset 5px 5px 10px rgba(0, 0, 0, 0.1);
   position: relative;
+}
+
+.slider-wrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: center; /* จัดให้อยู่ตรงกลาง */
+}
+
+.loader > div {
+  margin-top: 20px; /* เพิ่มระยะห่างระหว่าง .slider กับ "Loading Video" */
+  font-size: 1.2em; /* ขยายตัวอักษร (เลือกได้) */
+  text-align: center; /* จัดข้อความให้อยู่กลาง */
 }
 
 .slider::before {

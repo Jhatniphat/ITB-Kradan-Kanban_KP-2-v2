@@ -6,9 +6,9 @@ import router from '@/router';
 import { useRoute } from 'vue-router';
 import { useBoardStore } from '@/stores/board';
 import VueJwtDecode from 'vue-jwt-decode';
-
+import LoadingComponent from '@/components/loadingComponent.vue';
 // !  ====================================== Variable ==================================
-const loading = ref(false);
+const loading = ref([]);
 const route = useRoute();
 const boardStore = useBoardStore();
 
@@ -18,14 +18,12 @@ const userId = ref('');
 
 onBeforeMount(async () => {
   try {
-    loading.value = true;
+    addLoading('Loading Invitations');
     await getAllBoard();
   } catch (error) {
   } finally {
-    loading.value = false;
     userId.value = VueJwtDecode.decode(useAccountStore().tokenRaw).oid;
     checkInvites.value = boardStore.getAllPendingBoard();
-    console.log(checkInvites.value);
     allInvites.value = boardStore
       .getAllPendingBoard()
       .map((board) => {
@@ -41,18 +39,27 @@ onBeforeMount(async () => {
           : null;
       })
       .filter((invite) => invite !== null);
+      removeLoading('Loading Invitations');
   }
 });
 
 const routeToAccept = (id) => {
   router.push(`/board/${id}/collab/invitations`);
 };
+
+function addLoading(load) {
+  loading.value.push(load);
+}
+
+function removeLoading(load) {
+  loading.value = loading.value.filter((l) => l !== load);
+}
 </script>
 
 <template>
   <transition>
-    <div class="h-full w-full" v-if="!loading">
-      <div class="w-3/4 mx-auto mt-10 relative" v-if="!loading">
+    <div class="h-full w-full" v-if="loading.length === 0">
+      <div class="w-3/4 mx-auto mt-10 relative">
         <h1 class="w-full text-center text-2xl">Invitations</h1>
       </div>
       <div class="w-3/4 mx-auto mt-10 relative">
@@ -74,7 +81,7 @@ const routeToAccept = (id) => {
               <tbody>
                 <!-- Listing -->
                 <tr v-if="allInvites.length === 0">
-                  <td colspan="4">No Pending Invitations</td>
+                  <td colspan="5">No Pending Invitations Now</td>
                 </tr>
                 <tr v-if="allInvites !== null" v-for="(invite, index) in allInvites" class="itbkk-item hover">
                   <th>{{ index + 1 }}</th>
@@ -94,6 +101,8 @@ const routeToAccept = (id) => {
       </div>
     </div>
   </transition>
+
+  <loading-component  v-if="loading.length > 0" :loading="loading"></loading-component>
 </template>
 
 <style scoped></style>

@@ -46,12 +46,9 @@ public class StatusEntity {
     @Column(name = "updatedOn", insertable = false, updatable = false)
     private LocalDateTime updatedOn;
 
-//    @JsonIgnore
-//    @OneToMany(fetch = FetchType.LAZY, mappedBy = "status" , cascade = CascadeType.ALL)
-//    private Set<TaskEntity> recordings = new HashSet<>();
+    @Column(name = "color")
+    private String color = "b2b2b2";
 
-//    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-//    @JoinColumn(name = "st_boardId", nullable = false)
     @Column(name = "st_boardId" , nullable = false)
     private String stBoard;
 
@@ -72,6 +69,14 @@ public class StatusEntity {
         if (description == null || description.isBlank()) {
             this.description = null;
         } else this.description = description.trim();
+    }
+
+    public void setColor(String color) {
+        if (color == null || color.isBlank()) {
+            this.color = "b2b2b2";
+        } else {
+            this.color = color;
+        }
     }
 
 

@@ -5,7 +5,7 @@ export const useStatusStore = defineStore('status', {
     state: () => ({
         status: [],
         limit: 10,
-        limitEnable: null
+        limitEnable: false
     }),
     actions: {
         getAllStatus() {

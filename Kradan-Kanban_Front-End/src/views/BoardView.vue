@@ -2,19 +2,19 @@
 // ? import lib
 import { onBeforeMount, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { addBoard, deleteTask, getAllBoard, deleteCollaborator } from '../lib/fetchUtils.js';
+import { addBoard, getAllBoard, deleteCollaborator , deleteBoard } from '../lib/fetchUtils.js';
 import router from '@/router';
 // ? import component
 import Modal from '../components/Modal.vue';
 import { useBoardStore } from '@/stores/board.js';
 import { useAccountStore } from '@/stores/account.js';
 import { useToastStore } from '@/stores/toast.js';
-
+import loadingComponent from '@/components/loadingComponent.vue';
 // ! ================= Variable ======================
 // ? ----------------- Store and Route ---------------
 const boardStore = useBoardStore();
 const route = useRoute();
-const loading = ref(false);
+const loading = ref([]);
 const toastStore = useToastStore();
 // ? ----------------- Modal ---------------
 const toast = ref({ status: '', msg: '' });
@@ -47,7 +47,7 @@ onBeforeMount(() => {
 // ! ================= Function ======================
 // todo : refactor this function
 async function fetchBoardData() {
-  loading.value = true;
+  addLoading('Loading Boards');
   try {
     await getAllBoard();
   } catch (err) {
@@ -61,15 +61,12 @@ async function fetchBoardData() {
     if (allBoard.value !== null && allBoard.value !== undefined) {
       if (allBoard.value?.payload !== 'No board found') {
         allBoard.value = boardStore.boards;
-        // if (allBoard.value.length === 1) {
-        //   router.push(`/board/${allBoard.value[0].id}`);
-        // }
       } else {
         allBoard.value = [];
       }
     }
-    prepareData([''])
-    loading.value = false;
+    prepareData(['']);
+    removeLoading('Loading Boards');
   }
 }
 
@@ -83,21 +80,25 @@ async function prepareData([filterBy]) {
     allBoard.value = boardStore.boards;
   }
   personalBoard.value = boardStore.boards.filter((board) => board.owner.oid === useAccountStore().tokenDetail.oid);
-  collabBoard.value =  boardStore.boards.filter((board) => {
-    return board.owner.oid !== useAccountStore().tokenDetail.oid && 
-    ( board.collaborators.findIndex((collab) => ( collab.oid === useAccountStore().tokenDetail.oid  && collab.status !== "PENDING" ) ) !== -1 ) 
-  }) 
+  collabBoard.value = boardStore.boards.filter((board) => {
+    return board.owner.oid !== useAccountStore().tokenDetail.oid && board.collaborators.findIndex((collab) => collab.oid === useAccountStore().tokenDetail.oid ) !== -1;
+  });
 }
 
 watch([filterBy, boardStore.boards], (newValue) => {
   prepareData(newValue);
-});
+  console.log('watch');
+},{ deep: true });
 
 prepareData(['']);
 
-watch(boardStore.boards, () => {
-  prepareData(['']);
-} , { deep: true });
+watch(
+  boardStore.boards,
+  () => {
+    prepareData(['']);
+  },
+  { deep: true }
+);
 
 // todo : Move this add Modal component
 function openAdd() {
@@ -138,6 +139,7 @@ async function saveAddBoard() {
 // ! ================= Modal ======================
 
 const showLeaveModal = ref(false);
+const showDeleteModal = ref(false);
 const collabBoardName = ref('');
 const selectedBoardId = ref(0);
 
@@ -147,13 +149,23 @@ const openLeaveModal = (boardId, boardName) => {
   showLeaveModal.value = true;
 };
 
+const openDeleteModal = (boardId, boardName) => {
+  collabBoardName.value = boardName;
+  selectedBoardId.value = boardId;
+  showDeleteModal.value = true;
+};
+
 const leaveBoard = async () => {
   let res;
   const oid = useAccountStore().tokenDetail.oid;
   try {
     res = await deleteCollaborator(selectedBoardId.value, oid);
+    console.log(res);
     if (typeof res === 'object') {
       toastStore.createToast('Leave Board successfully');
+      boardStore.deleteBoard(res.id); // remove board from store
+      prepareData(['']);
+      router.go(0)
     } else if (res === 403 || 404) {
       router.push(`/board`);
     } else {
@@ -165,6 +177,37 @@ const leaveBoard = async () => {
     showLeaveModal.value = false;
   }
 };
+
+const DeleteBoard = async () => {
+  let res;
+  const oid = useAccountStore().tokenDetail.oid;
+  try {
+    res = await deleteBoard(selectedBoardId.value, oid);
+    console.log(res);
+    if (typeof res === 'object') {
+      toastStore.createToast('Leave Board successfully');
+      prepareData(['']);
+      router.go(0)
+    } else if (res === 403 || 404) {
+      router.push(`/board`);
+    } else {
+      toastStore.createToast('There is a problem. Please try again later.', 'danger');
+    }
+  } catch (error) {
+    console.log(error);
+  } finally {
+    showLeaveModal.value = false;
+  }
+};
+
+function addLoading(load) {
+  loading.value.push(load);
+}
+
+function removeLoading(load) {
+  loading.value = loading.value.filter((l) => l !== load);
+  console.table(loading.value);
+}
 </script>
 
 <template>
@@ -197,10 +240,12 @@ const leaveBoard = async () => {
     </div>
   </Modal>
 
-  <div class="w-3/4 mx-auto mt-10 relative">
+  <loadingComponent :loading="loading" v-if="loading.length > 0" />
+
+  <div class="w-3/4 mx-auto mt-10 relative" v-if="loading.length === 0">
     <div class="flex flex-col">
       <div class="flex">
-        <div class="flex-1">filter</div>
+        <div class="flex-1"></div>
         <h1 class="text-center text-2xl font-bold flex-1">Personal Board</h1>
         <div class="flex-1">
           <button class="btn btn-primary itbkk-button-create float-right" @click="openAdd()">
@@ -230,7 +275,9 @@ const leaveBoard = async () => {
               <td class="text-center font-normal">{{ board.visibility }}</td>
               <td class="text-center font-normal">{{ board?.owner?.name }}</td>
               <td class="text-center font-normal">{{ board.id }}</td>
-              <td class="text-center font-normal"></td>
+              <td class="text-center font-normal">
+                  <button class="btn btn-outline btn-error" @click="openDeleteModal(board.id, board.name)">Delete</button>
+                </td>
             </tr>
           </tbody>
         </table>
@@ -253,7 +300,7 @@ const leaveBoard = async () => {
             </thead>
             <tbody>
               <tr v-for="board in collabBoard">
-                <td class="text-center font-normal link link-primary" @click="router.push(`/board/${board.id}`)">
+                <td class="text-center font-normal link link-primary" @click="router.push({ name : board.collaborators.find((collab) => collab.oid === useAccountStore().tokenDetail.oid)['status'] !== 'PENDING' ? 'task-list':'collab-invitations' , params : { boardId : board.id}})">
                   {{ board.name }}
                 </td>
                 <td class="text-center font-normal">{{ board.visibility }}</td>
@@ -263,107 +310,69 @@ const leaveBoard = async () => {
                 <td class="text-center font-normal">
                   {{ board.collaborators.find((collab) => collab.oid === useAccountStore().tokenDetail.oid)['accessRight'] }}
                 </td>
-                <td class="text-center font-normal">
+                <td class="text-center font-normal" v-if="board.collaborators.find((collab) => collab.oid === useAccountStore().tokenDetail.oid)['status'] !== 'PENDING'">
                   <button class="btn btn-outline btn-error" @click="openLeaveModal(board.id, board.name)">Leave</button>
+                </td>
+                <td class="text-center font-normal" v-else>
+                  <button class="btn btn-outline btn-primary" @click="router.push({ name : 'collab-invitations' , params : { boardId : board.id}})">Go To Invitation</button>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
-
-      <!--      <table-->
-      <!--          class="table table-lg table-pin-rows table-pin-cols w-3/4 font-semibold mx-auto my-5 text-center text-base rounded-lg border-2 border-slate-500 border-separate border-spacing-1">-->
-      <!--        <thead>-->
-      <!--        <tr>-->
-      <!--          <th>Board Name</th>-->
-      <!--        </tr>-->
-      <!--        </thead>-->
-      <!--        <tbody>-->
-      <!--        <tr v-for="board in allboard">-->
-      <!--          <td>{{ board.name }}</td>-->
-      <!--        </tr>-->
-      <!--        </tbody>-->
-      <!--      </table>-->
     </div>
-    <!--    <div v-if="loading" class="loader"></div>-->
     <!-- DeleteModal -->
     <Modal :showModal="showLeaveModal">
       <div class="flex flex-col p-5 bg-slate-50 dark:bg-base-100 rounded-lg w-full">
         <h1 class="m-2 pb-4 text-2xl font-bold">Leave Board</h1>
         <hr />
-        <h1 class="itbkk-message font-semibold text-xl p-8">
-          <!-- Do you want to delete the task "{{ deleteTaskTitle }}" -->
-          Do you want to leave this "{{ collabBoardName }}" board?
-        </h1>
+        <h1 class="itbkk-message font-semibold text-xl p-8">Do you want to leave this "{{ collabBoardName }}" board?</h1>
         <hr />
         <div class="flex flex-row-reverse gap-4 mt-5">
           <button @click="showLeaveModal = false" class="itbkk-button-cancel btn btn-outline btn-error basis-1/6">Close</button>
           <button @click="leaveBoard()" class="itbkk-button-confirm btn btn-outline btn-success basis-1/6">
-            {{ loading ? '' : 'Confirm' }}
-            <span class="loading loading-spinner text-success" v-if="loading"></span>
+            {{ loading.length > 0 ? '' : 'Confirm' }}
+            <span class="loading loading-spinner text-success" v-if="loading.length > 0"></span>
           </button>
         </div>
       </div>
     </Modal>
-    <!-- Toast -->
-    <div class="toast">
-      <div role="alert" class="alert" :class="`alert-${toast.status}`" v-if="toast.status !== ''">
-        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24" v-if="toast.status === 'success'">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24" v-if="toast.status === 'error'">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <span>{{ toast.msg }}</span>
+
+    <Modal :showModal="showDeleteModal">
+      <div class="flex flex-col p-5 bg-slate-50 dark:bg-base-100 rounded-lg w-full">
+        <h1 class="m-2 pb-4 text-2xl font-bold">Delete Board</h1>
+        <hr />
+        <h1 class="itbkk-message font-semibold text-xl p-8">Do you want to delete this "{{ collabBoardName }}" board?</h1>
+        <hr />
+        <div class="flex flex-row-reverse gap-4 mt-5">
+          <button @click="showDeleteModal = false" class="itbkk-button-cancel btn btn-outline btn-error basis-1/6">Close</button>
+          <button @click="DeleteBoard()" class="itbkk-button-confirm btn btn-outline btn-success basis-1/6">
+            {{ loading.length > 0 ? '' : 'Confirm' }}
+            <span class="loading loading-spinner text-success" v-if="loading.length > 0"></span>
+          </button>
+        </div>
       </div>
-    </div>
+    </Modal>
+
   </div>
 </template>
 
 <style scoped>
+.v-enter-active,
+.v-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.v-enter-from,
+.v-leave-to {
+  opacity: 0;
+  z-index: -1;
+}
+
 ::backdrop {
   background-image: linear-gradient(45deg, magenta, rebeccapurple, dodgerblue, green);
   opacity: 0.75;
-}
-
-/* HTML: <div class="loader"></div> */
-.loader {
-  width: 22px;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: #f10c49;
-  animation: l10 1.5s infinite linear;
-}
-
-@keyframes l10 {
-  0% {
-    box-shadow: 0 -30px #f4dd51, calc(30px * 0.707) calc(-30px * 0.707) #e3aad6, 30px 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6;
-  }
-  12.5% {
-    box-shadow: 0 0 #f4dd51, calc(30px * 0.707) calc(-30px * 0.707) #e3aad6, 30px 0 #f4dd51, calc(30px * 0.707) calc(30px * 0.707) #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6;
-  }
-  25% {
-    box-shadow: 0 0 #f4dd51, 0 0 #e3aad6, 30px 0 #f4dd51, calc(30px * 0.707) calc(30px * 0.707) #e3aad6, 0 30px #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6;
-  }
-  37.5% {
-    box-shadow: 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, calc(30px * 0.707) calc(30px * 0.707) #e3aad6, 0 30px #f4dd51, calc(-30px * 0.707) calc(30px * 0.707) #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6;
-  }
-  50% {
-    box-shadow: 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 30px #f4dd51, calc(-30px * 0.707) calc(30px * 0.707) #e3aad6, -30px 0 #f4dd51, 0 0 #e3aad6;
-  }
-  62.5% {
-    box-shadow: 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, calc(-30px * 0.707) calc(30px * 0.707) #e3aad6, -30px 0 #f4dd51, calc(-30px * 0.707) calc(-30px * 0.707) #e3aad6;
-  }
-  75% {
-    box-shadow: 0 -30px #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, -30px 0 #f4dd51, calc(-30px * 0.707) calc(-30px * 0.707) #e3aad6;
-  }
-  87.5% {
-    box-shadow: 0 -30px #f4dd51, calc(30px * 0.707) calc(-30px * 0.707) #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, calc(-30px * 0.707) calc(-30px * 0.707) #e3aad6;
-  }
-  100% {
-    box-shadow: 0 -30px #f4dd51, calc(30px * 0.707) calc(-30px * 0.707) #e3aad6, 30px 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6, 0 0 #f4dd51, 0 0 #e3aad6;
-  }
 }
 
 .board-list-card {

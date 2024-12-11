@@ -3,12 +3,10 @@ package com.example.kradankanban_backend.common.services;
 
 import com.example.kradankanban_backend.common.dtos.CollabDTO;
 import com.example.kradankanban_backend.common.dtos.DetailBoardDTO;
+import com.example.kradankanban_backend.common.dtos.LimitDTO;
 import com.example.kradankanban_backend.common.dtos.VisibilityDTO;
 import com.example.kradankanban_backend.common.entities.*;
-import com.example.kradankanban_backend.common.repositories.BoardRepository;
-import com.example.kradankanban_backend.common.repositories.CollabRepository;
-import com.example.kradankanban_backend.common.repositories.LimitRepository;
-import com.example.kradankanban_backend.common.repositories.StatusRepository;
+import com.example.kradankanban_backend.common.repositories.*;
 import com.example.kradankanban_backend.exceptions.BadRequestException;
 import com.example.kradankanban_backend.exceptions.ForbiddenException;
 import com.example.kradankanban_backend.exceptions.ItemNotFoundException;
@@ -47,6 +45,8 @@ public class BoardService {
     private BoardRepository boardRepository;
     @Autowired
     private CollabRepository collabRepository;
+    @Autowired
+    private TaskRepository taskRepository;
 
     private DetailBoardDTO convertToDetailBoardDTO(BoardEntity board) {
         DetailBoardDTO.OwnerDTO owner = new DetailBoardDTO.OwnerDTO();
@@ -80,23 +80,6 @@ public class BoardService {
 
 
     public List<DetailBoardDTO> getBoardByUserId(String userId) {
-//        List<BoardEntity> privateBoards = repository.findAllByUserIdAndVisibility(userId, BoardEntity.Visibility.PRIVATE);
-//        List<BoardEntity> publicBoards = repository.findAllByVisibility(BoardEntity.Visibility.PUBLIC);
-//
-//        List<DetailBoardDTO> result = new ArrayList<>();
-//
-//        for (BoardEntity board : privateBoards) {
-//            DetailBoardDTO dto = convertToDetailBoardDTO(board);
-//            result.add(dto);
-//        }
-//
-//        for (BoardEntity board : publicBoards) {
-//            DetailBoardDTO dto = convertToDetailBoardDTO(board);
-//            result.add(dto);
-//        }
-//
-//        return result;
-
         List<DetailBoardDTO> result = new ArrayList<>();
 
         List<BoardEntity> ownerBoard = repository.findAllByUserId(userId);
@@ -107,29 +90,6 @@ public class BoardService {
 
         return result;
     }
-
-//    public DetailBoardDTO getBoardByUserId(String userId) {
-//        BoardEntity board = repository.findByUserId(userId);
-////        if (board == null) {
-////            throw new ItemNotFoundException("Board not found");
-////        }
-//
-//
-//        if (board != null) {
-//            DetailBoardDTO.OwnerDTO owner = new DetailBoardDTO.OwnerDTO();
-//            owner.setOid(board.getUserId());
-//            owner.setName(userRepository.findById(board.getUserId()).orElseThrow(() -> new ItemNotFoundException(board.getUserId() + "does not exist'")).getName());
-//
-//            DetailBoardDTO dto = new DetailBoardDTO();
-//            dto.setId(board.getBoardId());
-//            dto.setName(board.getBoardName());
-//            dto.setVisibility(board.getVisibility());
-//            dto.setOwner(owner);
-//
-//            return dto;
-//        }
-//        return modelMapper.map(repository.findAll(), DetailBoardDTO.class);
-//    }
 
     public DetailBoardDTO getBoardById(String boardId) {
         BoardEntity board = repository.findById(boardId).orElseThrow(() -> new WrongBoardException(boardId + "does not exist'"));
@@ -175,9 +135,13 @@ public class BoardService {
             BoardEntity newBoard = repository.save(board);
             List<StatusEntity> statusEntity = new ArrayList<>();
             StatusEntity status1 = new StatusEntity("No Status", "", newBoard.getBoardId());
+            status1.setColor("ffffff");
             StatusEntity status2 = new StatusEntity("To Do", "", newBoard.getBoardId());
+            status2.setColor("33e3ff");
             StatusEntity status3 = new StatusEntity("Doing", "", newBoard.getBoardId());
+            status3.setColor("fcff41");
             StatusEntity status4 = new StatusEntity("Done", "", newBoard.getBoardId());
+            status4.setColor("4aff41");
             statusEntity.add(status1);
             statusEntity.add(status2);
             statusEntity.add(status3);
@@ -192,9 +156,29 @@ public class BoardService {
 
             return dto;
         } catch (Exception e) {
-            System.out.println(e);
+
             throw new InternalError("Cannot add board");
         }
+    }
+
+    @Transactional
+    public LimitDTO updateLimitAndToggle(String boardId, LimitDTO limit) {
+        BoardEntity board = repository.findById(boardId).orElseThrow(() -> new WrongBoardException(boardId + "does not exist'"));
+        LimitSettings limitSettings = limitRepository.findByLsBoard(board.getBoardId());
+        if (limit.getToggleEnable() != null) {
+            limitSettings.setIsEnable(limit.getToggleEnable());
+        }
+        if (limit.getLimit() != null) {
+            if (!Boolean.TRUE.equals(limitSettings.getIsEnable())){
+                throw new BadRequestException("Cannot edit limit when limit is not enabled");
+            }
+            if (limit.getLimit() > 10) {
+                throw new BadRequestException("Limit cannot be more than 10");
+            }
+            limitSettings.setLimit(limit.getLimit());
+            limitRepository.save(limitSettings);
+        }
+        return limit;
     }
 
     @Transactional
@@ -208,6 +192,8 @@ public class BoardService {
     @Transactional
     public BoardEntity deleteBoard(String boardId) {
         BoardEntity board = repository.findById(boardId).orElseThrow(() -> new WrongBoardException(boardId + "does not exist'"));
+        taskRepository.deleteAllByTkBoard_BoardId(boardId);
+        statusRepository.deleteAllByStBoard(boardId);
         collabRepository.deleteAllByBoardId(boardId);
 
         repository.delete(board);
@@ -243,7 +229,6 @@ public class BoardService {
         if (boardId == null) {
             throw new BadRequestException("No Board Found");
         }
-        System.out.println(repository.existsById(boardId));
         return repository.existsById(boardId);
     }
 }

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
-import { getTaskById, editTask, getTaskByIdForGuest, getAllAttachments, deleteAttachment, uploadAttachments } from '@/lib/fetchUtils.js';
+import { getTaskById, editTask, getTaskByIdForGuest, getAllAttachments, deleteAttachment, uploadAttachments, getAllAttachmentsForGuest } from '@/lib/fetchUtils.js';
 import router from '@/router';
 import { useTaskStore } from '@/stores/task';
 import { useStatusStore } from '@/stores/status.js';
@@ -10,6 +10,7 @@ import { useToastStore } from '@/stores/toast.js';
 import * as pdfjsLib from 'pdfjs-dist/webpack'; // ใช้ Webpack version ของ PDF.js
 import LoadingComponent from '@/components/loadingComponent.vue';
 import { marked } from 'marked';
+import { generateFileData, openPreview } from '@/lib/fileUtils';
 
 const currentBoardId = useBoardStore().currentBoardId;
 const taskStore = useTaskStore();
@@ -25,13 +26,10 @@ const props = defineProps({
     required: true,
   },
 });
-console.log(props.isOwnerOrNot);
-// const editMode = ref(false);
 const statusList = ref([]);
-// const canSave = ref(false);
-const loading = ref(false);
+const loading = ref([]);
 const taskDetail = ref({});
-const originalTask = ref(null);
+const originalTask = ref({ title: '', description: '', assignees: '', status: '' });
 const error = ref(null);
 const Errortext = ref({
   title: '',
@@ -52,8 +50,6 @@ const editTaskAssigneesLength = computed(() => {
 const isHeaderSticky = ref(false);
 const isFooterSticky = ref(false);
 const content = ref();
-const createAnotherTask = ref(false);
-// const hoveredFileIndex = ref(null);
 const fileLoading = ref(false);
 const descriptionTab = ref('write');
 
@@ -63,6 +59,8 @@ const previewFiles = ref([]);
 const filesToUpload = ref([]);
 const filesToRemove = ref([]);
 const hoveredFileIndex = ref(null);
+const showIframePreview = ref(false);
+const iframePreviewURL = ref('');
 
 function handelScroll() {
   if (content.value.scrollTop > 0) {
@@ -96,15 +94,17 @@ watch(
 
 const canSave = computed(() => {
   return (
-    (Errortext.value.title === '' &&
+    loading.value.length === 0 &&
+    ((Errortext.value.title === '' &&
       Errortext.value.description === '' &&
       Errortext.value.assignees === '' &&
       (originalTask.value.title !== taskDetail.value.title ||
         originalTask.value.description !== taskDetail.value.description ||
         originalTask.value.assignees !== taskDetail.value.assignees ||
         originalTask.value.status !== taskDetail.value.status)) ||
-    filesToUpload.value.length > 0 ||
-    filesToRemove.value.length > 0
+      filesToUpload.value.length > 0 ||
+      filesToRemove.value.length > 0) &&
+    !previewFiles.value.some((file) => file.errorText.length === 0)
   );
 });
 
@@ -112,18 +112,16 @@ watch(
   statusStore.status,
   () => {
     statusList.value = statusStore.getAllStatusWithLimit();
-    console.table(statusList.value);
   },
   { deep: true }
 );
 
 async function fetchTask(id) {
   if (id === 0) {
-    loading.value = true;
     return 0;
   }
   error.value = null;
-  loading.value = true;
+  addLoading('Loading task');
   statusList.value = statusStore.getAllStatusWithLimit();
   try {
     let originalTaskDetails;
@@ -132,8 +130,6 @@ async function fetchTask(id) {
     } else {
       originalTaskDetails = await getTaskById(id);
     }
-
-    console.table(await originalTaskDetails);
     if (originalTaskDetails === 404 || originalTaskDetails === 400 || originalTaskDetails === 500) {
       emit('closeModal', 404);
       router.push(`/board/${currentBoardId}`);
@@ -147,31 +143,19 @@ async function fetchTask(id) {
 
     //Fetch Uploaded Files
     let uploadedFilesDetail;
-    uploadedFilesDetail = await getAllAttachments(currentBoardId, id);
+    if (useBoardStore().currentBoard.visibility === 'PUBLIC' && useAccountStore().tokenRaw === '') {
+      uploadedFilesDetail = await getAllAttachmentsForGuest(currentBoardId, id);
+    } else {
+      uploadedFilesDetail = await getAllAttachments(currentBoardId, id);
+    }
+    // uploadedFilesDetail = await getAllAttachments(currentBoardId, id);
 
     uploadedFiles.value = [...uploadedFilesDetail];
 
     // Process Uploaded Files
     uploadedFilesDetail.forEach(async (file) => {
       try {
-        // Convert base64 to Blob
-        const byteCharacters = atob(file.fileData);
-        const byteNumbers = Array.from(byteCharacters, (char) => char.charCodeAt(0));
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: file.fileType });
-
-        // Create preview file details
-        const previewUrl = URL.createObjectURL(blob);
-
-        previewFiles.value.push({
-          id: file.id,
-          name: file.fileName,
-          size: blob.size,
-          type: file.fileType,
-          previewUrl: file.fileType.startsWith('application/msword') ? `https://docs.google.com/viewer?url=${encodeURIComponent(previewUrl)}&embedded=true` : previewUrl,
-          thumbnail: file.fileType.startsWith('image/') ? previewUrl : file.fileType === 'application/pdf' ? await generatePDFThumbnail(blob) : null,
-          errorText: [],
-        });
+        previewFiles.value.push(await generateFileData(file, [])); // Generate file data
       } catch (fileProcessingError) {
         console.error('Error processing file:', file, fileProcessingError);
       }
@@ -179,28 +163,24 @@ async function fetchTask(id) {
   } catch (err) {
     error.value = err.toString();
   } finally {
-    loading.value = false;
+    removeLoading('Loading task');
   }
 }
 
 async function saveTask() {
-  loading.value = true;
+  addLoading('saving task');
   let res, editTaskResponse;
   let deleteAttachmentResponses = [];
   let uploadAttachmentsResponses = [];
   try {
-    console.log('Attachment Only Working!!!');
-
     if (filesToUpload.value.length > 0) {
       const resUp = await uploadAttachments(currentBoardId, props.taskId, filesToUpload.value);
-      console.log('File upload response:', resUp);
       uploadAttachmentsResponses.push(resUp);
     }
 
     if (filesToRemove.value.length > 0) {
       for (const file of filesToRemove.value) {
         const resRemove = await deleteAttachment(currentBoardId, props.taskId, file.id);
-        console.log(`Removed file ID: ${file.id}, Response:`, resRemove);
         deleteAttachmentResponses.push(resRemove);
       }
     }
@@ -212,27 +192,24 @@ async function saveTask() {
       originalTask.value.status === taskDetail.value.status
     ) {
       editTaskResponse = 200;
-      console.log(editTaskResponse);
     } else {
       delete taskDetail.value.id;
       delete taskDetail.value.createdOn;
       delete taskDetail.value.updatedOn;
       let editRes = await editTask(props.taskId, taskDetail.value);
-      taskDetail.value = editRes;
-      taskStore.editStoreTask(editRes.payload);
-      editTaskResponse = editRes.status;
+      taskDetail.value = await editRes;
+      taskStore.editStoreTask(await editRes.payload);
+      editTaskResponse = await editRes.status;
     }
   } catch (error) {
     console.log(error);
   } finally {
-    console.log(res);
     if (editTaskResponse === 200 && !deleteAttachmentResponses.some((res) => res.status !== 200) && !uploadAttachmentsResponses.some((res) => res.status !== 200)) {
       res = 200;
     } else {
       res = editTaskResponse;
     }
-    console.log('res', res);
-    loading.value = false;
+    removeLoading('saving task');
     router.push(`/board/${currentBoardId}`);
     emit('closeModal', res);
   }
@@ -245,63 +222,65 @@ function sendCloseModal() {
 
 // Handle New Files
 async function handleFileUpload(e) {
+  let dulpicateFileError = [];
   let files = Array.from(e.target.files);
   filesToUpload.value.push(...files);
-  console.log('File to Upload:', filesToUpload.value);
+  addLoading('Uploading files');
 
   files.forEach(async (file, index) => {
     let error = [];
     if (file.size > 20 * 1024 * 1024) {
       useToastStore().createToast(`"${file.name}" file size is too large`, 'danger');
-      error.push('this file is too large');
+      error.push('Each file cannot be larger than 20 MB');
     }
 
     if (previewFiles.value.length + index + 1 > 10) {
-      error.push('can upload only 10 file per task');
+      error.push('Each task can have at most 10 files.');
     }
 
     if (previewFiles.value.some((previewFile) => previewFile.name === file.name)) {
-      useToastStore().createToast(`"${file.name}" file is already uploaded`, 'danger', 5000);
+      dulpicateFileError.push(file.name);
+      // useToastStore().createToast(`"${file.name}" file is already uploaded`, 'danger', 5000);
     } else {
-      const reader = new FileReader();
-
-      reader.onload = async (e) => {
-        // error handling
-        previewFiles.value.push({
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          previewUrl: file.type.startsWith('application/msword') ? `https://docs.google.com/viewer?url=${encodeURIComponent(URL.createObjectURL(file))}&embedded=true` : URL.createObjectURL(file),
-          thumbnail: file.type.startsWith('image/') ? URL.createObjectURL(file) : file.type === 'application/pdf' ? await generatePDFThumbnail(file) : null,
-          errorText: error,
-        });
-      };
-      reader.readAsDataURL(file);
+      previewFiles.value.push(await generateFileData(file, error));
     }
   });
 
+  if (dulpicateFileError.length > 0) {
+    useToastStore().createToast(
+      `File with the same filename cannot be added or updated to the attachments. Please delete the attachment and add again to update the file. The following files are not added:<span class="underline"> ${dulpicateFileError.join(' , ')} </span>`,
+      'danger',
+      10000
+    );
+  }
+  removeLoading('Uploading files');
   checkErrorText();
 }
 
-function checkErrorText() {
-  // fileLoading.value = true;
+function addLoading(load) {
+  loading.value.push(load);
+}
 
+function removeLoading(load) {
+  loading.value = loading.value.filter((l) => l !== load);
+}
+
+function checkErrorText() {
   previewFiles.value.forEach((file, index) => {
     file.errorText = [];
 
     if (previewFiles.value.length > 10) {
-      if (!file.errorText.includes('can upload only 10 file per task')) {
-        file.errorText.push('can upload only 10 file per task');
+      if (!file.errorText.includes('Each task can have at most 10 files')) {
+        file.errorText.push('Each task can have at most 10 files');
       }
     }
 
     if (file.size > 20 * 1024 * 1024) {
-      if (!file.errorText.includes('this file is too large')) {
-        file.errorText.push('this file is too large');
+      if (!file.errorText.includes('Each file cannot be larger than 20 MB')) {
+        file.errorText.push('Each file cannot be larger than 20 MB');
       }
     }
   });
-  fileLoading.value = false;
 }
 
 const generatePDFThumbnail = async (file) => {
@@ -346,8 +325,6 @@ function removeFile(index) {
 
   // Remove from preview list
   previewFiles.value.splice(index, 1);
-  // console.log('Files to Upload:', filesToUpload.value);
-  // console.log('Files to Remove:', filesToRemove.value);
   checkErrorText();
 }
 
@@ -357,19 +334,11 @@ function showErrorTooltip(index) {
 function hideErrorTooltip() {
   hoveredFileIndex.value = null; // ซ่อน tooltip เมื่อเมาส์ออก
 }
-const openPreview = (file) => {
-  // previewFile.value = file;
-  window.open(file.previewUrl, '_blank');
-};
 </script>
 
 <template>
-  <div class="flex flex-col p-5 text-black bg-slate-50 dark:bg-base-100 rounded-lg w-full min-h-96" v-if="loading === true">
-    <loading-component class="absolute top-1/2" />
-  </div>
-
   <!-- Title -->
-  <div class="h-[50rem] w-full bg-white rounded-md flex flex-col overflow-scroll" v-if="loading === false">
+  <div class="h-[50rem] w-full bg-white rounded-md flex flex-col overflow-scroll">
     <!-- ? HEADER -->
     <div class="sticky top-0 flex flex-row p-4 bg-white z-50" :class="isHeaderSticky ? 'shadow-lg' : ''">
       <div class="flex-1 text-2xl">Edit Task / Issue</div>
@@ -380,8 +349,18 @@ const openPreview = (file) => {
       </div>
     </div>
 
+    <loading-component :loading="loading" v-if="loading.length > 0" />
+
     <!-- ? BODY -->
-    <div class="flex flex-col overflow-scroll p-2 grow" ref="content" @scroll="handelScroll">
+    <div class="flex flex-col overflow-scroll p-2 grow" ref="content" @scroll="handelScroll" v-if="loading.length === 0 && showIframePreview">
+      <div class="flex-1 flex flex-row-reverse">
+        <svg @click="showIframePreview = false" xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M6.4 19L5 17.6l5.6-5.6L5 6.4L6.4 5l5.6 5.6L17.6 5L19 6.4L13.4 12l5.6 5.6l-1.4 1.4l-5.6-5.6z" />
+        </svg>
+      </div>
+      <iframe :src="iframePreviewURL" class="h-full w-full" />
+    </div>
+    <div class="flex flex-col overflow-scroll p-2 grow" ref="content" @scroll="handelScroll" v-if="loading.length === 0 && !showIframePreview">
       <div class="w-full flex flex-row">
         <div class="basis-2/3 px-2">
           <!-- ? Title -->
@@ -452,7 +431,7 @@ const openPreview = (file) => {
               <div v-if="descriptionTab === 'preview'">
                 <div
                   class="markdown-preview w-full prose max-w-none prose-indigo leading-6 rounded-b-md shadow-sm border border-gray-300 p-5 bg-white overflow-y-auto min-h-64"
-                  v-html="!!taskDetail ? marked(taskDetail.description) : ''"
+                  v-html="marked(taskDetail.description === null ? '' : statusDetail.description)"
                 ></div>
               </div>
             </div>
@@ -467,7 +446,8 @@ const openPreview = (file) => {
             <textarea
               v-model="taskDetail.assignees"
               class="itbkk-assignees textarea textarea-bordered h-24 bg-white dark:bg-base-300 dark:text-slate-400 min-h-[18.625rem]"
-              placeholder="Bio"
+              placeholder="No Assignees"
+              :disabled="!isOwnerOrNot"
             ></textarea>
             <div class="label">
               <!-- ? Error Text -->
@@ -503,7 +483,7 @@ const openPreview = (file) => {
           <!-- Preview Button -->
           <div class="absolute top-2 left-2 z-50">
             <svg
-              @click="openPreview(file)"
+              @click="file.type !== 'text/plain' ? openPreview(file) : (showIframePreview = true), (iframePreviewURL = file.previewUrl)"
               xmlns="http://www.w3.org/2000/svg"
               width="1.5em"
               height="1.5em"
@@ -556,24 +536,50 @@ const openPreview = (file) => {
         </div>
       </div>
     </div>
-
     <!-- ? FOOTER -->
     <div class="sticky bottom-0 w-full z-50 gap-4 p-2" :class="isFooterSticky ? 'shadow-top' : ''">
       <div class="float-right flex flex-row-reverse gap-3">
         <button class="itbkk-button-cancel btn btn-outline btn-error basis-1/6" @click="sendCloseModal()">Cancel</button>
         <button class="itbkk-button-confirm btn btn-outline btn-success basis-1/6" :disabled="!canSave" :class="!canSave ? 'disabled' : ''" @click="saveTask()">
-          {{ loading ? '' : 'Save' }}
-          <span class="loading loading-spinner text-success" v-if="loading"></span>
+          {{ loading.length > 0 ? '' : 'Save' }}
+          <span class="loading loading-spinner text-success" v-if="loading.length > 0"></span>
         </button>
-        <!-- <div class="form-control">
-          <label class="label cursor-pointer">
-            <input type="checkbox" checked="false" v-model="createAnotherTask" class="toggle" />
-            <span class="label-text p-3">Create Another Task</span>
-          </label>
-        </div> -->
+        <div class="flex flex-col">
+          <div class="bold">updated On</div>
+          <div>{{ taskDetail.updatedOn }}</div>
+        </div>
+        <div class="flex flex-col">
+          <div class="bold">created On</div>
+          <div>{{ taskDetail.createdOn }}</div>
+        </div>
+        <div class="flex flex-col">
+          <div class="bold">Time Zone</div>
+          <div>{{ Intl.DateTimeFormat().resolvedOptions().timeZone }}</div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+/* .fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  z-index: -1;
+} */
+
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(500px);
+}
+
+.fade-enter-from {
+  opacity: 0;
+  transform: translateY(-500px);
+}
+</style>
