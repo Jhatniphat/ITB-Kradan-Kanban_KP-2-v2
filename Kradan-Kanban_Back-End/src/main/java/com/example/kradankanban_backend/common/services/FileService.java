@@ -28,6 +28,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -176,6 +177,15 @@ public class FileService {
         }
 
         attachmentRepository.saveAll(attachmentToSave);
+        successfulUploads = attachmentToSave.stream()
+                .map(entity -> new AttachmentDTO(
+                        entity.getId(),
+                        entity.getFileName(),
+                        entity.getFileType(),
+                        entity.getFileData(),
+                        entity.getUploadedOn().atOffset(ZoneOffset.UTC)
+                ))
+                .collect(Collectors.toList());
         responseDTO.setMessage("File upload completed with results.");
         responseDTO.setSuccessUpload(successfulUploads);
         responseDTO.setErrors(errors);
